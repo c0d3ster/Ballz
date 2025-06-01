@@ -111,43 +111,37 @@ function Update() {
 }
 
 //------------------------------------------------------------------------------
-function FixedUpdate () {
-
-	//if (SystemInfo.deviceType == DeviceType.Desktop)
-	//{
-	  //axes set to WASD and arrows by default
-	  var moveHorizontal: float = Input.GetAxis ("Horizontal");
-	  var moveVertical: float = Input.GetAxis ("Vertical");
-
-	  if (moveHorizontal != 0) {
-	  	var vector : Vector3 = Vector3(cam.transform.right.x, 0, cam.transform.right.z);
-	  	rb.AddForce(vector * moveHorizontal * speed);
-	  }
-
-	  if (moveVertical != 0) {
-	  	var vector2 : Vector3 = Vector3(cam.transform.forward.x, 0, cam.transform.forward.z);
-	  	rb.AddForce(vector2 * moveVertical * speed);
-	  }
-  //}
-  //else
-  //{
-  	var dir : Vector3 = Vector3.zero;
-  	//ensures acceleration value is between -1 and 1 but multiplies by a sensitivity variable (2)
-  	//makes it easier for user to move around with mobile
-  	dir.x = Mathf.Clamp(Input.acceleration.x*2,-1,1);
-  	dir.z = Mathf.Clamp(Input.acceleration.y*2-dirOffset,-1,1);
-
-		rb.AddForce(dir * speed);
- // }
-
- // if you fall off the map
- if (rb.transform.position.y <= -10) {
-  if (SceneLoader.currentScene == "Active Main Menu") {
-      SceneLoader.ChangeScene("Active Main Menu");
+function FixedUpdate() {
+  var moveHorizontal : float;
+  var moveVertical : float;
+  
+  if (SystemInfo.deviceType == DeviceType.Desktop) {
+    // Get keyboard input
+    moveHorizontal = Input.GetAxis("Horizontal");
+    moveVertical = Input.GetAxis("Vertical");
+    
+    // Override with touch controller if it's being used
+    if (TouchController.moveDirection != Vector2.zero) {
+      moveHorizontal = TouchController.moveDirection.x;
+      moveVertical = TouchController.moveDirection.y;
+    }
   } else {
-      SceneLoader.GameOver();
+    // On mobile, use touch controller or accelerometer
+    moveHorizontal = TouchController.moveDirection.x;
+    moveVertical = TouchController.moveDirection.y;
   }
-}
+
+  var movement : Vector3 = new Vector3(moveHorizontal, 0.0, moveVertical);
+  rb.AddForce(movement * speed);
+
+  // if you fall off the map
+  if (rb.transform.position.y <= -10) {
+    if (SceneLoader.currentScene == "Active Main Menu") {
+      SceneLoader.ChangeScene("Active Main Menu");
+    } else {
+      SceneLoader.GameOver();
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
