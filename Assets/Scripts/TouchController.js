@@ -15,7 +15,32 @@ class TouchController extends MonoBehaviour {
   private var movementRadius : float;
   static var moveDirection : Vector2 = Vector2.zero;  // Make static so PlayerController can access it
   
+  // Add this with the other private variables at the top
+  private var startedInCircle : boolean = false;
+  
+  // Add these with the other variables at the top
+  private var innerImage : Image;
+  private var normalAlpha : float = 0.5;  // 50% opacity
+  private var activeAlpha : float = 0.70; // 75% opacity
+  
   function Start() {
+    innerImage = innerCircle.GetComponent.<Image>();
+    
+    // Get player's material color and apply it to inner circle
+    var player = GameObject.FindWithTag("Player");
+    if (player) {
+      var playerRenderer = player.GetComponent.<Renderer>();
+      if (playerRenderer) {
+        var playerColor = playerRenderer.material.color;
+        var circleColor = innerImage.color;
+        circleColor.r = playerColor.r;
+        circleColor.g = playerColor.g;
+        circleColor.b = playerColor.b;
+        circleColor.a = normalAlpha;
+        innerImage.color = circleColor;
+      }
+    }
+    
     // Store the starting position of the inner circle
     startPos = innerCircle.anchoredPosition;
     // Calculate the maximum distance the joystick can move
@@ -24,31 +49,37 @@ class TouchController extends MonoBehaviour {
   } 
   
   function Update() {
+    // Add this at the start of the Update function
+    var color = innerImage.color;
+    color.a = (moveDirection != Vector2.zero) ? activeAlpha : normalAlpha;
+    innerImage.color = color;
+    
     if (SystemInfo.deviceType == DeviceType.Desktop) {
-      if (Input.GetMouseButton(0)) {
-        HandleMouseInput();
-      } else {
-        // Reflect keyboard input
-        var keyHorizontal = Input.GetAxis("Horizontal");
-        var keyVertical = Input.GetAxis("Vertical");
-        if (keyHorizontal != 0 || keyVertical != 0) {
-          moveDirection = new Vector2(keyHorizontal, keyVertical);
-          innerCircle.anchoredPosition = moveDirection * movementRadius;
-        } else {
-          moveDirection = Vector2.zero;
-          innerCircle.anchoredPosition = startPos;
+      // Handle WASD input first
+      var horizontal = Input.GetAxis("Horizontal");
+      var vertical = Input.GetAxis("Vertical");
+      
+      if ((horizontal != 0 || vertical != 0) && !isPressed) {
+        // Show WASD movement on joystick
+        moveDirection = new Vector2(horizontal, vertical);
+        if (moveDirection.magnitude > 1) {
+          moveDirection = moveDirection.normalized;
         }
+        innerCircle.anchoredPosition = moveDirection * movementRadius;
+      } else if (!isPressed) {
+        // Reset if no input and not being controlled by mouse
+        moveDirection = Vector2.zero;
+        innerCircle.anchoredPosition = startPos;
       }
+      
+      // Handle mouse input second (will override WASD if clicking)
+      HandleMouseInput();
     } else {
       if (Input.touchCount > 0) {
         HandleTouchInput();
       } else {
-        // Reflect accelerometer input when not touching
-        var accelX = Mathf.Clamp(Input.acceleration.x * 2, -1, 1);
-        var accelY = Mathf.Clamp(Input.acceleration.y * 2, -1, 1);
-        moveDirection = new Vector2(accelX, accelY);
-        // Move inner circle to reflect accelerometer
-        innerCircle.anchoredPosition = moveDirection * movementRadius;
+        moveDirection = Vector2.zero;
+        innerCircle.anchoredPosition = startPos;
       }
     }
   }
@@ -61,61 +92,82 @@ class TouchController extends MonoBehaviour {
       if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
         outerCircle, mousePos, null, localPoint)) {
         
+        // If just starting to press
         if (!isPressed) {
-          isPressed = true;
-          touchOffset = localPoint - innerCircle.anchoredPosition;
+          startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
+            outerCircle, mousePos, null);
         }
         
-        var newPos = localPoint - touchOffset;
-        if (newPos.magnitude > movementRadius) {
-          newPos = newPos.normalized * movementRadius;
+        isPressed = true;
+        if (startedInCircle) {
+          // Use joystick-style movement if we started in the circle
+          moveDirection = localPoint / movementRadius;
+          if (moveDirection.magnitude > 1) {
+            moveDirection = moveDirection.normalized;
+          }
+        } else {
+          // Outside circle - calculate direction and magnitude relative to player position
+          var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
+          var directionToClick = mousePos - playerScreenPos;
+          var distance = directionToClick.magnitude;
+          var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
+          moveDirection = new Vector2(directionToClick.x, directionToClick.y).normalized * normalizedDistance;
         }
-        
-        innerCircle.anchoredPosition = newPos;
-        moveDirection = newPos / movementRadius;
+        innerCircle.anchoredPosition = moveDirection * movementRadius;
       }
     } else {
       isPressed = false;
-      innerCircle.anchoredPosition = startPos;
-      moveDirection = Vector2.zero;
+      startedInCircle = false;
     }
   }
   
   function HandleTouchInput() {
     var touch : Touch = Input.GetTouch(0);
     var touchPos : Vector2 = touch.position;
-    
-    // Convert touch position to local space
     var localPoint : Vector2;
+    
     RectTransformUtility.ScreenPointToLocalPointInRectangle(
       outerCircle, touchPos, null, localPoint);
       
     switch (touch.phase) {
       case TouchPhase.Began:
-        if (RectTransformUtility.RectangleContainsScreenPoint(
-          outerCircle, touchPos, null)) {
+        startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
+          outerCircle, touchPos, null);
+        if (startedInCircle) {
           isPressed = true;
-          touchOffset = localPoint - innerCircle.anchoredPosition;
+          moveDirection = localPoint / movementRadius;
+          if (moveDirection.magnitude > 1) {
+            moveDirection = moveDirection.normalized;
+          }
+          innerCircle.anchoredPosition = moveDirection * movementRadius;
         }
         break;
         
       case TouchPhase.Moved:
-        if (isPressed) {
-          var newPos = localPoint - touchOffset;
-          // Clamp to circle
-          if (newPos.magnitude > movementRadius) {
-            newPos = newPos.normalized * movementRadius;
+        if (isPressed || !startedInCircle) {
+          if (startedInCircle) {
+            moveDirection = localPoint / movementRadius;
+            if (moveDirection.magnitude > 1) {
+              moveDirection = moveDirection.normalized;
+            }
+          } else {
+            // Outside circle - calculate direction and magnitude relative to player position
+            var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
+            var directionToTouch = touchPos - playerScreenPos;
+            var distance = directionToTouch.magnitude;
+            var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
+            moveDirection = new Vector2(directionToTouch.x, directionToTouch.y).normalized * normalizedDistance;
           }
-          innerCircle.anchoredPosition = newPos;
-          // Calculate movement direction (-1 to 1 range)
-          moveDirection = newPos / movementRadius;
+          innerCircle.anchoredPosition = moveDirection * movementRadius;
         }
         break;
         
       case TouchPhase.Ended:
       case TouchPhase.Canceled:
         isPressed = false;
-        // Don't reset to center, let accelerometer take over
+        startedInCircle = false;
+        moveDirection = Vector2.zero;
+        innerCircle.anchoredPosition = startPos;
         break;
     }
   }
