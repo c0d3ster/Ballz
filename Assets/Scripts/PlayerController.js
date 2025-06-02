@@ -45,8 +45,6 @@ function Start() {
   if (countText) {
     countText.text = "";
     SetCountText();
-  } else {
-    Debug.LogWarning("No Count Text UI reference assigned to PlayerController!");
   }
 
   if (Options.diff != 0)
@@ -57,10 +55,9 @@ function Start() {
   jump = false;
   canJump = true;
   var levelNumber = SceneLoader.GetLevelNumber();
-  Debug.Log("Level Number: " + SceneLoader.GetLevelNumber());
-  if (levelNumber == "1" || levelNumber == "u")
-  { //disable jump for first set of levels and mennu
-  	canJump = false;
+  Debug.Log("Level Number: " + levelNumber);
+  if (levelNumber <= 1) {
+    canJump = false;
   }
 
 
@@ -136,7 +133,7 @@ function FixedUpdate() {
 
   // if you fall off the map
   if (rb.transform.position.y <= -10) {
-    if (SceneLoader.currentScene == "Active Main Menu") {
+    if (!SceneLoader.currentScene || SceneLoader.currentScene == "Active Main Menu") {
       SceneLoader.ChangeScene("Active Main Menu");
     } else {
       SceneLoader.GameOver();
