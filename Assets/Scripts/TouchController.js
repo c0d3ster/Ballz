@@ -49,38 +49,26 @@ class TouchController extends MonoBehaviour {
   } 
   
   function Update() {
-    // Add this at the start of the Update function
+    // Don't process any input if paused
+    if (SceneLoader.isPaused) {
+      ResetJoystick();
+      return;
+    }
+    
+    // Update joystick visual feedback
     var color = innerImage.color;
     color.a = (moveDirection != Vector2.zero) ? activeAlpha : normalAlpha;
     innerImage.color = color;
     
+    // Show/hide joystick based on useJoystick option
+    var show = Optionz.useJoystick;
+    innerCircle.gameObject.SetActive(show);
+    outerCircle.gameObject.SetActive(show);
+    
     if (SystemInfo.deviceType == DeviceType.Desktop) {
-      // Handle WASD input first
-      var horizontal = Input.GetAxis("Horizontal");
-      var vertical = Input.GetAxis("Vertical");
-      
-      if ((horizontal != 0 || vertical != 0) && !isPressed) {
-        // Show WASD movement on joystick
-        moveDirection = new Vector2(horizontal, vertical);
-        if (moveDirection.magnitude > 1) {
-          moveDirection = moveDirection.normalized;
-        }
-        innerCircle.anchoredPosition = moveDirection * movementRadius;
-      } else if (!isPressed) {
-        // Reset if no input and not being controlled by mouse
-        moveDirection = Vector2.zero;
-        innerCircle.anchoredPosition = startPos;
-      }
-      
-      // Handle mouse input second (will override WASD if clicking)
       HandleMouseInput();
     } else {
-      if (Input.touchCount > 0) {
-        HandleTouchInput();
-      } else {
-        moveDirection = Vector2.zero;
-        innerCircle.anchoredPosition = startPos;
-      }
+      HandleTouchInput();
     }
   }
   
@@ -88,87 +76,93 @@ class TouchController extends MonoBehaviour {
     var mousePos : Vector2 = Input.mousePosition;
     var localPoint : Vector2;
     
-    if (Input.GetMouseButton(0)) { // Left mouse button
-      if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-        outerCircle, mousePos, null, localPoint)) {
-        
-        // If just starting to press
-        if (!isPressed) {
-          startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
-            outerCircle, mousePos, null);
-        }
-        
-        isPressed = true;
-        if (startedInCircle) {
-          // Use joystick-style movement if we started in the circle
-          moveDirection = localPoint / movementRadius;
-          if (moveDirection.magnitude > 1) {
-            moveDirection = moveDirection.normalized;
+    if (Input.GetMouseButton(0)) {
+      if (Optionz.useJoystick) {
+        // Check if input started in joystick area
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+          outerCircle, mousePos, null, localPoint)) {
+          
+          if (!isPressed) {
+            startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
+              outerCircle, mousePos, null);
           }
-        } else {
-          // Outside circle - calculate direction and magnitude relative to player position
-          var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
-          var directionToClick = mousePos - playerScreenPos;
-          var distance = directionToClick.magnitude;
-          var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
-          moveDirection = new Vector2(directionToClick.x, directionToClick.y).normalized * normalizedDistance;
+          
+          if (startedInCircle) {
+            isPressed = true;
+            moveDirection = localPoint / movementRadius;
+            if (moveDirection.magnitude > 1) {
+              moveDirection = moveDirection.normalized;
+            }
+          }
         }
+      }
+      
+      // Handle touch-style input if not using joystick or clicked outside joystick
+      if (Optionz.useTouch && !startedInCircle) {
+        var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
+        var directionToClick = new Vector2(mousePos.x - playerScreenPos.x, mousePos.y - playerScreenPos.y);
+        var distance = directionToClick.magnitude;
+        var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
+        moveDirection = directionToClick.normalized * normalizedDistance;
+      }
+      
+      // Always update joystick position to reflect current movement
+      if (moveDirection != Vector2.zero) {
         innerCircle.anchoredPosition = moveDirection * movementRadius;
       }
     } else {
-      isPressed = false;
-      startedInCircle = false;
+      ResetJoystick();
     }
   }
   
   function HandleTouchInput() {
-    var touch : Touch = Input.GetTouch(0);
+    var touch = Input.GetTouch(0);
     var touchPos : Vector2 = touch.position;
     var localPoint : Vector2;
     
-    RectTransformUtility.ScreenPointToLocalPointInRectangle(
-      outerCircle, touchPos, null, localPoint);
-      
-    switch (touch.phase) {
-      case TouchPhase.Began:
-        startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
-          outerCircle, touchPos, null);
+    if (Optionz.useJoystick) {
+      // Check if touch started in joystick area
+      if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+        outerCircle, touchPos, null, localPoint)) {
+        
+        if (!isPressed) {
+          startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(
+            outerCircle, touchPos, null);
+        }
+        
         if (startedInCircle) {
           isPressed = true;
           moveDirection = localPoint / movementRadius;
           if (moveDirection.magnitude > 1) {
             moveDirection = moveDirection.normalized;
           }
-          innerCircle.anchoredPosition = moveDirection * movementRadius;
         }
-        break;
-        
-      case TouchPhase.Moved:
-        if (isPressed || !startedInCircle) {
-          if (startedInCircle) {
-            moveDirection = localPoint / movementRadius;
-            if (moveDirection.magnitude > 1) {
-              moveDirection = moveDirection.normalized;
-            }
-          } else {
-            // Outside circle - calculate direction and magnitude relative to player position
-            var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
-            var directionToTouch = touchPos - playerScreenPos;
-            var distance = directionToTouch.magnitude;
-            var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
-            moveDirection = new Vector2(directionToTouch.x, directionToTouch.y).normalized * normalizedDistance;
-          }
-          innerCircle.anchoredPosition = moveDirection * movementRadius;
-        }
-        break;
-        
-      case TouchPhase.Ended:
-      case TouchPhase.Canceled:
-        isPressed = false;
-        startedInCircle = false;
-        moveDirection = Vector2.zero;
-        innerCircle.anchoredPosition = startPos;
-        break;
+      }
     }
+    
+    // Handle touch-style input if not using joystick or touched outside joystick
+    if (Optionz.useTouch && !startedInCircle) {
+      var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
+      var directionToTouch = new Vector2(touchPos.x - playerScreenPos.x, touchPos.y - playerScreenPos.y);
+      var distance = directionToTouch.magnitude;
+      var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
+      moveDirection = directionToTouch.normalized * normalizedDistance;
+    }
+    
+    // Always update joystick position to reflect current movement
+    if (moveDirection != Vector2.zero) {
+      innerCircle.anchoredPosition = moveDirection * movementRadius;
+    }
+    
+    if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) {
+      ResetJoystick();
+    }
+  }
+  
+  function ResetJoystick() {
+    isPressed = false;
+    startedInCircle = false;
+    moveDirection = Vector2.zero;
+    innerCircle.anchoredPosition = startPos;
   }
 }
