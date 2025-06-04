@@ -100,6 +100,43 @@ function OnGUI () {
     toggleStyle
   );
   
+  // If joystick state changed
+  if (joystickEnabled != Optionz.useJoystick) {
+    Optionz.useJoystick = joystickEnabled;
+    
+    // Find and update both controller objects
+    var outer = GameObject.Find("TouchControllerOuter");
+    var inner = GameObject.Find("TouchControllerInner");
+    
+    if (outer && inner) {
+      // Get the Image components
+      var outerImage = outer.GetComponent.<UnityEngine.UI.Image>();
+      var innerImage = inner.GetComponent.<UnityEngine.UI.Image>();
+      
+      if (outerImage && innerImage) {
+        // Store current colors
+        var outerColor = outerImage.color;
+        var innerColor = innerImage.color;
+        
+        // Update alpha but keep other color values
+        outerColor.a = joystickEnabled ? 0.5 : 0; // 50% opacity when visible
+        innerColor.a = joystickEnabled ? 0.5 : 0;
+        
+        // Apply new colors
+        outerImage.color = outerColor;
+        innerImage.color = innerColor;
+        
+        // Also disable raycast target when hidden
+        outerImage.raycastTarget = joystickEnabled;
+        innerImage.raycastTarget = joystickEnabled;
+        
+        Debug.Log("Setting TouchController opacity to: " + (joystickEnabled ? "visible" : "invisible"));
+      }
+    } else {
+      Debug.LogWarning("TouchController objects not found!");
+    }
+  }
+  
   GUI.color = originalColor;
   
   // Draw the labels
@@ -107,11 +144,10 @@ function OnGUI () {
   GUI.Label(Rect(rightPosition + 20, Screen.height * 0.4, rightButtonWidth - 20, checkboxSize), "Accelerometer", labelStyle);
   GUI.Label(Rect(rightPosition + 20, Screen.height * 0.5, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
 
-  // Update options after all toggles are drawn
+  // Update other options
   Optionz.useTouch = touchEnabled;
   Optionz.useAccelerometer = accelEnabled;
-  Optionz.useJoystick = joystickEnabled;
-
+  
   // Ensure at least one control method is enabled
   if (!Optionz.useTouch && !Optionz.useAccelerometer && !Optionz.useJoystick) {
     Optionz.useTouch = true; // Default to touch if nothing selected

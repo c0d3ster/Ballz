@@ -42,9 +42,6 @@ class MoveController extends MonoBehaviour {
     startPos = innerCircle.anchoredPosition;
     // Calculate the maximum distance the joystick can move
     movementRadius = (outerCircle.sizeDelta.x - innerCircle.sizeDelta.x) / 2;
-    
-    // Set initial visibility based on platform and options
-    UpdateControllerVisibility();
   }
   
   function Update() {
@@ -54,7 +51,9 @@ class MoveController extends MonoBehaviour {
     }
     
     // Update joystick opacity based on movement
-    UpdateJoystickOpacity();
+    if (Optionz.useJoystick) {
+      UpdateJoystickOpacity();
+    }
     
     // Handle keyboard input first
     if (SystemInfo.deviceType == DeviceType.Desktop) {
@@ -74,13 +73,7 @@ class MoveController extends MonoBehaviour {
       ResetMovement();
     }
   }
-  
-  function UpdateControllerVisibility() {
-    var showJoystick = Optionz.useJoystick;
-    innerCircle.gameObject.SetActive(showJoystick);
-    outerCircle.gameObject.SetActive(showJoystick);
-  }
-  
+
   function UpdateJoystickOpacity() {
     var color = innerImage.color;
     color.a = (moveDirection != Vector2.zero) ? activeAlpha : normalAlpha;
