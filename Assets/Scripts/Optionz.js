@@ -4,9 +4,10 @@
 static var diff : double = 1.0; // Initialize with default value
 
 // Control options - can have multiple enabled
-static var useTouch : boolean = true;
-static var useAccelerometer : boolean = true;
+static var useTarget : boolean = true;
+static var useAccelerometer : boolean = true;  // Mobile only
 static var useJoystick : boolean = true;
+static var useKeyboard : boolean = true;       // Desktop only
 
 static function ChangeDifficulty() {
 	if (!diff) diff = 1.0; // Safety check in case static var is reset

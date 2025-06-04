@@ -74,31 +74,44 @@ function OnGUI () {
   GUI.Box(Rect(rightPosition - boxPadding, Screen.height * 0.3 - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
   GUI.Box(Rect(rightPosition - boxPadding, Screen.height * 0.4 - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
   GUI.Box(Rect(rightPosition - boxPadding, Screen.height * 0.5 - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
-
+  
   var originalColor = GUI.color;
   GUI.color = new Color(0, 0.4, 0, 1);  // Darker green (40% green)
   
   // Checkboxes for control options
-  var touchEnabled = GUI.Toggle(
+  var targetEnabled = GUI.Toggle(
     Rect(rightPosition, Screen.height * 0.3, rightButtonWidth, checkboxSize),
-    Optionz.useTouch,
-    "",
-    toggleStyle
-  );
-  
-  var accelEnabled = GUI.Toggle(
-    Rect(rightPosition, Screen.height * 0.4, rightButtonWidth, checkboxSize),
-    Optionz.useAccelerometer,
+    Optionz.useTarget,
     "",
     toggleStyle
   );
   
   var joystickEnabled = GUI.Toggle(
-    Rect(rightPosition, Screen.height * 0.5, rightButtonWidth, checkboxSize),
+    Rect(rightPosition, Screen.height * 0.4, rightButtonWidth, checkboxSize),
     Optionz.useJoystick,
     "",
     toggleStyle
   );
+  
+  // Third option depends on platform
+  var accelEnabled = false;
+  var keyboardEnabled = false;
+  
+  if (SystemInfo.deviceType == DeviceType.Handheld) {
+    accelEnabled = GUI.Toggle(
+      Rect(rightPosition, Screen.height * 0.5, rightButtonWidth, checkboxSize),
+      Optionz.useAccelerometer,
+      "",
+      toggleStyle
+    );
+  } else {
+    keyboardEnabled = GUI.Toggle(
+      Rect(rightPosition, Screen.height * 0.5, rightButtonWidth, checkboxSize),
+      Optionz.useKeyboard,
+      "",
+      toggleStyle
+    );
+  }
   
   // If joystick state changed
   if (joystickEnabled != Optionz.useJoystick) {
@@ -119,14 +132,14 @@ function OnGUI () {
         var innerColor = innerImage.color;
         
         // Update alpha but keep other color values
-        outerColor.a = joystickEnabled ? 0.5 : 0; // 50% opacity when visible
+        outerColor.a = joystickEnabled ? 0.5 : 0;
         innerColor.a = joystickEnabled ? 0.5 : 0;
         
-        // Apply new colors
+        // Apply colors
         outerImage.color = outerColor;
         innerImage.color = innerColor;
         
-        // Also disable raycast target when hidden
+        // Update raycast targets
         outerImage.raycastTarget = joystickEnabled;
         innerImage.raycastTarget = joystickEnabled;
         
@@ -140,17 +153,36 @@ function OnGUI () {
   GUI.color = originalColor;
   
   // Draw the labels
-  GUI.Label(Rect(rightPosition + 20, Screen.height * 0.3, rightButtonWidth - 20, checkboxSize), "Touch", labelStyle);
-  GUI.Label(Rect(rightPosition + 20, Screen.height * 0.4, rightButtonWidth - 20, checkboxSize), "Accelerometer", labelStyle);
-  GUI.Label(Rect(rightPosition + 20, Screen.height * 0.5, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
+  GUI.Label(Rect(rightPosition + 20, Screen.height * 0.3, rightButtonWidth - 20, checkboxSize), "Target", labelStyle);
+  GUI.Label(Rect(rightPosition + 20, Screen.height * 0.4, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
+  
+  // Third option label depends on platform
+  if (SystemInfo.deviceType == DeviceType.Handheld) {
+    GUI.Label(Rect(rightPosition + 20, Screen.height * 0.5, rightButtonWidth - 20, checkboxSize), "Accelerometer", labelStyle);
+  } else {
+    GUI.Label(Rect(rightPosition + 20, Screen.height * 0.5, rightButtonWidth - 20, checkboxSize), "Keyboard", labelStyle);
+  }
 
-  // Update other options
-  Optionz.useTouch = touchEnabled;
-  Optionz.useAccelerometer = accelEnabled;
+  // Update options after all toggles are drawn
+  Optionz.useTarget = targetEnabled;
+  Optionz.useJoystick = joystickEnabled;
+  
+  // Update platform-specific options
+  if (SystemInfo.deviceType == DeviceType.Handheld) {
+    Optionz.useAccelerometer = accelEnabled;
+    Optionz.useKeyboard = false;  // Force off on mobile
+  } else {
+    Optionz.useKeyboard = keyboardEnabled;
+    Optionz.useAccelerometer = false;  // Force off on desktop
+  }
   
   // Ensure at least one control method is enabled
-  if (!Optionz.useTouch && !Optionz.useAccelerometer && !Optionz.useJoystick) {
-    Optionz.useTouch = true; // Default to touch if nothing selected
+  if (!Optionz.useTarget && !Optionz.useAccelerometer && !Optionz.useJoystick && !Optionz.useKeyboard) {
+    if (SystemInfo.deviceType == DeviceType.Handheld) {
+      Optionz.useTarget = true; // Default to target on mobile
+    } else {
+      Optionz.useKeyboard = true; // Default to keyboard on desktop
+    }
   }
 }
 

@@ -55,8 +55,8 @@ class MoveController extends MonoBehaviour {
       UpdateJoystickOpacity();
     }
     
-    // Handle keyboard input first
-    if (SystemInfo.deviceType == DeviceType.Desktop) {
+    // Handle keyboard input first if enabled
+    if (Optionz.useKeyboard && SystemInfo.deviceType == DeviceType.Desktop) {
       HandleKeyboardInput();
     }
     
@@ -64,7 +64,7 @@ class MoveController extends MonoBehaviour {
     if (SystemInfo.deviceType == DeviceType.Desktop) {
       if (Input.GetMouseButton(0)) {
         HandlePointerInput(Input.mousePosition);
-      } else if (!Input.anyKey) {
+      } else if (!Input.anyKey || !Optionz.useKeyboard) {
         ResetMovement();
       }
     } else if (Input.touchCount > 0) {
@@ -121,12 +121,12 @@ class MoveController extends MonoBehaviour {
     }
     
     // Handle touch/click input outside joystick area
-    if (Optionz.useTouch) {
+    if (Optionz.useTarget) {
       var playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
-      var directionToPointer = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
-      var distance = directionToPointer.magnitude;
+      var directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
+      var distance = directionToTarget.magnitude;
       var normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5));
-      moveDirection = directionToPointer.normalized * normalizedDistance;
+      moveDirection = directionToTarget.normalized * normalizedDistance;
       
       // Update joystick visual if enabled
       if (Optionz.useJoystick) {
