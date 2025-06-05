@@ -12,6 +12,7 @@ public class MoveController : MonoBehaviour
     private Vector2 touchOffset;
     private bool isPressed;
     private Vector2 startPos;
+    private bool usingJoystickMode; // Track which control mode we started with
     // Movement limits
     private float movementRadius;
     public static Vector2 moveDirection; // Make static so PlayerController can access it
@@ -117,28 +118,31 @@ public class MoveController : MonoBehaviour
 
     public virtual void HandlePointerInput(Vector2 pointerPos)
     {
-        Vector2 localPoint = default(Vector2);
-        // Handle joystick input if enabled and pointer is in joystick area
-        if (Optionz.useJoystick && RectTransformUtility.ScreenPointToLocalPointInRectangle(this.outerCircle, pointerPos, null, out localPoint))
+        // If we haven't started input yet, determine the mode
+        if (!this.isPressed)
         {
-            if (!this.isPressed)
+            Vector2 localPoint;
+            this.usingJoystickMode = Optionz.useJoystick && 
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(this.outerCircle, pointerPos, null, out localPoint) &&
+                RectTransformUtility.RectangleContainsScreenPoint(this.outerCircle, pointerPos, null);
+            this.isPressed = true;
+        }
+
+        // Handle input based on the initial mode
+        if (this.usingJoystickMode)
+        {
+            Vector2 localPoint;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(this.outerCircle, pointerPos, null, out localPoint))
             {
-                this.startedInCircle = RectTransformUtility.RectangleContainsScreenPoint(this.outerCircle, pointerPos, null);
-            }
-            if (this.startedInCircle)
-            {
-                this.isPressed = true;
                 MoveController.moveDirection = localPoint / this.movementRadius;
                 if (MoveController.moveDirection.magnitude > 1)
                 {
                     MoveController.moveDirection = MoveController.moveDirection.normalized;
                 }
                 this.innerCircle.anchoredPosition = MoveController.moveDirection * this.movementRadius;
-                return;
             }
         }
-        // Handle touch/click input outside joystick area
-        if (Optionz.useTarget)
+        else if (Optionz.useTarget)
         {
             Vector3 playerScreenPos = Camera.main.WorldToScreenPoint(GameObject.FindWithTag("Player").transform.position);
             Vector2 directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
@@ -156,6 +160,7 @@ public class MoveController : MonoBehaviour
     public virtual void ResetMovement()
     {
         this.isPressed = false;
+        this.usingJoystickMode = false;
         this.startedInCircle = false;
         MoveController.moveDirection = Vector2.zero;
         this.innerCircle.anchoredPosition = this.startPos;
