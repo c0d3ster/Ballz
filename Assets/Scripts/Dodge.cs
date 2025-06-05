@@ -10,9 +10,9 @@ public partial class Dodge : MonoBehaviour
     private float timer;
     public virtual void Start()
     {
-        if (Options.diff != 0)
+        if (Optionz.diff != 0)
         {
-            this.moveSpeed = (float) (this.moveSpeed / Options.diff);
+            this.moveSpeed = (float) (this.moveSpeed / Optionz.diff);
         }
         this.originalPosition = this.transform.position; // grabs original position
     }

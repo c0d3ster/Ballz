@@ -11,9 +11,9 @@ public partial class Timer : MonoBehaviour
     // add options for difficulty
     public virtual void Start()
     {
-        if (Options.diff != 0)
+        if (Optionz.diff != 0)
         {
-            this.timer = (float) (this.timer * Options.diff);
+            this.timer = (float) (this.timer * Optionz.diff);
         }
         this.SetTimerText();
     }

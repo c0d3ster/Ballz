@@ -21,15 +21,12 @@ public partial class SceneLoader : MonoBehaviour
         Time.timeScale = 1;
         SceneLoader.isPaused = false;
         UnityEngine.Object.DontDestroyOnLoad(this.transform.gameObject);
-        // Add safety check for difficulty
-        if (!Options.diff)
-        {
-            Options.diff = 1f;
-        }
+        
         // Set initial scene immediately in Awake
         SceneLoader.currentScene = SceneManager.GetActiveScene().name;
         SceneLoader.lastScene = SceneLoader.currentScene;
         Debug.Log("Initial scene set in Awake to: " + SceneLoader.currentScene);
+        
         // Register scene load callback
         SceneManager.sceneLoaded += this.OnSceneLoaded;
     }
@@ -107,33 +104,33 @@ public partial class SceneLoader : MonoBehaviour
 
     public static void NextLevel()
     {
-        switch (SceneLoader.currentScene)
+        if (SceneLoader.currentScene == "Ball Collector 1 (StudySoup)")
         {
-            case "Ball Collector 1 (StudySoup)":
-                SceneLoader.ReloadScene();
-            default:
-                if (SceneLoader.currentScene == ("Ball Balancer " + (SceneLoader.balanceCounter - 1)))
-                {
-                    SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
-                }
-                if (SceneLoader.currentScene == ("Ball Collector " + (SceneLoader.collectCounter - 1)))
-                {
-                    SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
-                }
-                if (SceneLoader.currentScene == ("Ball Dodger " + (SceneLoader.dodgeCounter - 1)))
-                {
-                    SceneLoader.ChangeScene("Ball Dodger " + SceneLoader.dodgeCounter);
-                }
-                if (SceneLoader.currentScene == ("Ball Jumper " + (SceneLoader.jumpCounter - 1)))
-                {
-                    SceneLoader.ChangeScene("Ball Jumper " + SceneLoader.jumpCounter);
-                }
-                if (SceneLoader.currentScene == ("Ball Pusher " + (SceneLoader.pushCounter - 1)))
-                {
-                    SceneLoader.ChangeScene("Ball Pusher " + SceneLoader.pushCounter);
-                }
-                SceneLoader.ChangeScene("Active Main Menu");
-                break;
+            SceneLoader.ReloadScene();
+        }
+        else if (SceneLoader.currentScene == "Ball Balancer " + (SceneLoader.balanceCounter - 1))
+        {
+            SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
+        }
+        else if (SceneLoader.currentScene == "Ball Collector " + (SceneLoader.collectCounter - 1))
+        {
+            SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
+        }
+        else if (SceneLoader.currentScene == "Ball Dodger " + (SceneLoader.dodgeCounter - 1))
+        {
+            SceneLoader.ChangeScene("Ball Dodger " + SceneLoader.dodgeCounter);
+        }
+        else if (SceneLoader.currentScene == "Ball Jumper " + (SceneLoader.jumpCounter - 1))
+        {
+            SceneLoader.ChangeScene("Ball Jumper " + SceneLoader.jumpCounter);
+        }
+        else if (SceneLoader.currentScene == "Ball Pusher " + (SceneLoader.pushCounter - 1))
+        {
+            SceneLoader.ChangeScene("Ball Pusher " + SceneLoader.pushCounter);
+        }
+        else
+        {
+            SceneLoader.ChangeScene("Active Main Menu");
         }
     }
 

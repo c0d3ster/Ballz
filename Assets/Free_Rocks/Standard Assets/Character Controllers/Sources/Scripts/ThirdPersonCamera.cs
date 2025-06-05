@@ -42,7 +42,7 @@ public partial class ThirdPersonCamera : MonoBehaviour
         }
         if (this.controller)
         {
-            CharacterController characterController = this._target.GetComponent<Collider>();
+            CharacterController characterController = this._target.GetComponent<CharacterController>();
             this.centerOffset = characterController.bounds.center - this._target.position;
             this.headOffset = this.centerOffset;
             this.headOffset.y = characterController.bounds.max.y - this._target.position.y;

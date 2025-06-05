@@ -8,7 +8,7 @@ namespace UnityStandardAssets.CrossPlatformInput
 	[RequireComponent(typeof(Image))]
 	public class TouchPad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 	{
-		// Options for which axes to use
+		// Optionz for which axes to use
 		public enum AxisOption
 		{
 			Both, // Use both

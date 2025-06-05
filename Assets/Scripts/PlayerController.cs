@@ -16,6 +16,8 @@ public class PlayerController : MonoBehaviour
     public static Vector3 camOffset;
     public Vector3 camShift;
     public float dirOffset;
+    public float jumpForce = 350f; 
+    public float gravityMultiplier = 2f; 
     public virtual void Awake()
     {
         // Try to get camera reference immediately
@@ -51,9 +53,9 @@ public class PlayerController : MonoBehaviour
             this.countText.text = "";
             this.SetCountText();
         }
-        if (Options.diff != 0)
+        if (Optionz.diff != 0)
         {
-            this.speed = (float) (this.speed / Options.diff); // makes player move slower if difficulty is low and vice versa
+            this.speed = (float) (this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
         }
         this.jump = false;
         this.canJump = true;
@@ -87,14 +89,19 @@ public class PlayerController : MonoBehaviour
             }
         }
         // Handle jumping
-        if ((Input.GetKey("space") && !this.jump) && this.canJump)
+        if (Input.GetKey("space") && IsGrounded() && this.canJump)
         {
-            this.rb.AddForce(Vector3.up * 300);
+            this.rb.AddForce(Vector3.up * jumpForce);
             this.jump = true;
         }
-        if (this.jump)
+        // Apply extra gravity when falling
+        if (!IsGrounded())
         {
-            this.rb.AddForce(Vector3.down * 15);
+            this.rb.AddForce(Physics.gravity * gravityMultiplier);
+        }
+        else
+        {
+            this.jump = false;
         }
     }
 
@@ -134,10 +141,6 @@ public class PlayerController : MonoBehaviour
             this.count = this.count + 1;
             this.SetCountText();
         }
-        if (other.gameObject.CompareTag("Ground"))
-        {
-            this.jump = false;
-        }
     }
 
     public virtual void SetCountText()
@@ -147,6 +150,12 @@ public class PlayerController : MonoBehaviour
         {
             SceneLoader.Win();
         }
+    }
+
+    private bool IsGrounded()
+    {
+        // Reduced check distance for tighter ground detection
+        return Physics.Raycast(transform.position, Vector3.down, 0.6f);
     }
 
 }

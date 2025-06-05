@@ -5,7 +5,7 @@ using System.Collections;
 public partial class Optionz : MonoBehaviour
 {
     //stores difficulty multiplier (1.2 = easy, 1 = medium, .8 = hard)
-    public static double diff; // Initialize with default value
+    public static double diff = 1.0; // Default to medium difficulty
     // Control options - can have multiple enabled
     public static bool useTarget;
     public static bool useAccelerometer; // Mobile only
@@ -13,46 +13,39 @@ public partial class Optionz : MonoBehaviour
     public static bool useKeyboard; // Desktop only
     public static void ChangeDifficulty()
     {
-        if (!Optionz.diff)
+        if (Optionz.diff == 1.0)
         {
-            Optionz.diff = 1f; // Safety check in case static var is reset
+            Optionz.diff = 0.8;
         }
-        switch (Optionz.diff)
+        else if (Optionz.diff == 0.8)
         {
-            case 1:
-                Optionz.diff = 0.8f;
-                break;
-            case 0.8:
-                Optionz.diff = 1.2f;
-                break;
-            case 1.2:
-                Optionz.diff = 1;
-                break;
-            default:
-                Optionz.diff = 1f; // Reset to medium if unknown state
-                break;
+            Optionz.diff = 1.2;
+        }
+        else if (Optionz.diff == 1.2)
+        {
+            Optionz.diff = 1.0;
+        }
+        else
+        {
+            Optionz.diff = 1.0; // Reset to medium if unknown state
         }
     }
 
     public static string DisplayDifficulty()
     {
-        string diffString = null;
-        switch (Optionz.diff)
+        if (Optionz.diff == 1.0)
         {
-            case 1:
-                diffString = "Medium";
-                break;
-            case 0.8:
-                diffString = "Hard";
-                break;
-            case 1.2:
-                diffString = "Easy";
-                break;
-            default:
-                diffString = "Unknown";
-                break;
+            return "Medium";
         }
-        return diffString;
+        else if (Optionz.diff == 0.8)
+        {
+            return "Hard";
+        }
+        else if (Optionz.diff == 1.2)
+        {
+            return "Easy";
+        }
+        return "Unknown";
     }
 
     public static void SetDifficulty(string difficulty)
@@ -60,14 +53,17 @@ public partial class Optionz : MonoBehaviour
         switch (difficulty.ToLower())
         {
             case "easy":
-                Optionz.diff = 1.2f;
+                Optionz.diff = 1.2;
+                break;
             case "medium":
-                Optionz.diff = 1f;
+                Optionz.diff = 1.0;
+                break;
             case "hard":
-                Optionz.diff = 0.8f;
+                Optionz.diff = 0.8;
+                break;
             default:
                 Debug.LogWarning("Invalid difficulty: " + difficulty);
-                Optionz.diff = 1f; // Default to medium
+                Optionz.diff = 1.0; // Default to medium
                 break;
         }
     }
