@@ -139,12 +139,17 @@ public class PlayerController : MonoBehaviour
         {
             other.gameObject.SetActive(false);
             this.count = this.count + 1;
-            this.SetCountText();
+            if (this.countText != null)
+            {
+                this.SetCountText();
+            }
         }
     }
 
     public virtual void SetCountText()
     {
+        if (this.countText == null) return;
+        
         this.countText.text = (("Count: " + this.count.ToString()) + "/") + this.totalBoxes.Length.ToString();
         if (this.count >= this.totalBoxes.Length)
         {
