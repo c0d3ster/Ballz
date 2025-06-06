@@ -8,7 +8,7 @@ namespace UnityStandardAssets.CrossPlatformInput
 	{
 		public enum AxisOption
 		{
-			// Options for which axes to use
+			// Optionz for which axes to use
 			Both, // Use both
 			OnlyHorizontal, // Only horizontal
 			OnlyVertical // Only vertical
