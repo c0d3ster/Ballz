@@ -16,8 +16,8 @@ public class PlayerController : MonoBehaviour
     public static Vector3 camOffset;
     public Vector3 camShift;
     public float dirOffset;
-    public float jumpForce = 200f;
-    public float gravityMultiplier = 1f; 
+    public float jumpForce = 100f;
+    public float gravityMultiplier = .5f; 
     public virtual void Awake()
     {
         // Try to get camera reference immediately
@@ -73,21 +73,6 @@ public class PlayerController : MonoBehaviour
 
     public virtual void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (!SceneLoader.isPaused)
-            {
-                Time.timeScale = 0;
-                SceneLoader.isPaused = true;
-                SceneLoader.Pause();
-            }
-            else
-            {
-                Time.timeScale = 1;
-                SceneLoader.isPaused = false;
-                UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("PAUSE");
-            }
-        }
         // Handle jumping
         if (Input.GetKey("space") && IsGrounded() && this.canJump)
         {
@@ -150,8 +135,14 @@ public class PlayerController : MonoBehaviour
     {
         if (this.countText == null) return;
         
+        if (this.totalBoxes.Length == 0)
+        {
+            this.countText.text = "";
+            return;
+        }
+
         this.countText.text = (("Count: " + this.count.ToString()) + "/") + this.totalBoxes.Length.ToString();
-        if (this.count >= this.totalBoxes.Length)
+        if (this.totalBoxes.Length > 0 && this.count >= this.totalBoxes.Length)
         {
             SceneLoader.Win();
         }

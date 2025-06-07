@@ -1,54 +1,87 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
 
-    public GameObject uiManagerPrefab;  // Assign the UIManager prefab in inspector
-    public GameObject sceneLoaderPrefab; // Assign the SceneLoader prefab in inspector
-
     private UIManager uiManager;
     private SceneLoader sceneLoader;
+    private const string UI_PREFAB_PATH = "Assets/Prefabs/Managers/UIManager.prefab";
 
-    void Awake()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
     {
         if (instance == null)
         {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-            InitializeManagers();
-        }
-        else
-        {
-            Destroy(gameObject);
+            GameObject go = new GameObject("GameManager");
+            instance = go.AddComponent<GameManager>();
+            DontDestroyOnLoad(go);
+            
+            // Add required components
+            instance.sceneLoader = go.AddComponent<SceneLoader>();
+            go.AddComponent<Optionz>();
+            
+            // Setup UI
+            instance.InitializeUI();
+
+            // Subscribe to scene changes
+            SceneManager.sceneLoaded += instance.OnSceneLoaded;
+            
+            // Check initial scene
+            instance.UpdateUIVisibility();
         }
     }
 
-    void InitializeManagers()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Check if UIManager exists, if not create it
-        if (FindObjectOfType<UIManager>() == null && uiManagerPrefab != null)
-        {
-            GameObject uiObj = Instantiate(uiManagerPrefab);
-            uiManager = uiObj.GetComponent<UIManager>();
-        }
-
-        // Check if SceneLoader exists, if not create it
-        if (FindObjectOfType<SceneLoader>() == null && sceneLoaderPrefab != null)
-        {
-            GameObject sceneObj = Instantiate(sceneLoaderPrefab);
-            sceneLoader = sceneObj.GetComponent<SceneLoader>();
-        }
+        UpdateUIVisibility();
     }
 
-    // Optional: Method to check if we're in a gameplay scene
-    public bool IsGameplayScene()
+    private void UpdateUIVisibility()
     {
         string currentScene = SceneManager.GetActiveScene().name;
-        return !currentScene.Contains("MENU") && 
-               !currentScene.Contains("WIN") && 
-               !currentScene.Contains("GAME OVER");
+        bool shouldHideUI = currentScene == "Splash Screen" || 
+                          currentScene == "GAME OVER" || 
+                          currentScene == "WIN";
+        
+        UIManager.ShowTouchController(!shouldHideUI);
+    }
+
+    void OnDestroy()
+    {
+        if (instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            instance = null;
+        }
+    }
+
+    void InitializeUI()
+    {
+        if (FindObjectOfType<UIManager>() == null)
+        {
+            #if UNITY_EDITOR
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UI_PREFAB_PATH);
+            if (prefab == null)
+            {
+                Debug.LogError($"UIManager prefab not found at {UI_PREFAB_PATH}");
+                return;
+            }
+            
+            GameObject uiObj = Instantiate(prefab);
+            uiManager = uiObj.GetComponent<UIManager>();
+            if (uiManager != null)
+            {
+                uiObj.name = "UIManager";
+                DontDestroyOnLoad(uiObj);
+            }
+            #endif
+        }
     }
 } 

@@ -162,9 +162,4 @@ public partial class PAUSE : MonoBehaviour
             }
         }
     }
-
-    public virtual void Update()
-    {
-    }
-
 }
