@@ -16,8 +16,8 @@ public class PlayerController : MonoBehaviour
     public static Vector3 camOffset;
     public Vector3 camShift;
     public float dirOffset;
-    public float jumpForce = 350f; 
-    public float gravityMultiplier = 2f; 
+    public float jumpForce = 200f;
+    public float gravityMultiplier = 1f; 
     public virtual void Awake()
     {
         // Try to get camera reference immediately
