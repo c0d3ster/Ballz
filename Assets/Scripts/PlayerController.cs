@@ -48,6 +48,24 @@ public class PlayerController : MonoBehaviour
         this.rb = this.GetComponent<Rigidbody>();
         this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
         this.count = 0;
+
+        // Force joystick to be visible
+        GameObject outer = GameObject.Find("TouchControllerOuter");
+        GameObject inner = GameObject.Find("TouchControllerInner");
+        if (outer && inner)
+        {
+            UnityEngine.UI.Image outerImage = outer.GetComponent<UnityEngine.UI.Image>();
+            UnityEngine.UI.Image innerImage = inner.GetComponent<UnityEngine.UI.Image>();
+            if (outerImage && innerImage)
+            {
+                outerImage.color = new Color(outerImage.color.r, outerImage.color.g, outerImage.color.b, 0.5f);
+                innerImage.color = new Color(innerImage.color.r, innerImage.color.g, innerImage.color.b, 0.5f);
+                outerImage.raycastTarget = true;
+                innerImage.raycastTarget = true;
+                Optionz.useJoystick = true;
+            }
+        }
+
         if (this.countText)
         {
             this.countText.text = "";
