@@ -16,7 +16,6 @@ public class MoveController : MonoBehaviour
     // Movement limits
     private float movementRadius;
     public static Vector2 moveDirection; // Make static so PlayerController can access it
-    private bool startedInCircle;
     private Image innerImage;
     private float normalAlpha = 0.5f; // 50% opacity
     private float activeAlpha = 0.7f; // 75% opacity
@@ -207,7 +206,6 @@ public class MoveController : MonoBehaviour
 
         isPressed = false;
         usingJoystickMode = false;
-        startedInCircle = false;
         moveDirection = Vector2.zero;
         if (innerCircle)
         {

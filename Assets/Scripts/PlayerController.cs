@@ -7,7 +7,6 @@ public class PlayerController : MonoBehaviour
 {
     public Rigidbody rb;
     public float speed;
-    private bool jump;
     private bool canJump;
     public int count;
     public Text countText;
@@ -35,6 +34,7 @@ public class PlayerController : MonoBehaviour
 
     public virtual void Start()
     {
+        Debug.Log("PlayerController Start called");
         // Get camera if not assigned
         if (!this.cam)
         {
@@ -47,17 +47,21 @@ public class PlayerController : MonoBehaviour
         }
         this.rb = this.GetComponent<Rigidbody>();
         this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
+        Debug.Log("Total Boxes: " + this.totalBoxes.Length);
         this.count = 0;
 
-        // Force joystick to be visible
+        // Debug joystick setup
         GameObject outer = GameObject.Find("TouchControllerOuter");
         GameObject inner = GameObject.Find("TouchControllerInner");
+        Debug.Log("Found joystick objects - Outer: " + (outer != null) + ", Inner: " + (inner != null));
+        
         if (outer && inner)
         {
             UnityEngine.UI.Image outerImage = outer.GetComponent<UnityEngine.UI.Image>();
             UnityEngine.UI.Image innerImage = inner.GetComponent<UnityEngine.UI.Image>();
             if (outerImage && innerImage)
             {
+                Debug.Log("Setting joystick visibility");
                 outerImage.color = new Color(outerImage.color.r, outerImage.color.g, outerImage.color.b, 0.5f);
                 innerImage.color = new Color(innerImage.color.r, innerImage.color.g, innerImage.color.b, 0.5f);
                 outerImage.raycastTarget = true;
@@ -75,7 +79,6 @@ public class PlayerController : MonoBehaviour
         {
             this.speed = (float) (this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
         }
-        this.jump = false;
         this.canJump = true;
         int levelNumber = SceneLoader.GetLevelNumber();
         Debug.Log("Level Number: " + levelNumber);
@@ -91,20 +94,23 @@ public class PlayerController : MonoBehaviour
 
     public virtual void Update()
     {
+        // Debug input state
+        Vector2 moveDir = MoveController.moveDirection;
+        if (moveDir != Vector2.zero)
+        {
+            Debug.Log("Movement detected: " + moveDir);
+        }
+
         // Handle jumping
         if (Input.GetKey("space") && IsGrounded() && this.canJump)
         {
+            Debug.Log("Jump triggered");
             this.rb.AddForce(Vector3.up * jumpForce);
-            this.jump = true;
         }
         // Apply extra gravity when falling
         if (!IsGrounded())
         {
             this.rb.AddForce(Physics.gravity * gravityMultiplier);
-        }
-        else
-        {
-            this.jump = false;
         }
     }
 

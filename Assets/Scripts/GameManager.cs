@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour
 
     void InitializeUI()
     {
-        if (FindObjectOfType<UIManager>() == null)
+        if (FindFirstObjectByType<UIManager>() == null)
         {
             #if UNITY_EDITOR
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UI_PREFAB_PATH);

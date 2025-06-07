@@ -156,5 +156,5 @@ MonoBehaviour:
   cam: {fileID: 0}
   camShift: {x: 0, y: 0, z: 0}
   dirOffset: 0
-  jumpForce: 100
-  gravityMultiplier: 0.5
+  jumpForce: 80
+  gravityMultiplier: 0.22
