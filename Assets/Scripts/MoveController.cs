@@ -21,15 +21,58 @@ public class MoveController : MonoBehaviour
     private float normalAlpha = 0.5f; // 50% opacity
     private float activeAlpha = 0.7f; // 75% opacity
     private bool isInitialized = false;
+    
+    // Accelerometer settings
+    private Vector3 accelerometerRestPosition;
+    private const float ACCELEROMETER_SENSITIVITY = 1.5f;
+    
+    // Double tap settings
+    private const float DOUBLE_TAP_TIME = 0.3f; // Time window for double tap
+    private float lastTapTime = 0;
+    private Vector2 lastTapPosition;
+    private const float TAP_MOVEMENT_THRESHOLD = 50f; // Max distance between taps to count as double tap
+    public static bool jumpRequested = false; // Static so PlayerController can access it
 
     void Awake()
     {
         InitializeController();
     }
 
+    void OnEnable()
+    {
+        // Subscribe to scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        // Unsubscribe from scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        // Recalibrate immediately when any scene is loaded
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            CalibrateAccelerometer();
+        }
+    }
+
+    private void CalibrateAccelerometer()
+    {
+        accelerometerRestPosition = Input.acceleration;
+        Debug.Log($"Accelerometer calibrated to rest position: {accelerometerRestPosition}");
+    }
+
     public virtual void Start()
     {
         InitializeController();
+        // Initial calibration
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            CalibrateAccelerometer();
+        }
     }
 
     private void InitializeController()
@@ -118,23 +161,61 @@ public class MoveController : MonoBehaviour
             HandleKeyboardInput();
         }
 
-        // Handle touch/mouse input (can override keyboard)
+        // Handle touch/mouse input first (highest priority)
+        bool usingTouchInput = false;
         if (SystemInfo.deviceType == DeviceType.Desktop)
         {
             if (Input.GetMouseButton(0))
             {
                 HandlePointerInput(Input.mousePosition);
+                usingTouchInput = true;
             }
-            else if (!Input.anyKey || !Optionz.useKeyboard)
+            else
             {
-                ResetMovement();
+                isPressed = false; // Reset pressed state when mouse button is released
             }
         }
-        else if (Input.touchCount > 0)
+        else if (Input.touchCount == 1) // Single touch for joystick/target
         {
             HandlePointerInput(Input.GetTouch(0).position);
+            usingTouchInput = true;
+        }
+        else if (Input.touchCount == 2) // Two finger touch for accelerometer recalibration
+        {
+            if (Optionz.useAccelerometer)
+            {
+                CalibrateAccelerometer();
+            }
         }
         else
+        {
+            isPressed = false; // Reset pressed state when no touches
+        }
+
+        // Handle accelerometer input if enabled on mobile and not using touch
+        if (!usingTouchInput && Optionz.useAccelerometer && SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            // Get accelerometer data relative to rest position
+            Vector3 currentTilt = Input.acceleration;
+            Vector3 relativeTilt = currentTilt - accelerometerRestPosition;
+            
+            // Convert acceleration to movement direction
+            // Apply sensitivity multiplier
+            moveDirection = new Vector2(relativeTilt.x, relativeTilt.y) * ACCELEROMETER_SENSITIVITY;
+            
+            // Normalize if magnitude is greater than 1
+            if (moveDirection.magnitude > 1)
+            {
+                moveDirection.Normalize();
+            }
+            
+            // Update joystick visual if enabled
+            if (Optionz.useJoystick && innerCircle)
+            {
+                innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
+            }
+        }
+        else if (!usingTouchInput && !Optionz.useAccelerometer) // Only reset if not using any input
         {
             ResetMovement();
         }
@@ -147,7 +228,7 @@ public class MoveController : MonoBehaviour
 
         if (!isInitialized || !outerCircle || !innerCircle) return;
 
-        // If we haven't started input yet, determine the mode
+        // First, determine if this is a joystick input
         if (!isPressed)
         {
             Vector2 localPoint;
@@ -157,7 +238,7 @@ public class MoveController : MonoBehaviour
             isPressed = true;
         }
 
-        // Handle input based on the initial mode
+        // Handle input based on the mode
         if (usingJoystickMode)
         {
             Vector2 localPoint;
@@ -180,6 +261,25 @@ public class MoveController : MonoBehaviour
         }
         else if (Optionz.useTarget)
         {
+            // Check for double tap
+            float timeSinceLastTap = Time.time - lastTapTime;
+            float tapDistance = Vector2.Distance(pointerPos, lastTapPosition);
+            
+            if (timeSinceLastTap <= DOUBLE_TAP_TIME && tapDistance < TAP_MOVEMENT_THRESHOLD)
+            {
+                // Double tap detected
+                jumpRequested = true;
+                lastTapTime = 0; // Reset to prevent triple-tap
+                Debug.Log("Double tap detected - Jump requested");
+            }
+            else
+            {
+                // Store this tap's info
+                lastTapTime = Time.time;
+                lastTapPosition = pointerPos;
+            }
+
+            // Handle target movement
             GameObject player = GameObject.FindWithTag("Player");
             if (!player) return;
 
@@ -237,6 +337,7 @@ public class MoveController : MonoBehaviour
         isPressed = false;
         usingJoystickMode = false;
         moveDirection = Vector2.zero;
+        jumpRequested = false; // Reset jump request
         if (innerCircle)
         {
             innerCircle.anchoredPosition = startPos;
