@@ -17,10 +17,10 @@ public partial class PAUSE : MonoBehaviour
     public virtual void OnGUI()
     {
         float leftButtonWidth = Screen.width * 0.25f;
-        float rightButtonWidth = Screen.width * 0.2f; // 25% of screen width
+        float rightButtonWidth = Screen.width * 0.3f; // Increased from 0.2f to 0.3f (30% of screen width)
         float buttonHeight = Screen.height * 0.15f; // 20% for control options
         float checkboxSize = buttonHeight * 0.4f;
-        float rightPosition = Screen.width * 0.75f; // Reduced checkbox size
+        float rightPosition = Screen.width * 0.65f; // Adjusted from 0.75f to 0.65f to accommodate wider rect
         float leftPosition = Screen.width * 0.375f; // Right side position
         int boxPadding = 3; // Left side position
         // Create styles // Reduced padding around boxes
@@ -33,6 +33,7 @@ public partial class PAUSE : MonoBehaviour
         headerStyle.fontSize = (int) (buttonHeight * 0.3f); // 50% bigger than normal text
         headerStyle.fontStyle = FontStyle.Bold;
         headerStyle.normal.textColor = Color.white;
+        headerStyle.hover = headerStyle.normal; // Prevent hover effect
         GUIStyle toggleStyle = new GUIStyle(GUI.skin.toggle);
         toggleStyle.fontSize = (int) (buttonHeight * 0.2f);
         toggleStyle.normal.textColor = Color.white;
@@ -68,26 +69,50 @@ public partial class PAUSE : MonoBehaviour
         }
         // Right side - Control Optionz header
         GUI.Label(new Rect(rightPosition, Screen.height * 0.2f, rightButtonWidth, buttonHeight * 0.5f), "Control Optionz", headerStyle);
+        
+        float checkboxVerticalOffset = checkboxSize * 0.12f; // Add a small offset to vertically center checkboxes
+        float boxHeight = checkboxSize * 0.85f; // Reduce box height to minimize bottom padding
+        
         // Draw background boxes for better visibility with less padding
-        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.3f) - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
-        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.4f) - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
-        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), checkboxSize + (boxPadding * 2)), "", boxStyle);
+        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.3f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
+        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.4f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
+        GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
+        
         Color originalColor = GUI.color;
-        GUI.color = new Color(0, 0.4f, 0, 1); // Darker green (40% green)
-        // Checkboxes for control options
-        bool targetEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.3f, rightButtonWidth, checkboxSize), Optionz.useTarget, "", toggleStyle);
-        bool joystickEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.4f, rightButtonWidth, checkboxSize), Optionz.useJoystick, "", toggleStyle);
+        GUI.color = new Color(0, 0.5f, 0, 1); // Darker green (50% green)
+        
+        // Checkboxes for control options - now with vertical offset
+        bool targetEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.3f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useTarget, "", toggleStyle);
+        bool joystickEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.4f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useJoystick, "", toggleStyle);
+        
         // Third option depends on platform
         bool accelEnabled = false;
         bool keyboardEnabled = false;
         if (SystemInfo.deviceType == DeviceType.Handheld)
         {
-            accelEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f, rightButtonWidth, checkboxSize), Optionz.useAccelerometer, "", toggleStyle);
+            accelEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useAccelerometer, "", toggleStyle);
         }
         else
         {
-            keyboardEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f, rightButtonWidth, checkboxSize), Optionz.useKeyboard, "", toggleStyle);
+            keyboardEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useKeyboard, "", toggleStyle);
         }
+        
+        GUI.color = originalColor;
+        
+        // Draw the labels - keep them at original vertical position for proper alignment
+        GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.3f, rightButtonWidth - 20, checkboxSize), "Target", labelStyle);
+        GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.4f, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
+        
+        // Third option label depends on platform
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.5f, rightButtonWidth - 20, checkboxSize), "Accelerometer", labelStyle);
+        }
+        else
+        {
+            GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.5f, rightButtonWidth - 20, checkboxSize), "Keyboard", labelStyle);
+        }
+        
         // If joystick state changed
         if (joystickEnabled != Optionz.useJoystick)
         {
@@ -122,19 +147,7 @@ public partial class PAUSE : MonoBehaviour
                 Debug.LogWarning("TouchController objects not found!");
             }
         }
-        GUI.color = originalColor;
-        // Draw the labels
-        GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.3f, rightButtonWidth - 20, checkboxSize), "Target", labelStyle);
-        GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.4f, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
-        // Third option label depends on platform
-        if (SystemInfo.deviceType == DeviceType.Handheld)
-        {
-            GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.5f, rightButtonWidth - 20, checkboxSize), "Accelerometer", labelStyle);
-        }
-        else
-        {
-            GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.5f, rightButtonWidth - 20, checkboxSize), "Keyboard", labelStyle);
-        }
+        
         // Update options after all toggles are drawn
         Optionz.useTarget = targetEnabled;
         Optionz.useJoystick = joystickEnabled;
@@ -162,9 +175,4 @@ public partial class PAUSE : MonoBehaviour
             }
         }
     }
-
-    public virtual void Update()
-    {
-    }
-
 }

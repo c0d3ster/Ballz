@@ -21,7 +21,7 @@ public partial class Win : MonoBehaviour
         if (GUI.Button(new Rect(Screen.width * 0.08f, verticalPosition, buttonWidth, buttonHeight), "Main Menu")) // 8% from left
         {
             Time.timeScale = 1;
-            if (SceneLoader.currentScene == "Ball Collector 1 (StudySoup)")
+            if (SceneLoader.currentScene == "Ball Collector 1")
             {
                 SceneLoader.ReloadScene();
             }

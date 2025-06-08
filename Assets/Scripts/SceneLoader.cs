@@ -33,8 +33,18 @@ public partial class SceneLoader : MonoBehaviour
 
     public virtual void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        SceneLoader.currentScene = scene.name;
-        Debug.Log("Scene loaded: " + SceneLoader.currentScene);
+        Debug.Log($"[Scene] OnSceneLoaded - Old current: '{currentScene}', New scene: '{scene.name}', Mode: {mode}");
+        
+        // Only update currentScene if this is not an additive load
+        if (mode != LoadSceneMode.Additive)
+        {
+            SceneLoader.currentScene = scene.name;
+            Debug.Log($"[Scene] Updated current scene to: '{currentScene}', Last: '{lastScene}'");
+        }
+        else
+        {
+            Debug.Log($"[Scene] Additive load - keeping current scene as: '{currentScene}'");
+        }
     }
 
     public virtual void OnDestroy()
@@ -45,22 +55,27 @@ public partial class SceneLoader : MonoBehaviour
 
     public static void ChangeScene(string sceneName)
     {
+        Debug.Log($"[Scene] ChangeScene called - Current: '{currentScene}', Last: '{lastScene}', Changing to: '{sceneName}'");
         SceneLoader.lastScene = SceneLoader.currentScene;
         SceneLoader.currentScene = sceneName;
-        Debug.Log("Changing scene to: " + SceneLoader.currentScene);
+        Debug.Log($"[Scene] After update - Current: '{currentScene}', Last: '{lastScene}'");
         SceneManager.LoadScene(SceneLoader.currentScene);
     }
 
     public static void ReloadScene()
     {
+        Debug.Log($"[Scene] ReloadScene called - Current: '{currentScene}', Last: '{lastScene}'");
+        // Don't update lastScene when reloading
         SceneManager.LoadScene(SceneLoader.currentScene);
     }
 
     public static void LoadLastScene()
     {
+        Debug.Log($"[Scene] LoadLastScene called - Current: '{currentScene}', Last: '{lastScene}'");
         string last = SceneLoader.lastScene;
         SceneLoader.lastScene = SceneLoader.currentScene;
         SceneLoader.currentScene = last;
+        Debug.Log($"[Scene] After swap - Current: '{currentScene}', Last: '{lastScene}'");
         SceneManager.LoadScene(SceneLoader.currentScene);
     }
 
@@ -104,11 +119,7 @@ public partial class SceneLoader : MonoBehaviour
 
     public static void NextLevel()
     {
-        if (SceneLoader.currentScene == "Ball Collector 1 (StudySoup)")
-        {
-            SceneLoader.ReloadScene();
-        }
-        else if (SceneLoader.currentScene == "Ball Balancer " + (SceneLoader.balanceCounter - 1))
+        if (SceneLoader.currentScene == "Ball Balancer " + (SceneLoader.balanceCounter - 1))
         {
             SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
         }
