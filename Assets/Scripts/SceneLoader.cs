@@ -72,10 +72,9 @@ public partial class SceneLoader : MonoBehaviour
     public static void LoadLastScene()
     {
         Debug.Log($"[Scene] LoadLastScene called - Current: '{currentScene}', Last: '{lastScene}'");
-        string last = SceneLoader.lastScene;
-        SceneLoader.lastScene = SceneLoader.currentScene;
-        SceneLoader.currentScene = last;
-        Debug.Log($"[Scene] After swap - Current: '{currentScene}', Last: '{lastScene}'");
+        // Don't swap scenes, just load lastScene while keeping it as lastScene
+        SceneLoader.currentScene = SceneLoader.lastScene;
+        Debug.Log($"[Scene] After loading last - Current: '{currentScene}', Last: '{lastScene}'");
         SceneManager.LoadScene(SceneLoader.currentScene);
     }
 

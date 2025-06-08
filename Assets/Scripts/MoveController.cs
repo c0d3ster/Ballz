@@ -1,5 +1,6 @@
 using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 [System.Serializable]
@@ -70,9 +71,24 @@ public class MoveController : MonoBehaviour
         // Store the starting position of the inner circle
         startPos = innerCircle.anchoredPosition;
         // Calculate the maximum distance the joystick can move
-        movementRadius = (outerCircle.sizeDelta.x - innerCircle.sizeDelta.x) / 2;
+        // Add half the inner circle's size to allow it to extend halfway out
+        movementRadius = (outerCircle.sizeDelta.x + innerCircle.sizeDelta.x) / 2;
         
         isInitialized = true;
+    }
+
+    private bool IsPointerOverUI()
+    {
+        // Check if pointer is over UI element
+        if (SystemInfo.deviceType == DeviceType.Desktop)
+        {
+            return EventSystem.current && EventSystem.current.IsPointerOverGameObject();
+        }
+        else if (Input.touchCount > 0)
+        {
+            return EventSystem.current && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+        return false;
     }
 
     public virtual void Update()
@@ -83,6 +99,7 @@ public class MoveController : MonoBehaviour
             if (!isInitialized) return;
         }
 
+        // If paused, ignore all input
         if (SceneLoader.isPaused)
         {
             ResetMovement();
@@ -125,6 +142,9 @@ public class MoveController : MonoBehaviour
 
     public virtual void HandlePointerInput(Vector2 pointerPos)
     {
+        // Ignore input if paused
+        if (SceneLoader.isPaused) return;
+
         if (!isInitialized || !outerCircle || !innerCircle) return;
 
         // If we haven't started input yet, determine the mode
@@ -143,12 +163,19 @@ public class MoveController : MonoBehaviour
             Vector2 localPoint;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint))
             {
-                moveDirection = localPoint / movementRadius;
-                if (moveDirection.magnitude > 1)
+                // Calculate direction and magnitude
+                moveDirection = localPoint / (movementRadius - innerCircle.sizeDelta.x / 2);
+                float magnitude = moveDirection.magnitude;
+                
+                // Normalize if beyond max range
+                if (magnitude > 1)
                 {
                     moveDirection = moveDirection.normalized;
                 }
-                innerCircle.anchoredPosition = moveDirection * movementRadius;
+                
+                // Calculate the actual position of the inner circle
+                Vector2 position = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
+                innerCircle.anchoredPosition = position;
             }
         }
         else if (Optionz.useTarget)
@@ -159,13 +186,13 @@ public class MoveController : MonoBehaviour
             Vector3 playerScreenPos = Camera.main.WorldToScreenPoint(player.transform.position);
             Vector2 directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
             float distance = directionToTarget.magnitude;
-            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5f));
+            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.33f));
             moveDirection = directionToTarget.normalized * normalizedDistance;
 
             // Update joystick visual if enabled
             if (Optionz.useJoystick)
             {
-                innerCircle.anchoredPosition = moveDirection * movementRadius;
+                innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
             }
         }
     }
@@ -181,6 +208,9 @@ public class MoveController : MonoBehaviour
 
     public virtual void HandleKeyboardInput()
     {
+        // Ignore input if paused
+        if (SceneLoader.isPaused) return;
+
         if (!isInitialized) return;
 
         float horizontal = Input.GetAxis("Horizontal");
@@ -195,7 +225,7 @@ public class MoveController : MonoBehaviour
             // Update joystick visual if enabled
             if (Optionz.useJoystick && innerCircle)
             {
-                innerCircle.anchoredPosition = moveDirection * movementRadius;
+                innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
             }
         }
     }

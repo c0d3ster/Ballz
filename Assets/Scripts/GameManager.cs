@@ -45,10 +45,21 @@ public class GameManager : MonoBehaviour
 
     private void UpdateUIVisibility()
     {
-        string currentScene = SceneManager.GetActiveScene().name;
-        bool shouldHideUI = currentScene == "Splash Screen" || 
-                          currentScene == "GAME OVER" || 
-                          currentScene == "WIN";
+        // Check both active scene and any additively loaded scenes
+        bool shouldHideUI = false;
+        
+        // Check all loaded scenes
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (scene.name == "Splash Screen" || 
+                scene.name == "GAME OVER" || 
+                scene.name == "WIN")
+            {
+                shouldHideUI = true;
+                break;
+            }
+        }
         
         UIManager.ShowTouchController(!shouldHideUI);
     }
