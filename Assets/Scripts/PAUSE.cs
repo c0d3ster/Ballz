@@ -16,20 +16,20 @@ public partial class PAUSE : MonoBehaviour
     //creates two buttons for main menu and try again
     public virtual void OnGUI()
     {
-        float leftButtonWidth = Screen.width * 0.25f;
+        float middleButtonWidth = Screen.width * 0.25f;
         float rightButtonWidth = Screen.width * 0.3f; // Increased from 0.2f to 0.3f (30% of screen width)
         float buttonHeight = Screen.height * 0.15f; // 20% for control options
         float checkboxSize = buttonHeight * 0.4f;
         float rightPosition = Screen.width * 0.65f; // Adjusted from 0.75f to 0.65f to accommodate wider rect
-        float leftPosition = Screen.width * 0.375f; // Right side position
+        float middlePosition = Screen.width * 0.375f; // Right side position
         int boxPadding = 3; // Left side position
 
         // Create styles // Reduced padding around boxes
         GUIStyle style = GUI.skin.button;
-        style.fontSize = (int)(buttonHeight * 0.25f);
+        style.fontSize = (int)(middleButtonWidth * 0.06f);
         
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = (int)(buttonHeight * 0.2f);
+        labelStyle.fontSize = (int)(rightButtonWidth * 0.05f);
         labelStyle.normal.textColor = Color.white;
         
         GUIStyle headerStyle = new GUIStyle(GUI.skin.label);
@@ -39,7 +39,7 @@ public partial class PAUSE : MonoBehaviour
         headerStyle.hover = headerStyle.normal; // Prevent hover effect
         
         GUIStyle toggleStyle = new GUIStyle(GUI.skin.toggle);
-        toggleStyle.fontSize = (int)(buttonHeight * 0.2f);
+        toggleStyle.fontSize = (int)(rightButtonWidth * 0.1f);
         toggleStyle.normal.textColor = Color.white;
         toggleStyle.onNormal.textColor = Color.white;
         toggleStyle.hover.textColor = Color.white;
@@ -50,24 +50,24 @@ public partial class PAUSE : MonoBehaviour
         GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
         boxStyle.normal.textColor = Color.white;
 
-        // Left side - existing menu buttons
-        if (GUI.Button(new Rect(leftPosition, Screen.height * 0.2f, leftButtonWidth, buttonHeight), "Resume Play", style))
+        // middle - existing menu buttons
+        if (GUI.Button(new Rect(middlePosition, Screen.height * 0.2f, middleButtonWidth, buttonHeight), "Resume Play", style))
         {
             Time.timeScale = 1;
             SceneLoader.isPaused = false;
             UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("PAUSE");
         }
-        if (GUI.Button(new Rect(leftPosition, Screen.height * 0.4f, leftButtonWidth, buttonHeight), "Restart Level", style))
+        if (GUI.Button(new Rect(middlePosition, Screen.height * 0.4f, middleButtonWidth, buttonHeight), "Restart Level", style))
         {
             Time.timeScale = 1;
             SceneLoader.isPaused = false;
             SceneLoader.ReloadScene();
         }
-        if (GUI.Button(new Rect(leftPosition, Screen.height * 0.6f, leftButtonWidth, buttonHeight), "Change Difficulty: " + Optionz.DisplayDifficulty(), style))
+        if (GUI.Button(new Rect(middlePosition, Screen.height * 0.6f, middleButtonWidth, buttonHeight), "Change Difficulty: " + Optionz.DisplayDifficulty(), style))
         {
             Optionz.ChangeDifficulty();
         }
-        if (GUI.Button(new Rect(leftPosition, Screen.height * 0.8f, leftButtonWidth, buttonHeight), "Main Menu", style))
+        if (GUI.Button(new Rect(middlePosition, Screen.height * 0.8f, middleButtonWidth, buttonHeight), "Main Menu", style))
         {
             Time.timeScale = 1;
             SceneLoader.isPaused = false;

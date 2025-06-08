@@ -91,7 +91,7 @@ public class PlayerController : MonoBehaviour
         //================= Starting Camera Position ==========//
         this.cam.transform.position = this.cam.transform.position + this.transform.position;
         this.camShift = this.cam.transform.position - this.transform.position;
-        PlayerController.camOffset = new Vector3(0, -1.75f, 5.75f);
+        PlayerController.camOffset = new Vector3(0, -1.75f, 5.25f);
     }
 
     public virtual void Update()

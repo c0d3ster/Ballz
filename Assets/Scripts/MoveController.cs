@@ -178,7 +178,7 @@ public class MoveController : MonoBehaviour
             Vector3 playerScreenPos = Camera.main.WorldToScreenPoint(player.transform.position);
             Vector2 directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
             float distance = directionToTarget.magnitude;
-            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.5f));
+            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.35f));
             moveDirection = directionToTarget.normalized * normalizedDistance;
 
             // Update joystick visual if enabled

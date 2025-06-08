@@ -19,7 +19,7 @@ public partial class Win : MonoBehaviour
 
         // Create button style with larger text
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = (int)(buttonHeight * 0.25f); // Text size is 25% of button height
+        buttonStyle.fontSize = (int)(buttonWidth * 0.06f);
 
         // Main Menu button - left position
         if (GUI.Button(new Rect(Screen.width * 0.08f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 8% from left
