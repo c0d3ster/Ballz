@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
-  speed: 40
+  speed: 35
   count: 0
   countText: {fileID: 0}
   cam: {fileID: 0}
@@ -158,3 +158,4 @@ MonoBehaviour:
   dirOffset: 0
   jumpForce: 80
   gravityMultiplier: 0.2
+  minSpeedMultiplier: 0.3

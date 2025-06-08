@@ -1,5 +1,6 @@
 using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 [System.Serializable]
@@ -75,6 +76,20 @@ public class MoveController : MonoBehaviour
         isInitialized = true;
     }
 
+    private bool IsPointerOverUI()
+    {
+        // Check if pointer is over UI element
+        if (SystemInfo.deviceType == DeviceType.Desktop)
+        {
+            return EventSystem.current && EventSystem.current.IsPointerOverGameObject();
+        }
+        else if (Input.touchCount > 0)
+        {
+            return EventSystem.current && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+        return false;
+    }
+
     public virtual void Update()
     {
         if (!isInitialized)
@@ -83,6 +98,7 @@ public class MoveController : MonoBehaviour
             if (!isInitialized) return;
         }
 
+        // If paused, ignore all input
         if (SceneLoader.isPaused)
         {
             ResetMovement();
@@ -125,6 +141,9 @@ public class MoveController : MonoBehaviour
 
     public virtual void HandlePointerInput(Vector2 pointerPos)
     {
+        // Ignore input if paused
+        if (SceneLoader.isPaused) return;
+
         if (!isInitialized || !outerCircle || !innerCircle) return;
 
         // If we haven't started input yet, determine the mode
@@ -181,6 +200,9 @@ public class MoveController : MonoBehaviour
 
     public virtual void HandleKeyboardInput()
     {
+        // Ignore input if paused
+        if (SceneLoader.isPaused) return;
+
         if (!isInitialized) return;
 
         float horizontal = Input.GetAxis("Horizontal");

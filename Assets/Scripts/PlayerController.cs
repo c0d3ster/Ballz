@@ -6,7 +6,7 @@ using System.Collections;
 public class PlayerController : MonoBehaviour
 {
     public Rigidbody rb;
-    public float speed;
+    public float speed = 10f;
     private bool canJump;
     public int count;
     public Text countText;
@@ -16,7 +16,9 @@ public class PlayerController : MonoBehaviour
     public Vector3 camShift;
     public float dirOffset;
     public float jumpForce = 100f;
-    public float gravityMultiplier = .5f; 
+    public float gravityMultiplier = .5f;
+    [Range(0.1f, 1f)]
+    public float minSpeedMultiplier = 0.3f; // Minimum speed multiplier for small movements
     public virtual void Awake()
     {
         // Try to get camera reference immediately
@@ -89,7 +91,7 @@ public class PlayerController : MonoBehaviour
         //================= Starting Camera Position ==========//
         this.cam.transform.position = this.cam.transform.position + this.transform.position;
         this.camShift = this.cam.transform.position - this.transform.position;
-        PlayerController.camOffset = new Vector3(0, -2.5f, 5);
+        PlayerController.camOffset = new Vector3(0, -1.75f, 5.75f);
     }
 
     public virtual void Update()
@@ -114,9 +116,15 @@ public class PlayerController : MonoBehaviour
     {
         // Get movement direction from MoveController
         Vector2 moveDirection = MoveController.moveDirection;
-        // Apply movement force
+        
+        // Calculate speed multiplier based on input magnitude
+        float inputMagnitude = moveDirection.magnitude;
+        float speedMultiplier = Mathf.Lerp(minSpeedMultiplier, 1f, inputMagnitude);
+        
+        // Apply movement force with smooth sensitivity
         Vector3 movement = new Vector3(moveDirection.x, 0f, moveDirection.y);
-        this.rb.AddForce(movement * this.speed);
+        this.rb.AddForce(movement * this.speed * speedMultiplier);
+
         // Check if player fell off the map
         if (this.rb.transform.position.y <= -10)
         {

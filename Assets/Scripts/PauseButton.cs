@@ -7,10 +7,12 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 {
     private Button button;
     private UIManager uiManager;
+    private Image buttonImage;
 
     void Start()
     {
         button = GetComponent<Button>();
+        buttonImage = GetComponent<Image>();
         button.onClick.AddListener(OnPauseClick);
         
         // Find UIManager instance
@@ -18,6 +20,16 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         if (uiManager == null)
         {
             Debug.LogWarning("UIManager instance not found!");
+        }
+    }
+
+    void Update()
+    {
+        // Hide button when game is paused
+        if (buttonImage != null)
+        {
+            buttonImage.enabled = !SceneLoader.isPaused;
+            button.enabled = !SceneLoader.isPaused;
         }
     }
 

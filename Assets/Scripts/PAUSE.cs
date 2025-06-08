@@ -23,27 +23,33 @@ public partial class PAUSE : MonoBehaviour
         float rightPosition = Screen.width * 0.65f; // Adjusted from 0.75f to 0.65f to accommodate wider rect
         float leftPosition = Screen.width * 0.375f; // Right side position
         int boxPadding = 3; // Left side position
+
         // Create styles // Reduced padding around boxes
         GUIStyle style = GUI.skin.button;
-        style.fontSize = (int) (buttonHeight * 0.2f);
+        style.fontSize = (int)(buttonHeight * 0.25f);
+        
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = (int) (buttonHeight * 0.2f);
+        labelStyle.fontSize = (int)(buttonHeight * 0.2f);
         labelStyle.normal.textColor = Color.white;
+        
         GUIStyle headerStyle = new GUIStyle(GUI.skin.label);
-        headerStyle.fontSize = (int) (buttonHeight * 0.3f); // 50% bigger than normal text
+        headerStyle.fontSize = (int)(buttonHeight * 0.3f); // 50% bigger than normal text
         headerStyle.fontStyle = FontStyle.Bold;
         headerStyle.normal.textColor = Color.white;
         headerStyle.hover = headerStyle.normal; // Prevent hover effect
+        
         GUIStyle toggleStyle = new GUIStyle(GUI.skin.toggle);
-        toggleStyle.fontSize = (int) (buttonHeight * 0.2f);
+        toggleStyle.fontSize = (int)(buttonHeight * 0.2f);
         toggleStyle.normal.textColor = Color.white;
         toggleStyle.onNormal.textColor = Color.white;
         toggleStyle.hover.textColor = Color.white;
         toggleStyle.onHover.textColor = Color.white;
         toggleStyle.active.textColor = Color.white;
         toggleStyle.onActive.textColor = Color.white;
+        
         GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
         boxStyle.normal.textColor = Color.white;
+
         // Left side - existing menu buttons
         if (GUI.Button(new Rect(leftPosition, Screen.height * 0.2f, leftButtonWidth, buttonHeight), "Resume Play", style))
         {
@@ -70,7 +76,7 @@ public partial class PAUSE : MonoBehaviour
         // Right side - Control Optionz header
         GUI.Label(new Rect(rightPosition, Screen.height * 0.2f, rightButtonWidth, buttonHeight * 0.5f), "Control Optionz", headerStyle);
         
-        float checkboxVerticalOffset = checkboxSize * 0.12f; // Add a small offset to vertically center checkboxes
+        float checkboxVerticalOffset = checkboxSize * 0.1f; // Add a small offset to vertically center checkboxes
         float boxHeight = checkboxSize * 0.85f; // Reduce box height to minimize bottom padding
         
         // Draw background boxes for better visibility with less padding
@@ -79,7 +85,7 @@ public partial class PAUSE : MonoBehaviour
         GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
         
         Color originalColor = GUI.color;
-        GUI.color = new Color(0, 0.5f, 0, 1); // Darker green (50% green)
+        GUI.color = new Color(0, 0.6f, 0, 1); // Darker green (60% green)
         
         // Checkboxes for control options - now with vertical offset
         bool targetEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.3f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useTarget, "", toggleStyle);
