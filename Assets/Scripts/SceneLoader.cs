@@ -81,7 +81,6 @@ public partial class SceneLoader : MonoBehaviour
     public static void GameOver()
     {
         SceneLoader.ChangeScene("GAME OVER");
-
     }
 
     public static void Win()
