@@ -157,4 +157,4 @@ MonoBehaviour:
   camShift: {x: 0, y: 0, z: 0}
   dirOffset: 0
   jumpForce: 80
-  gravityMultiplier: 0.22
+  gravityMultiplier: 0.2
