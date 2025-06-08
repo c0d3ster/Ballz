@@ -96,10 +96,6 @@ public class PlayerController : MonoBehaviour
     {
         // Debug input state
         Vector2 moveDir = MoveController.moveDirection;
-        if (moveDir != Vector2.zero)
-        {
-            Debug.Log("Movement detected: " + moveDir);
-        }
 
         // Handle jumping
         if (Input.GetKey("space") && IsGrounded() && this.canJump)

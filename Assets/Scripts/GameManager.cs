@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
 
     private UIManager uiManager;
     private SceneLoader sceneLoader;
-    private const string UI_PREFAB_PATH = "Assets/Prefabs/Managers/UIManager.prefab";
+    private const string UI_PREFAB_PATH = "Prefabs/Managers/UIManager";
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Bootstrap()
@@ -66,11 +66,11 @@ public class GameManager : MonoBehaviour
     {
         if (FindFirstObjectByType<UIManager>() == null)
         {
-            #if UNITY_EDITOR
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UI_PREFAB_PATH);
+            // Load from Resources folder
+            GameObject prefab = Resources.Load<GameObject>(UI_PREFAB_PATH);
             if (prefab == null)
             {
-                Debug.LogError($"UIManager prefab not found at {UI_PREFAB_PATH}");
+                Debug.LogError($"UIManager prefab not found at Resources/{UI_PREFAB_PATH}");
                 return;
             }
             
@@ -81,7 +81,10 @@ public class GameManager : MonoBehaviour
                 uiObj.name = "UIManager";
                 DontDestroyOnLoad(uiObj);
             }
-            #endif
+            else
+            {
+                Debug.LogError("UIManager component not found on instantiated prefab!");
+            }
         }
     }
 } 
