@@ -169,7 +169,12 @@ public class MoveController : MonoBehaviour
             }
             else
             {
-                isPressed = false; // Reset pressed state when mouse button is released
+                isPressed = false;
+                moveDirection = Vector2.zero;
+                if (innerCircle)
+                {
+                    innerCircle.anchoredPosition = Vector2.zero;
+                }
             }
         }
         else if (Input.touchCount == 1) // Single touch for joystick/target
@@ -186,35 +191,18 @@ public class MoveController : MonoBehaviour
         }
         else
         {
-            isPressed = false; // Reset pressed state when no touches
+            isPressed = false;
+            moveDirection = Vector2.zero;
+            if (innerCircle)
+            {
+                innerCircle.anchoredPosition = Vector2.zero;
+            }
         }
 
         // Handle accelerometer input if enabled on mobile and not using touch
-        if (!usingTouchInput && Optionz.useAccelerometer && SystemInfo.deviceType == DeviceType.Handheld)
+        if (Optionz.useAccelerometer && SystemInfo.deviceType == DeviceType.Handheld && !usingTouchInput)
         {
-            // Get accelerometer data relative to rest position
-            Vector3 currentTilt = Input.acceleration;
-            Vector3 relativeTilt = currentTilt - accelerometerRestPosition;
-            
-            // Convert acceleration to movement direction
-            // Apply sensitivity multiplier
-            moveDirection = new Vector2(relativeTilt.x, relativeTilt.y) * ACCELEROMETER_SENSITIVITY;
-            
-            // Normalize if magnitude is greater than 1
-            if (moveDirection.magnitude > 1)
-            {
-                moveDirection.Normalize();
-            }
-            
-            // Update joystick visual if enabled
-            if (Optionz.useJoystick && innerCircle)
-            {
-                innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
-            }
-        }
-        else if (!usingTouchInput && !Optionz.useAccelerometer) // Only reset if not using any input
-        {
-            ResetMovement();
+            HandleAccelerometerInput();
         }
     }
 
@@ -319,6 +307,29 @@ public class MoveController : MonoBehaviour
         if (innerCircle)
         {
             innerCircle.anchoredPosition = startPos;
+        }
+    }
+
+    public virtual void HandleAccelerometerInput()
+    {
+        // Get accelerometer data relative to rest position
+        Vector3 currentTilt = Input.acceleration;
+        Vector3 relativeTilt = currentTilt - accelerometerRestPosition;
+        
+        // Convert acceleration to movement direction
+        // Apply sensitivity multiplier
+        moveDirection = new Vector2(relativeTilt.x, relativeTilt.y) * ACCELEROMETER_SENSITIVITY;
+        
+        // Normalize if magnitude is greater than 1
+        if (moveDirection.magnitude > 1)
+        {
+            moveDirection.Normalize();
+        }
+        
+        // Update joystick visual if enabled
+        if (Optionz.useJoystick && innerCircle)
+        {
+            innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
         }
     }
 
