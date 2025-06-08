@@ -15,6 +15,22 @@ public partial class SceneLoader : MonoBehaviour
     public static int balanceCounter;
     public static int dodgeCounter;
     public static int jumpCounter;
+
+    // Scenes that don't have gameplay interaction
+    private static readonly string[] nonInteractiveScenes = new string[] 
+    {
+        "Splash Screen",
+        "GAME OVER",
+        "WIN"
+    };
+
+    public static bool IsCurrentSceneNonInteractive => IsNonInteractiveScene(currentScene);
+
+    public static bool IsNonInteractiveScene(string sceneName)
+    {
+        return System.Array.Exists(nonInteractiveScenes, scene => scene == sceneName);
+    }
+
     //keeps object between scenes to manage all scene movements
     public virtual void Awake()
     {

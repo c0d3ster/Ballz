@@ -2,6 +2,8 @@ using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 [System.Serializable]
 public class MoveController : MonoBehaviour
@@ -16,9 +18,6 @@ public class MoveController : MonoBehaviour
     private bool usingJoystickMode; // Track which control mode we started with
     // Movement limits
     private float movementRadius;
-    private float maxMovementRadius;
-    private float minMovementRadius;
-    private float movementRadiusPercent = 0.15f; // 15% of screen height
     public static Vector2 moveDirection; // Make static so PlayerController can access it
     private Image innerImage;
     private Image outerImage;
@@ -29,6 +28,8 @@ public class MoveController : MonoBehaviour
     // Accelerometer settings
     private Vector3 accelerometerRestPosition;
     private const float ACCELEROMETER_SENSITIVITY = 1.5f;
+
+    private bool isClickingButton = false; // Track if current click/touch started on a button
 
     void Awake()
     {
@@ -117,16 +118,42 @@ public class MoveController : MonoBehaviour
         isInitialized = true;
     }
 
-    private bool IsPointerOverUI()
+    private bool IsClickingButton()
     {
-        // Check if pointer is over UI element
+        if (EventSystem.current == null) return false;
+
         if (SystemInfo.deviceType == DeviceType.Desktop)
         {
-            return EventSystem.current && EventSystem.current.IsPointerOverGameObject();
+            if (Input.GetMouseButtonDown(0))
+            {
+                // Check if initial click was on a button
+                var pointerData = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
+                isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                isClickingButton = false;
+            }
+            return isClickingButton;
         }
         else if (Input.touchCount > 0)
         {
-            return EventSystem.current && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            var touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                // Check if initial touch was on a button
+                var pointerData = new PointerEventData(EventSystem.current) { position = touch.position };
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
+                isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+            }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                isClickingButton = false;
+            }
+            return isClickingButton;
         }
         return false;
     }
@@ -152,33 +179,35 @@ public class MoveController : MonoBehaviour
             UpdateJoystickOpacity();
         }
 
+        bool isUsingKeyboard = false;
         // Handle keyboard input first if enabled
-        if (Optionz.useKeyboard && (SystemInfo.deviceType == DeviceType.Desktop))
+        if (Optionz.useKeyboard)
         {
+            Debug.Log($"Keyboard enabled, handling input. moveDirection before: {moveDirection}");
             HandleKeyboardInput();
+            isUsingKeyboard = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
+            Debug.Log($"moveDirection after keyboard: {moveDirection}");
         }
 
-        // Handle touch/mouse input first (highest priority)
+        // Handle touch/mouse input if there is input (highest priority)
         bool usingTouchInput = false;
         if (SystemInfo.deviceType == DeviceType.Desktop)
         {
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(0) && !IsClickingButton())
             {
+                Debug.Log("Handling mouse input");
                 HandlePointerInput(Input.mousePosition);
                 usingTouchInput = true;
             }
-            else
+            else if (!isUsingKeyboard) // Only reset if not actively using keyboard
             {
-                isPressed = false;
-                moveDirection = Vector2.zero;
-                if (innerCircle)
-                {
-                    innerCircle.anchoredPosition = Vector2.zero;
-                }
+                Debug.Log("Resetting movement from mouse else");
+                ResetMovement();
             }
         }
-        else if (Input.touchCount == 1) // Single touch for joystick/target
+        else if (Input.touchCount == 1 && !IsClickingButton()) // Single touch for joystick/target
         {
+            Debug.Log("Handling touch input");
             HandlePointerInput(Input.GetTouch(0).position);
             usingTouchInput = true;
         }
@@ -189,14 +218,10 @@ public class MoveController : MonoBehaviour
                 CalibrateAccelerometer();
             }
         }
-        else
+        else if (!isUsingKeyboard) // Only reset if not actively using keyboard
         {
-            isPressed = false;
-            moveDirection = Vector2.zero;
-            if (innerCircle)
-            {
-                innerCircle.anchoredPosition = Vector2.zero;
-            }
+            Debug.Log("Resetting movement from final else");
+            ResetMovement();
         }
 
         // Handle accelerometer input if enabled on mobile and not using touch
@@ -282,6 +307,7 @@ public class MoveController : MonoBehaviour
 
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
+        Debug.Log($"Keyboard input - H: {horizontal}, V: {vertical}");
         if (horizontal != 0 || vertical != 0)
         {
             moveDirection = new Vector2(horizontal, vertical);
