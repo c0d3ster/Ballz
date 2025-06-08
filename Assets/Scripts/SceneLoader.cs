@@ -24,7 +24,21 @@ public partial class SceneLoader : MonoBehaviour
         "WIN"
     };
 
-    public static bool IsCurrentSceneNonInteractive => IsNonInteractiveScene(currentScene);
+    public static bool IsCurrentSceneNonInteractive
+    {
+        get
+        {
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (IsNonInteractiveScene(scene.name))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 
     public static bool IsNonInteractiveScene(string sceneName)
     {

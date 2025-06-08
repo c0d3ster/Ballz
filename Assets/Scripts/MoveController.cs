@@ -183,10 +183,8 @@ public class MoveController : MonoBehaviour
         // Handle keyboard input first if enabled
         if (Optionz.useKeyboard)
         {
-            Debug.Log($"Keyboard enabled, handling input. moveDirection before: {moveDirection}");
             HandleKeyboardInput();
             isUsingKeyboard = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
-            Debug.Log($"moveDirection after keyboard: {moveDirection}");
         }
 
         // Handle touch/mouse input if there is input (highest priority)
@@ -195,19 +193,12 @@ public class MoveController : MonoBehaviour
         {
             if (Input.GetMouseButton(0) && !IsClickingButton())
             {
-                Debug.Log("Handling mouse input");
                 HandlePointerInput(Input.mousePosition);
                 usingTouchInput = true;
-            }
-            else if (!isUsingKeyboard) // Only reset if not actively using keyboard
-            {
-                Debug.Log("Resetting movement from mouse else");
-                ResetMovement();
             }
         }
         else if (Input.touchCount == 1 && !IsClickingButton()) // Single touch for joystick/target
         {
-            Debug.Log("Handling touch input");
             HandlePointerInput(Input.GetTouch(0).position);
             usingTouchInput = true;
         }
@@ -218,16 +209,19 @@ public class MoveController : MonoBehaviour
                 CalibrateAccelerometer();
             }
         }
-        else if (!isUsingKeyboard) // Only reset if not actively using keyboard
-        {
-            Debug.Log("Resetting movement from final else");
-            ResetMovement();
-        }
 
         // Handle accelerometer input if enabled on mobile and not using touch
+        bool usingAccelerometer = false;
         if (Optionz.useAccelerometer && SystemInfo.deviceType == DeviceType.Handheld && !usingTouchInput)
         {
             HandleAccelerometerInput();
+            usingAccelerometer = true;
+        }
+
+        // Reset movement if no input method is being used
+        if (!isUsingKeyboard && !usingTouchInput && !usingAccelerometer)
+        {
+            ResetMovement();
         }
     }
 
@@ -307,7 +301,6 @@ public class MoveController : MonoBehaviour
 
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
-        Debug.Log($"Keyboard input - H: {horizontal}, V: {vertical}");
         if (horizontal != 0 || vertical != 0)
         {
             moveDirection = new Vector2(horizontal, vertical);
