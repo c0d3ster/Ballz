@@ -100,12 +100,12 @@ public class PlayerController : MonoBehaviour
         Vector2 moveDir = MoveController.moveDirection;
 
         // Handle jumping
-        if ((Input.GetKey("space") || MoveController.jumpRequested) && IsGrounded() && this.canJump)
+        if (Input.GetKey("space") && IsGrounded() && this.canJump)
         {
             Debug.Log("Jump triggered");
             this.rb.AddForce(Vector3.up * jumpForce);
-            MoveController.jumpRequested = false; // Reset the jump request
         }
+        
         // Apply extra gravity when falling
         if (!IsGrounded())
         {

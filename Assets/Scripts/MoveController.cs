@@ -16,8 +16,12 @@ public class MoveController : MonoBehaviour
     private bool usingJoystickMode; // Track which control mode we started with
     // Movement limits
     private float movementRadius;
+    private float maxMovementRadius;
+    private float minMovementRadius;
+    private float movementRadiusPercent = 0.15f; // 15% of screen height
     public static Vector2 moveDirection; // Make static so PlayerController can access it
     private Image innerImage;
+    private Image outerImage;
     private float normalAlpha = 0.5f; // 50% opacity
     private float activeAlpha = 0.7f; // 75% opacity
     private bool isInitialized = false;
@@ -25,13 +29,6 @@ public class MoveController : MonoBehaviour
     // Accelerometer settings
     private Vector3 accelerometerRestPosition;
     private const float ACCELEROMETER_SENSITIVITY = 1.5f;
-    
-    // Double tap settings
-    private const float DOUBLE_TAP_TIME = 0.3f; // Time window for double tap
-    private float lastTapTime = 0;
-    private Vector2 lastTapPosition;
-    private const float TAP_MOVEMENT_THRESHOLD = 50f; // Max distance between taps to count as double tap
-    public static bool jumpRequested = false; // Static so PlayerController can access it
 
     void Awake()
     {
@@ -261,24 +258,6 @@ public class MoveController : MonoBehaviour
         }
         else if (Optionz.useTarget)
         {
-            // Check for double tap
-            float timeSinceLastTap = Time.time - lastTapTime;
-            float tapDistance = Vector2.Distance(pointerPos, lastTapPosition);
-            
-            if (timeSinceLastTap <= DOUBLE_TAP_TIME && tapDistance < TAP_MOVEMENT_THRESHOLD)
-            {
-                // Double tap detected
-                jumpRequested = true;
-                lastTapTime = 0; // Reset to prevent triple-tap
-                Debug.Log("Double tap detected - Jump requested");
-            }
-            else
-            {
-                // Store this tap's info
-                lastTapTime = Time.time;
-                lastTapPosition = pointerPos;
-            }
-
             // Handle target movement
             GameObject player = GameObject.FindWithTag("Player");
             if (!player) return;
@@ -337,7 +316,6 @@ public class MoveController : MonoBehaviour
         isPressed = false;
         usingJoystickMode = false;
         moveDirection = Vector2.zero;
-        jumpRequested = false; // Reset jump request
         if (innerCircle)
         {
             innerCircle.anchoredPosition = startPos;
