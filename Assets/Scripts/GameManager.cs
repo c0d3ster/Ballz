@@ -29,46 +29,13 @@ public class GameManager : MonoBehaviour
             
             // Setup UI
             instance.InitializeUI();
-
-            // Subscribe to scene changes
-            SceneManager.sceneLoaded += instance.OnSceneLoaded;
-            
-            // Check initial scene
-            instance.UpdateUIVisibility();
         }
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        UpdateUIVisibility();
-    }
-
-    private void UpdateUIVisibility()
-    {
-        // Check both active scene and any additively loaded scenes
-        bool shouldHideUI = false;
-        
-        // Check all loaded scenes
-        for (int i = 0; i < SceneManager.sceneCount; i++)
-        {
-            Scene scene = SceneManager.GetSceneAt(i);
-            if (scene.name == "Splash Screen" || 
-                scene.name == "GAME OVER" || 
-                scene.name == "WIN")
-            {
-                shouldHideUI = true;
-                break;
-            }
-        }
-        
-        UIManager.ShowTouchController(!shouldHideUI);
     }
 
     void OnDestroy()
     {
         if (instance == this)
         {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
             instance = null;
         }
     }

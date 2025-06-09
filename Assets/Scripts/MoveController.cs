@@ -2,6 +2,8 @@ using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 [System.Serializable]
 public class MoveController : MonoBehaviour
@@ -18,18 +20,57 @@ public class MoveController : MonoBehaviour
     private float movementRadius;
     public static Vector2 moveDirection; // Make static so PlayerController can access it
     private Image innerImage;
+    private Image outerImage;
     private float normalAlpha = 0.5f; // 50% opacity
     private float activeAlpha = 0.7f; // 75% opacity
     private bool isInitialized = false;
+    
+    // Accelerometer settings
+    private Vector3 accelerometerRestPosition;
+    private const float ACCELEROMETER_SENSITIVITY = 1.5f;
+
+    private bool isClickingButton = false; // Track if current click/touch started on a button
 
     void Awake()
     {
         InitializeController();
     }
 
+    void OnEnable()
+    {
+        // Subscribe to scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        // Unsubscribe from scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        // Recalibrate immediately when any scene is loaded
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            CalibrateAccelerometer();
+        }
+    }
+
+    private void CalibrateAccelerometer()
+    {
+        accelerometerRestPosition = Input.acceleration;
+        Debug.Log($"Accelerometer calibrated to rest position: {accelerometerRestPosition}");
+    }
+
     public virtual void Start()
     {
         InitializeController();
+        // Initial calibration
+        if (SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            CalibrateAccelerometer();
+        }
     }
 
     private void InitializeController()
@@ -77,16 +118,42 @@ public class MoveController : MonoBehaviour
         isInitialized = true;
     }
 
-    private bool IsPointerOverUI()
+    private bool IsClickingButton()
     {
-        // Check if pointer is over UI element
+        if (EventSystem.current == null) return false;
+
         if (SystemInfo.deviceType == DeviceType.Desktop)
         {
-            return EventSystem.current && EventSystem.current.IsPointerOverGameObject();
+            if (Input.GetMouseButtonDown(0))
+            {
+                // Check if initial click was on a button
+                var pointerData = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
+                isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                isClickingButton = false;
+            }
+            return isClickingButton;
         }
         else if (Input.touchCount > 0)
         {
-            return EventSystem.current && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            var touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                // Check if initial touch was on a button
+                var pointerData = new PointerEventData(EventSystem.current) { position = touch.position };
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
+                isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+            }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                isClickingButton = false;
+            }
+            return isClickingButton;
         }
         return false;
     }
@@ -112,29 +179,47 @@ public class MoveController : MonoBehaviour
             UpdateJoystickOpacity();
         }
 
+        bool isUsingKeyboard = false;
         // Handle keyboard input first if enabled
-        if (Optionz.useKeyboard && (SystemInfo.deviceType == DeviceType.Desktop))
+        if (Optionz.useKeyboard)
         {
             HandleKeyboardInput();
+            isUsingKeyboard = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
         }
 
-        // Handle touch/mouse input (can override keyboard)
+        // Handle touch/mouse input if there is input (highest priority)
+        bool usingTouchInput = false;
         if (SystemInfo.deviceType == DeviceType.Desktop)
         {
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(0) && !IsClickingButton())
             {
                 HandlePointerInput(Input.mousePosition);
-            }
-            else if (!Input.anyKey || !Optionz.useKeyboard)
-            {
-                ResetMovement();
+                usingTouchInput = true;
             }
         }
-        else if (Input.touchCount > 0)
+        else if (Input.touchCount == 1 && !IsClickingButton()) // Single touch for joystick/target
         {
             HandlePointerInput(Input.GetTouch(0).position);
+            usingTouchInput = true;
         }
-        else
+        else if (Input.touchCount == 2) // Two finger touch for accelerometer recalibration
+        {
+            if (Optionz.useAccelerometer)
+            {
+                CalibrateAccelerometer();
+            }
+        }
+
+        // Handle accelerometer input if enabled on mobile and not using touch
+        bool usingAccelerometer = false;
+        if (Optionz.useAccelerometer && SystemInfo.deviceType == DeviceType.Handheld && !usingTouchInput)
+        {
+            HandleAccelerometerInput();
+            usingAccelerometer = true;
+        }
+
+        // Reset movement if no input method is being used
+        if (!isUsingKeyboard && !usingTouchInput && !usingAccelerometer)
         {
             ResetMovement();
         }
@@ -147,17 +232,26 @@ public class MoveController : MonoBehaviour
 
         if (!isInitialized || !outerCircle || !innerCircle) return;
 
-        // If we haven't started input yet, determine the mode
+        // First, determine if this is a joystick input
         if (!isPressed)
         {
             Vector2 localPoint;
-            usingJoystickMode = Optionz.useJoystick && 
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
-                RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
+            bool isOverJoystick = RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
+                                 RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
+            
+            // Only use joystick mode if both useJoystick is true AND we're touching the joystick area
+            usingJoystickMode = Optionz.useJoystick && isOverJoystick;
+            
+            // If we're not in joystick mode and target mode is enabled, we're in target mode
+            if (!usingJoystickMode && Optionz.useTarget)
+            {
+                usingJoystickMode = false; // Ensure we're not in joystick mode
+            }
+            
             isPressed = true;
         }
 
-        // Handle input based on the initial mode
+        // Handle input based on the mode
         if (usingJoystickMode)
         {
             Vector2 localPoint;
@@ -180,13 +274,14 @@ public class MoveController : MonoBehaviour
         }
         else if (Optionz.useTarget)
         {
+            // Handle target movement
             GameObject player = GameObject.FindWithTag("Player");
             if (!player) return;
 
             Vector3 playerScreenPos = Camera.main.WorldToScreenPoint(player.transform.position);
             Vector2 directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
             float distance = directionToTarget.magnitude;
-            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.33f));
+            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.3f));
             moveDirection = directionToTarget.normalized * normalizedDistance;
 
             // Update joystick visual if enabled
@@ -240,6 +335,29 @@ public class MoveController : MonoBehaviour
         if (innerCircle)
         {
             innerCircle.anchoredPosition = startPos;
+        }
+    }
+
+    public virtual void HandleAccelerometerInput()
+    {
+        // Get accelerometer data relative to rest position
+        Vector3 currentTilt = Input.acceleration;
+        Vector3 relativeTilt = currentTilt - accelerometerRestPosition;
+        
+        // Convert acceleration to movement direction
+        // Apply sensitivity multiplier
+        moveDirection = new Vector2(relativeTilt.x, relativeTilt.y) * ACCELEROMETER_SENSITIVITY;
+        
+        // Normalize if magnitude is greater than 1
+        if (moveDirection.magnitude > 1)
+        {
+            moveDirection.Normalize();
+        }
+        
+        // Update joystick visual if enabled
+        if (Optionz.useJoystick && innerCircle)
+        {
+            innerCircle.anchoredPosition = moveDirection * (movementRadius - innerCircle.sizeDelta.x / 2);
         }
     }
 

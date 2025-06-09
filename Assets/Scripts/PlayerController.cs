@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     public Rigidbody rb;
     public float speed = 10f;
-    private bool canJump;
+    public bool canJump;
     public int count;
     public Text countText;
     private GameObject[] totalBoxes;
@@ -15,10 +15,14 @@ public class PlayerController : MonoBehaviour
     public static Vector3 camOffset;
     public Vector3 camShift;
     public float dirOffset;
-    public float jumpForce = 100f;
+    protected float jumpForce = 500f;
     public float gravityMultiplier = .5f;
     [Range(0.1f, 1f)]
     public float minSpeedMultiplier = 0.3f; // Minimum speed multiplier for small movements
+
+    private bool isHoldingSpace = false;
+    private Coroutine spaceHoldCoroutine;
+
     public virtual void Awake()
     {
         // Try to get camera reference immediately
@@ -81,13 +85,10 @@ public class PlayerController : MonoBehaviour
         {
             this.speed = (float) (this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
         }
-        this.canJump = true;
-        int levelNumber = SceneLoader.GetLevelNumber();
-        Debug.Log("Level Number: " + levelNumber);
-        if (levelNumber <= 1)
-        {
-            this.canJump = false;
-        }
+       
+        this.canJump = SceneLoader.GetLevelNumber() > 1;
+        Debug.Log($"Jump enabled: {this.canJump} for level {SceneLoader.GetLevelNumber()}");
+        
         //================= Starting Camera Position ==========//
         this.cam.transform.position = this.cam.transform.position + this.transform.position;
         this.camShift = this.cam.transform.position - this.transform.position;
@@ -100,15 +101,41 @@ public class PlayerController : MonoBehaviour
         Vector2 moveDir = MoveController.moveDirection;
 
         // Handle jumping
-        if (Input.GetKey("space") && IsGrounded() && this.canJump)
+        if (Input.GetKeyDown("space") && IsGrounded() && this.canJump)
         {
-            Debug.Log("Jump triggered");
-            this.rb.AddForce(Vector3.up * jumpForce);
+            isHoldingSpace = true;
+            if (spaceHoldCoroutine != null)
+            {
+                StopCoroutine(spaceHoldCoroutine);
+            }
+            spaceHoldCoroutine = StartCoroutine(HoldSpaceJump());
         }
+        else if (Input.GetKeyUp("space"))
+        {
+            isHoldingSpace = false;
+            if (spaceHoldCoroutine != null)
+            {
+                StopCoroutine(spaceHoldCoroutine);
+                spaceHoldCoroutine = null;
+            }
+        }
+        
         // Apply extra gravity when falling
         if (!IsGrounded())
         {
             this.rb.AddForce(Physics.gravity * gravityMultiplier);
+        }
+    }
+
+    private IEnumerator HoldSpaceJump()
+    {
+        while (isHoldingSpace)
+        {
+            if (IsGrounded() && this.canJump)
+            {
+                Jump();
+            }
+            yield return new WaitForSeconds(0.1f); // Small delay between jumps
         }
     }
 
@@ -175,11 +202,19 @@ public class PlayerController : MonoBehaviour
             SceneLoader.Win();
         }
     }
-
-    private bool IsGrounded()
+   
+    public void Jump()
     {
-        // Reduced check distance for tighter ground detection
-        return Physics.Raycast(transform.position, Vector3.down, 0.6f);
+        if (IsGrounded() && canJump)
+        {
+            rb.AddForce(Vector3.up * jumpForce);
+        }
+    }
+
+
+    public bool IsGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, .6f);
     }
 
 }

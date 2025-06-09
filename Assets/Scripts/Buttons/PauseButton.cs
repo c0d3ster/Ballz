@@ -21,6 +21,11 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         {
             Debug.LogWarning("UIManager instance not found!");
         }
+
+        // Disable UI navigation
+        Navigation nav = new Navigation();
+        nav.mode = Navigation.Mode.None;
+        button.navigation = nav;
     }
 
     void Update()
