@@ -20,6 +20,8 @@ public class PlayerController : MonoBehaviour
     [Range(0.1f, 1f)]
     public float minSpeedMultiplier = 0.3f; // Minimum speed multiplier for small movements
 
+    private bool isJumping = false;
+
     public void Jump()
     {
         Debug.Log($"Jump called - canJump: {canJump}, isGrounded: {IsGrounded()}, scene: {SceneLoader.currentScene}");
@@ -108,9 +110,10 @@ public class PlayerController : MonoBehaviour
         Vector2 moveDir = MoveController.moveDirection;
 
         // Handle jumping
-        if (Input.GetKeyDown("space") && IsGrounded() && this.canJump)
+        if (Input.GetKeyDown("space") && IsGrounded() && this.canJump && !isJumping)
         {
             Jump();
+            isJumping = true;
         }
         
         // Apply extra gravity when falling
@@ -186,7 +189,12 @@ public class PlayerController : MonoBehaviour
 
     private bool IsGrounded()
     {
-        return Physics.Raycast(transform.position, Vector3.down, .6f);
+        bool grounded = Physics.Raycast(transform.position, Vector3.down, .6f);
+        if (grounded)
+        {
+            isJumping = false;
+        }
+        return grounded;
     }
 
 }

@@ -1,112 +1,97 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
+using System.Collections;
 
-[RequireComponent(typeof(Button))]
-public class JumpButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class JumpButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
-    private Button button;
     private Image buttonImage;
     private PlayerController playerController;
+    private bool isHolding = false;
+    private Coroutine holdCoroutine;
 
     void Start()
     {
-        Debug.Log("JumpButton Start called");
-        button = GetComponent<Button>();
         buttonImage = GetComponent<Image>();
-        button.onClick.AddListener(OnJumpClick);
-        Debug.Log("JumpButton onClick listener added");
-    }
-
-    void FindPlayerController()
-    {
-        if (playerController == null)
-        {
-            playerController = FindFirstObjectByType<PlayerController>();
-            if (playerController == null)
-            {
-                Debug.LogWarning("PlayerController not found in scene!");
-            }
-            else
-            {
-                Debug.Log("JumpButton found PlayerController");
-            }
-        }
-    }
-
-    void OnJumpClick()
-    {
-        Debug.Log("JumpButton OnJumpClick called");
         FindPlayerController();
-        if (playerController != null)
-        {
-            Debug.Log("JumpButton attempting to jump");
-            playerController.Jump();
-        }
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        Debug.Log("JumpButton pointer enter");
-        // Unity's button will handle the cursor change automatically
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        Debug.Log("JumpButton pointer exit");
-        // Unity's button will handle the cursor change automatically
     }
 
     void OnEnable()
     {
-        // Clear the reference when enabled (like when switching scenes)
-        playerController = null;
-        Debug.Log("JumpButton enabled, cleared PlayerController reference");
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        // Subscribe to scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     void OnDisable()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        // Unsubscribe from scene change events
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
     {
-        // Clear player reference and find new one
-        playerController = null;
         FindPlayerController();
     }
 
-    void OnDestroy()
+    private void FindPlayerController()
     {
-        if (button != null)
+        // Try to find player by tag first
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player)
         {
-            button.onClick.RemoveListener(OnJumpClick);
+            playerController = player.GetComponent<PlayerController>();
         }
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        else
+        {
+            // Fallback to finding any PlayerController
+            playerController = FindFirstObjectByType<PlayerController>();
+        }
     }
 
     void Update()
     {
-        // Skip update in non-interactive scenes since UIManager handles canvas visibility
-        if (SceneLoader.IsCurrentSceneNonInteractive)
-        {
-            return;
-        }
+        if (SceneLoader.IsCurrentSceneNonInteractive) return;
 
-        // Find player controller if needed
         if (playerController == null)
         {
             FindPlayerController();
+            return;
         }
 
-        // Update visibility based on canJump state
-        if (buttonImage != null)
+        // Set alpha based on canJump state
+        Color color = buttonImage.color;
+        color.a = playerController.canJump ? 0.8f : 0f;
+        buttonImage.color = color;
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (playerController != null && playerController.canJump)
         {
-            Color color = buttonImage.color;
-            color.a = (playerController != null && playerController.canJump) ? 0.8f : 0f;
-            buttonImage.color = color;
+            isHolding = true;
+            holdCoroutine = StartCoroutine(HoldJump());
+        }
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        isHolding = false;
+        if (holdCoroutine != null)
+        {
+            StopCoroutine(holdCoroutine);
+            holdCoroutine = null;
+        }
+    }
+
+    private IEnumerator HoldJump()
+    {
+        while (isHolding)
+        {
+            if (playerController != null && playerController.canJump)
+            {
+                playerController.Jump();
+            }
+            yield return new WaitForSeconds(0.1f); // Small delay between jumps
         }
     }
 } 
