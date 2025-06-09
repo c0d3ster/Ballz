@@ -236,9 +236,18 @@ public class MoveController : MonoBehaviour
         if (!isPressed)
         {
             Vector2 localPoint;
-            usingJoystickMode = Optionz.useJoystick && 
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
-                RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
+            bool isOverJoystick = RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
+                                 RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
+            
+            // Only use joystick mode if both useJoystick is true AND we're touching the joystick area
+            usingJoystickMode = Optionz.useJoystick && isOverJoystick;
+            
+            // If we're not in joystick mode and target mode is enabled, we're in target mode
+            if (!usingJoystickMode && Optionz.useTarget)
+            {
+                usingJoystickMode = false; // Ensure we're not in joystick mode
+            }
+            
             isPressed = true;
         }
 
@@ -272,7 +281,7 @@ public class MoveController : MonoBehaviour
             Vector3 playerScreenPos = Camera.main.WorldToScreenPoint(player.transform.position);
             Vector2 directionToTarget = new Vector2(pointerPos.x - playerScreenPos.x, pointerPos.y - playerScreenPos.y);
             float distance = directionToTarget.magnitude;
-            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.33f));
+            float normalizedDistance = Mathf.Clamp01(distance / (Screen.height * 0.3f));
             moveDirection = directionToTarget.normalized * normalizedDistance;
 
             // Update joystick visual if enabled
