@@ -7,7 +7,29 @@ public partial class Win : MonoBehaviour
     public virtual void Start()
     {
         Time.timeScale = 0;
-        SceneLoader.IncrementLevel();
+        
+        // Determine which game mode was completed based on the current scene
+        string gameMode = DetermineGameMode(SceneLoader.currentScene);
+        if (!string.IsNullOrEmpty(gameMode))
+        {
+            LevelProgressManager.Instance.CompleteLevel(gameMode);
+            LevelProgressManager.Instance.SaveProgress(); // Save progress after completing a level
+        }
+    }
+
+    private string DetermineGameMode(string sceneName)
+    {
+        if (sceneName.StartsWith("Ball Collector"))
+            return "collect";
+        else if (sceneName.StartsWith("Ball Balancer"))
+            return "balance";
+        else if (sceneName.StartsWith("Ball Dodger"))
+            return "dodge";
+        else if (sceneName.StartsWith("Ball Jumper"))
+            return "jump";
+        else if (sceneName.StartsWith("Ball Pusher"))
+            return "push";
+        return null;
     }
 
     public virtual void OnGUI()
@@ -44,5 +66,4 @@ public partial class Win : MonoBehaviour
     public virtual void Update()
     {
     }
-
 }

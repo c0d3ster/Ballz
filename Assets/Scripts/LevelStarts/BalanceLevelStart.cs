@@ -12,7 +12,7 @@ public partial class BalanceLevelStart : MonoBehaviour
             other.gameObject.SetActive(false);
             if (SceneLoader.currentScene == "Active Main Menu")
             {
-                SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
+                SceneLoader.ChangeScene("Ball Balancer " + LevelProgressManager.Instance.GetHighestLevelNumber("Balance"));
             }
             else
             {

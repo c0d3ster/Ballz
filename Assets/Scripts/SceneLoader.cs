@@ -9,12 +9,6 @@ public partial class SceneLoader : MonoBehaviour
     public static string lastScene;
     public static string currentScene;
     public static bool isPaused;
-    //counters for each level sets progress
-    public static int pushCounter;
-    public static int collectCounter;
-    public static int balanceCounter;
-    public static int dodgeCounter;
-    public static int jumpCounter;
 
     // Scenes that don't have gameplay interaction
     private static readonly string[] nonInteractiveScenes = new string[] 
@@ -102,10 +96,14 @@ public partial class SceneLoader : MonoBehaviour
     public static void LoadLastScene()
     {
         Debug.Log($"[Scene] LoadLastScene called - Current: '{currentScene}', Last: '{lastScene}'");
-        // Don't swap scenes, just load lastScene while keeping it as lastScene
-        SceneLoader.currentScene = SceneLoader.lastScene;
-        Debug.Log($"[Scene] After loading last - Current: '{currentScene}', Last: '{lastScene}'");
-        SceneManager.LoadScene(SceneLoader.currentScene);
+        if (lastScene != null)
+        {
+            SceneLoader.ChangeScene(lastScene);
+        }
+        else
+        {
+            SceneLoader.ChangeScene("Active Main Menu");
+        }
     }
 
     public static void GameOver()
@@ -128,7 +126,7 @@ public partial class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("LEVEL SELECT", LoadSceneMode.Additive);
     }
 
-    public static int GetLevelNumber()
+    public static int GetLevelNumberFromCurrentScene()
     {
         // Try to find a number at the end of the string
         if (!string.IsNullOrEmpty(SceneLoader.currentScene))
@@ -146,71 +144,40 @@ public partial class SceneLoader : MonoBehaviour
         return 0; // Default return if no number found
     }
 
+    public static string DetermineGameMode(string sceneName)
+    {
+        if (sceneName.StartsWith("Ball Collector"))
+            return "Collect";
+        else if (sceneName.StartsWith("Ball Balancer"))
+            return "Balance";
+        else if (sceneName.StartsWith("Ball Dodger"))
+            return "Dodge";
+        else if (sceneName.StartsWith("Ball Jumper"))
+            return "Jump";
+        else if (sceneName.StartsWith("Ball Pusher"))
+            return "Push";
+        return null;
+    }
+
     public static void NextLevel()
     {
-        if (SceneLoader.currentScene == "Ball Balancer " + (SceneLoader.balanceCounter - 1))
+        string currentScene = SceneLoader.currentScene;
+        string gameMode = DetermineGameMode(currentScene);
+        string suffix = "er";
+
+        // If we found a valid game mode, load the next level
+        if (!string.IsNullOrEmpty(gameMode))
         {
-            SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Collector " + (SceneLoader.collectCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Dodger " + (SceneLoader.dodgeCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Dodger " + SceneLoader.dodgeCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Jumper " + (SceneLoader.jumpCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Jumper " + SceneLoader.jumpCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Pusher " + (SceneLoader.pushCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Pusher " + SceneLoader.pushCounter);
+            if (gameMode == "Collect")
+            {
+                suffix = "or";
+            }
+            SceneLoader.ChangeScene($"Ball {gameMode}{suffix} {GetLevelNumberFromCurrentScene() + 1}");
         }
         else
         {
+            // If we're not on a valid level, go to main menu
             SceneLoader.ChangeScene("Active Main Menu");
         }
     }
-
-    // increments level only if it is the current highest level
-    public static void IncrementLevel()
-    {
-        switch (SceneLoader.currentScene)
-        {
-            default:
-                if (SceneLoader.currentScene == ("Ball Balancer " + SceneLoader.balanceCounter))
-                {
-                    SceneLoader.balanceCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Collector " + SceneLoader.collectCounter))
-                {
-                    SceneLoader.collectCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Dodger " + SceneLoader.dodgeCounter))
-                {
-                    SceneLoader.dodgeCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Jumper " + SceneLoader.jumpCounter))
-                {
-                    SceneLoader.jumpCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Pusher " + SceneLoader.pushCounter))
-                {
-                    SceneLoader.pushCounter++;
-                }
-                break;
-        }
-    }
-
-    static SceneLoader()
-    {
-        SceneLoader.pushCounter = 1;
-        SceneLoader.collectCounter = 1;
-        SceneLoader.balanceCounter = 1;
-        SceneLoader.dodgeCounter = 1;
-        SceneLoader.jumpCounter = 1;
-    }
-
 }

@@ -9,7 +9,7 @@ public partial class CollectLevelStart : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             other.gameObject.SetActive(false);
-            SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
+            SceneLoader.ChangeScene("Ball Collector " + LevelProgressManager.Instance.GetHighestLevelNumber("Collect"));
         }
     }
 
