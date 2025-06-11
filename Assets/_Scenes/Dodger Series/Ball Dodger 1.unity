@@ -2038,6 +2038,10 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 13656574, guid: 0449f07b855da744886069f17d3602da, type: 3}
+      propertyPath: m_Center.y
+      value: -0.2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
