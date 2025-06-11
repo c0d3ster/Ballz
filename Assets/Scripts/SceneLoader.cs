@@ -159,7 +159,7 @@ public partial class SceneLoader : MonoBehaviour
         return null;
     }
 
-    private string GetGameModeSuffix(string gameMode)
+    private static string GetGameModeSuffix(string gameMode)
     {
         switch (gameMode)
         {
@@ -173,7 +173,7 @@ public partial class SceneLoader : MonoBehaviour
         }
     }
 
-    private bool SceneExists(string sceneName)
+    private static bool SceneExists(string sceneName)
     {
         return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/Scenes/{sceneName}.unity") != -1;
     }
