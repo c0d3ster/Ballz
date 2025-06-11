@@ -5,62 +5,62 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Button))]
 public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private Button button;
-    private UIManager uiManager;
-    private Image buttonImage;
+  private Button button;
+  private UIManager uiManager;
+  private Image buttonImage;
 
-    void Start()
+  void Start()
+  {
+    button = GetComponent<Button>();
+    buttonImage = GetComponent<Image>();
+    button.onClick.AddListener(OnPauseClick);
+
+    // Find UIManager instance
+    uiManager = UIManager.Instance;
+    if (uiManager == null)
     {
-        button = GetComponent<Button>();
-        buttonImage = GetComponent<Image>();
-        button.onClick.AddListener(OnPauseClick);
-        
-        // Find UIManager instance
-        uiManager = UIManager.Instance;
-        if (uiManager == null)
-        {
-            Debug.LogWarning("UIManager instance not found!");
-        }
-
-        // Disable UI navigation
-        Navigation nav = new Navigation();
-        nav.mode = Navigation.Mode.None;
-        button.navigation = nav;
+      Debug.LogWarning("UIManager instance not found!");
     }
 
-    void Update()
-    {
-        // Hide button when game is paused
-        if (buttonImage != null)
-        {
-            buttonImage.enabled = !SceneLoader.isPaused;
-            button.enabled = !SceneLoader.isPaused;
-        }
-    }
+    // Disable UI navigation
+    Navigation nav = new Navigation();
+    nav.mode = Navigation.Mode.None;
+    button.navigation = nav;
+  }
 
-    void OnPauseClick()
+  void Update()
+  {
+    // Hide button when game is paused
+    if (buttonImage != null)
     {
-        if (uiManager != null)
-        {
-            uiManager.TogglePause();
-        }
+      buttonImage.enabled = !SceneLoader.isPaused;
+      button.enabled = !SceneLoader.isPaused;
     }
+  }
 
-    public void OnPointerEnter(PointerEventData eventData)
+  void OnPauseClick()
+  {
+    if (uiManager != null)
     {
-        // Unity's button will handle the cursor change automatically
+      uiManager.TogglePause();
     }
+  }
 
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        // Unity's button will handle the cursor change automatically
-    }
+  public void OnPointerEnter(PointerEventData eventData)
+  {
+    // Unity's button will handle the cursor change automatically
+  }
 
-    void OnDestroy()
+  public void OnPointerExit(PointerEventData eventData)
+  {
+    // Unity's button will handle the cursor change automatically
+  }
+
+  void OnDestroy()
+  {
+    if (button != null)
     {
-        if (button != null)
-        {
-            button.onClick.RemoveListener(OnPauseClick);
-        }
+      button.onClick.RemoveListener(OnPauseClick);
     }
-} 
+  }
+}
