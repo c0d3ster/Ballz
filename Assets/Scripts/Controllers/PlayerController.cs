@@ -1,6 +1,7 @@
 using UnityEngine.UI;
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public class PlayerController : MonoBehaviour
@@ -40,7 +41,6 @@ public class PlayerController : MonoBehaviour
 
     public virtual void Start()
     {
-        Debug.Log("PlayerController Start called");
         // Get camera if not assigned
         if (!this.cam)
         {
@@ -53,13 +53,11 @@ public class PlayerController : MonoBehaviour
         }
         this.rb = this.GetComponent<Rigidbody>();
         this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
-        Debug.Log("Total Boxes: " + this.totalBoxes.Length);
         this.count = 0;
 
         // Debug joystick setup
         GameObject outer = GameObject.Find("TouchControllerOuter");
         GameObject inner = GameObject.Find("TouchControllerInner");
-        Debug.Log("Found joystick objects - Outer: " + (outer != null) + ", Inner: " + (inner != null));
         
         if (outer && inner)
         {
@@ -67,7 +65,6 @@ public class PlayerController : MonoBehaviour
             UnityEngine.UI.Image innerImage = inner.GetComponent<UnityEngine.UI.Image>();
             if (outerImage && innerImage)
             {
-                Debug.Log("Setting joystick visibility");
                 outerImage.color = new Color(outerImage.color.r, outerImage.color.g, outerImage.color.b, 0.5f);
                 innerImage.color = new Color(innerImage.color.r, innerImage.color.g, innerImage.color.b, 0.5f);
                 outerImage.raycastTarget = true;
@@ -86,8 +83,8 @@ public class PlayerController : MonoBehaviour
             this.speed = (float) (this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
         }
        
-        this.canJump = SceneLoader.GetLevelNumber() > 1;
-        Debug.Log($"Jump enabled: {this.canJump} for level {SceneLoader.GetLevelNumber()}");
+        // Check if jump is unlocked (Push level > 1)
+        this.canJump = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push) > 1;
         
         //================= Starting Camera Position ==========//
         this.cam.transform.position = this.cam.transform.position + this.transform.position;

@@ -1,15 +1,17 @@
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class CollectLevelStart : MonoBehaviour
 {
-    public virtual void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        Debug.Log("[CollectLevelStart] OnTriggerEnter called highest level: " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Collect));
+        if (other.CompareTag("Player"))
         {
             other.gameObject.SetActive(false);
-            SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
+            SceneLoader.ChangeScene("Ball Collector " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Collect));
         }
     }
 

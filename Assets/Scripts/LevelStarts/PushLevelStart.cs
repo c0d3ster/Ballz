@@ -1,16 +1,15 @@
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class PushLevelStart : MonoBehaviour
 {
-    public virtual void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Pick Up"))
+        if (other.CompareTag("Pick Up"))
         {
-            other.gameObject.SetActive(false);
-            SceneLoader.ChangeScene("Ball Pusher " + SceneLoader.pushCounter);
+            SceneLoader.ChangeScene("Ball Pusher " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push));
         }
     }
-
 }

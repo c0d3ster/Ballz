@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class Win : MonoBehaviour
@@ -7,7 +8,14 @@ public partial class Win : MonoBehaviour
     public virtual void Start()
     {
         Time.timeScale = 0;
-        SceneLoader.IncrementLevel();
+        
+        // Determine which game mode was completed based on the current scene
+        GameMode? gameMode = SceneLoader.DetermineGameMode(SceneLoader.currentScene);
+        if (gameMode.HasValue)
+        {
+            LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
+            LevelProgressManager.Instance.SaveProgress(); // Save progress after completing a level
+        }
     }
 
     public virtual void OnGUI()
@@ -44,5 +52,4 @@ public partial class Win : MonoBehaviour
     public virtual void Update()
     {
     }
-
 }

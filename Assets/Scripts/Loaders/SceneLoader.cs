@@ -1,6 +1,7 @@
 using UnityEngine.SceneManagement;
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class SceneLoader : MonoBehaviour
@@ -9,12 +10,6 @@ public partial class SceneLoader : MonoBehaviour
     public static string lastScene;
     public static string currentScene;
     public static bool isPaused;
-    //counters for each level sets progress
-    public static int pushCounter;
-    public static int collectCounter;
-    public static int balanceCounter;
-    public static int dodgeCounter;
-    public static int jumpCounter;
 
     // Scenes that don't have gameplay interaction
     private static readonly string[] nonInteractiveScenes = new string[] 
@@ -50,7 +45,6 @@ public partial class SceneLoader : MonoBehaviour
     {
         Time.timeScale = 1;
         SceneLoader.isPaused = false;
-        UnityEngine.Object.DontDestroyOnLoad(this.transform.gameObject);
         
         // Set initial scene immediately in Awake
         SceneLoader.currentScene = SceneManager.GetActiveScene().name;
@@ -102,10 +96,14 @@ public partial class SceneLoader : MonoBehaviour
     public static void LoadLastScene()
     {
         Debug.Log($"[Scene] LoadLastScene called - Current: '{currentScene}', Last: '{lastScene}'");
-        // Don't swap scenes, just load lastScene while keeping it as lastScene
-        SceneLoader.currentScene = SceneLoader.lastScene;
-        Debug.Log($"[Scene] After loading last - Current: '{currentScene}', Last: '{lastScene}'");
-        SceneManager.LoadScene(SceneLoader.currentScene);
+        if (lastScene != null)
+        {
+            SceneLoader.ChangeScene(lastScene);
+        }
+        else
+        {
+            SceneLoader.ChangeScene("Active Main Menu");
+        }
     }
 
     public static void GameOver()
@@ -115,6 +113,15 @@ public partial class SceneLoader : MonoBehaviour
 
     public static void Win()
     {
+        // Complete the current level and save progress
+        GameMode? gameMode = DetermineGameMode(currentScene);
+        Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}");
+        if (gameMode.HasValue)
+        {
+            LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
+        }
+        
+        // Load the win scene
         SceneManager.LoadScene("WIN", LoadSceneMode.Additive);
     }
 
@@ -128,7 +135,7 @@ public partial class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("LEVEL SELECT", LoadSceneMode.Additive);
     }
 
-    public static int GetLevelNumber()
+    public static int GetLevelNumberFromCurrentScene()
     {
         // Try to find a number at the end of the string
         if (!string.IsNullOrEmpty(SceneLoader.currentScene))
@@ -146,71 +153,63 @@ public partial class SceneLoader : MonoBehaviour
         return 0; // Default return if no number found
     }
 
+    private static string GetGameModeSuffix(GameMode gameMode)
+    {
+        var field = gameMode.GetType().GetField(gameMode.ToString());
+        var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
+        return attribute.Suffix;
+    }
+
+    public static GameMode? DetermineGameMode(string sceneName)
+    {
+        if (sceneName.StartsWith("Ball "))
+        {
+            string modePart = sceneName.Substring(5).Split(' ')[0];
+            
+            // Try each game mode
+            foreach (GameMode mode in System.Enum.GetValues(typeof(GameMode)))
+            {
+                var field = mode.GetType().GetField(mode.ToString());
+                var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
+                
+                // Check if the mode part matches the game mode with its suffix
+                if (modePart == mode.ToString() + attribute.Suffix)
+                {
+                    return mode;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static bool SceneExists(string sceneName)
+    {
+        return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/Scenes/{sceneName}.unity") != -1;
+    }
+
     public static void NextLevel()
     {
-        if (SceneLoader.currentScene == "Ball Balancer " + (SceneLoader.balanceCounter - 1))
+        string currentScene = SceneLoader.currentScene;
+        GameMode? gameMode = DetermineGameMode(currentScene);
+
+        // If we found a valid game mode, load the next level
+        if (gameMode.HasValue)
         {
-            SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Collector " + (SceneLoader.collectCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Collector " + SceneLoader.collectCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Dodger " + (SceneLoader.dodgeCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Dodger " + SceneLoader.dodgeCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Jumper " + (SceneLoader.jumpCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Jumper " + SceneLoader.jumpCounter);
-        }
-        else if (SceneLoader.currentScene == "Ball Pusher " + (SceneLoader.pushCounter - 1))
-        {
-            SceneLoader.ChangeScene("Ball Pusher " + SceneLoader.pushCounter);
+            string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode.Value)} {GetLevelNumberFromCurrentScene() + 1}";
+            if (SceneExists(nextScene))
+            {
+                SceneLoader.ChangeScene(nextScene);
+            }
+            else
+            {
+                // If next level doesn't exist, go to main menu
+                SceneLoader.ChangeScene("Active Main Menu");
+            }
         }
         else
         {
+            // If we're not on a valid level, go to main menu
             SceneLoader.ChangeScene("Active Main Menu");
         }
     }
-
-    // increments level only if it is the current highest level
-    public static void IncrementLevel()
-    {
-        switch (SceneLoader.currentScene)
-        {
-            default:
-                if (SceneLoader.currentScene == ("Ball Balancer " + SceneLoader.balanceCounter))
-                {
-                    SceneLoader.balanceCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Collector " + SceneLoader.collectCounter))
-                {
-                    SceneLoader.collectCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Dodger " + SceneLoader.dodgeCounter))
-                {
-                    SceneLoader.dodgeCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Jumper " + SceneLoader.jumpCounter))
-                {
-                    SceneLoader.jumpCounter++;
-                }
-                if (SceneLoader.currentScene == ("Ball Pusher " + SceneLoader.pushCounter))
-                {
-                    SceneLoader.pushCounter++;
-                }
-                break;
-        }
-    }
-
-    static SceneLoader()
-    {
-        SceneLoader.pushCounter = 1;
-        SceneLoader.collectCounter = 1;
-        SceneLoader.balanceCounter = 1;
-        SceneLoader.dodgeCounter = 1;
-        SceneLoader.jumpCounter = 1;
-    }
-
 }
