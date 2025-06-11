@@ -1,6 +1,7 @@
 using UnityEngine.UI;
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public class PlayerController : MonoBehaviour
@@ -83,7 +84,7 @@ public class PlayerController : MonoBehaviour
         }
        
         // Check if jump is unlocked (Push level > 1)
-        this.canJump = LevelProgressManager.Instance.GetHighestLevelNumber("Push") > 1;
+        this.canJump = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push) > 1;
         
         //================= Starting Camera Position ==========//
         this.cam.transform.position = this.cam.transform.position + this.transform.position;

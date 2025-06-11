@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using Enums;
 
 [System.Serializable]
 public class LevelProgressManager : MonoBehaviour
@@ -38,6 +39,7 @@ public class LevelProgressManager : MonoBehaviour
             Destroy(instance.gameObject);
         }
         instance = this;
+        DontDestroyOnLoad(gameObject);
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -69,26 +71,41 @@ public class LevelProgressManager : MonoBehaviour
         {
             ResetProgress();
         }
+        
+        // Press C to complete current level (only in editor)
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            GameMode? gameMode = SceneLoader.DetermineGameMode(SceneLoader.currentScene);
+            if (gameMode.HasValue)
+            {
+                Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.currentScene}");
+                Debug.Log($"[LevelProgress] Determined game mode: {gameMode}");
+                Debug.Log($"[LevelProgress] Completing level for game mode: {gameMode.Value}");
+                SceneLoader.Win();
+            }
+        }
         #endif
     }
 
     public void UpdateGameModeVisibility()
     {
+        Debug.Log($"[LevelProgress] Levels - Collect: {collectLevel}, Balance: {balanceLevel}, Dodge: {dodgeLevel}, Jump: {jumpLevel}, Push: {pushLevel}");
+        
         // Balance is unlocked after completing Collect level 1
         bool balanceUnlocked = collectLevel > 1;
         SetGameModeState(balanceLockedItems, balanceLock, balanceUnlocked);
 
-        // Dodge is unlocked after completing Balance level 1
-        bool dodgeUnlocked = balanceLevel > 1;
-        SetGameModeState(dodgeLockedItems, dodgeLock, dodgeUnlocked);
+        // Push is unlocked after completing Balance level 1
+        bool pushUnlocked = balanceLevel > 1;
+        SetGameModeState(pushLockedItems, pushLock, pushUnlocked);
 
-        // Jump is unlocked after completing Dodge level 1
-        bool jumpUnlocked = dodgeLevel > 1;
+        // Jump is unlocked after completing Push level 1
+        bool jumpUnlocked = pushLevel > 1;
         SetGameModeState(jumpLockedItems, jumpLock, jumpUnlocked);
 
-        // Push is unlocked after completing Jump level 1
-        bool pushUnlocked = jumpLevel > 1;
-        SetGameModeState(pushLockedItems, pushLock, pushUnlocked);
+        // Dodge is unlocked after completing Jump level 1
+        bool dodgeUnlocked = jumpLevel > 1;
+        SetGameModeState(dodgeLockedItems, dodgeLock, dodgeUnlocked);
     }
 
     private void SetGameModeState(GameObject[] lockedItems, GameObject lockObject, bool isUnlocked)
@@ -113,39 +130,39 @@ public class LevelProgressManager : MonoBehaviour
     }
 
     // Level progression methods
-    public void CompleteLevel(string gameMode)
+    public void CompleteLevel(GameMode gameMode)
     {
-        switch (gameMode.ToLower())
+        switch (gameMode)
         {
-            case "collect":
+            case GameMode.Collect:
                 if (SceneLoader.currentScene == "Ball Collector " + collectLevel)
                 {
                     collectLevel++;
                     UpdateGameModeVisibility();
                 }
                 break;
-            case "balance":
+            case GameMode.Balance:
                 if (SceneLoader.currentScene == "Ball Balancer " + balanceLevel)
                 {
                     balanceLevel++;
                     UpdateGameModeVisibility();
                 }
                 break;
-            case "dodge":
+            case GameMode.Dodge:
                 if (SceneLoader.currentScene == "Ball Dodger " + dodgeLevel)
                 {
                     dodgeLevel++;
                     UpdateGameModeVisibility();
                 }
                 break;
-            case "jump":
+            case GameMode.Jump:
                 if (SceneLoader.currentScene == "Ball Jumper " + jumpLevel)
                 {
                     jumpLevel++;
                     UpdateGameModeVisibility();
                 }
                 break;
-            case "push":
+            case GameMode.Push:
                 if (SceneLoader.currentScene == "Ball Pusher " + pushLevel)
                 {
                     pushLevel++;
@@ -206,19 +223,19 @@ public class LevelProgressManager : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
-    public int GetHighestLevelNumber(string gameMode)
+    public int GetHighestLevelNumber(GameMode gameMode)
     {
         switch (gameMode)
         {
-            case "Collect":
+            case GameMode.Collect:
                 return collectLevel;
-            case "Balance":
+            case GameMode.Balance:
                 return balanceLevel;
-            case "Dodge":
+            case GameMode.Dodge:
                 return dodgeLevel;
-            case "Jump":
+            case GameMode.Jump:
                 return jumpLevel;
-            case "Push":
+            case GameMode.Push:
                 return pushLevel;
             default:
                 return 1;

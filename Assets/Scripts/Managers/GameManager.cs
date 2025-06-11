@@ -11,7 +11,6 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get { return instance; } }
 
     private UIManager uiManager;
-    private SceneLoader sceneLoader;
     private const string UI_PREFAB_PATH = "Prefabs/Managers/UIManager";
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -20,23 +19,15 @@ public class GameManager : MonoBehaviour
         if (instance == null)
         {
             GameObject go = new GameObject("GameManager");
+            go.transform.SetParent(null);
             instance = go.AddComponent<GameManager>();
             DontDestroyOnLoad(go);
             
-            // Add required components
-            instance.sceneLoader = go.AddComponent<SceneLoader>();
-            go.AddComponent<Optionz>();
+            // Initialize SceneLoader
+            go.AddComponent<SceneLoader>();
             
             // Setup UI
             instance.InitializeUI();
-        }
-    }
-
-    void OnDestroy()
-    {
-        if (instance == this)
-        {
-            instance = null;
         }
     }
 
@@ -53,6 +44,8 @@ public class GameManager : MonoBehaviour
             }
             
             GameObject uiObj = Instantiate(prefab);
+            uiObj.transform.SetParent(null);
+            
             uiManager = uiObj.GetComponent<UIManager>();
             if (uiManager != null)
             {

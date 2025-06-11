@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class JumpLevelStart : MonoBehaviour
 {
-    public virtual void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
@@ -12,7 +13,7 @@ public partial class JumpLevelStart : MonoBehaviour
             other.gameObject.SetActive(false);
             if (SceneLoader.currentScene == "Active Main Menu")
             {
-                SceneLoader.ChangeScene("Ball Jumper " + LevelProgressManager.Instance.GetHighestLevelNumber("Jump"));
+                SceneLoader.ChangeScene("Ball Jumper " + SceneLoader.jumpCounter);
             }
             else
             {

@@ -1,6 +1,7 @@
 using UnityEngine.SceneManagement;
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class SceneLoader : MonoBehaviour
@@ -44,7 +45,6 @@ public partial class SceneLoader : MonoBehaviour
     {
         Time.timeScale = 1;
         SceneLoader.isPaused = false;
-        UnityEngine.Object.DontDestroyOnLoad(this.transform.gameObject);
         
         // Set initial scene immediately in Awake
         SceneLoader.currentScene = SceneManager.GetActiveScene().name;
@@ -113,6 +113,15 @@ public partial class SceneLoader : MonoBehaviour
 
     public static void Win()
     {
+        // Complete the current level and save progress
+        GameMode? gameMode = DetermineGameMode(currentScene);
+        Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}, Game mode value: {gameMode.Value}");
+        if (gameMode.HasValue)
+        {
+            LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
+        }
+        
+        // Load the win scene
         SceneManager.LoadScene("WIN", LoadSceneMode.Additive);
     }
 
@@ -144,33 +153,35 @@ public partial class SceneLoader : MonoBehaviour
         return 0; // Default return if no number found
     }
 
-    public static string DetermineGameMode(string sceneName)
+    private static string GetGameModeSuffix(GameMode gameMode)
     {
-        if (sceneName.StartsWith("Ball Collector"))
-            return "Collect";
-        else if (sceneName.StartsWith("Ball Balancer"))
-            return "Balance";
-        else if (sceneName.StartsWith("Ball Dodger"))
-            return "Dodge";
-        else if (sceneName.StartsWith("Ball Jumper"))
-            return "Jump";
-        else if (sceneName.StartsWith("Ball Pusher"))
-            return "Push";
-        return null;
+        var field = gameMode.GetType().GetField(gameMode.ToString());
+        var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
+        return attribute.Suffix;
     }
 
-    private static string GetGameModeSuffix(string gameMode)
+    public static GameMode? DetermineGameMode(string sceneName)
     {
-        switch (gameMode)
+        if (sceneName.StartsWith("Ball "))
         {
-            case "Collect":
-                return "or";
-            case "Balance":
-            case "Dodge":
-                return "r";
-            default:
-                return "er";
+            string modePart = sceneName.Substring(5).Split(' ')[0];
+            
+            // Remove the suffix to match enum values
+            if (modePart == "Pusher")
+                modePart = "Push";
+            else if (modePart.EndsWith("or"))
+                modePart = modePart.Substring(0, modePart.Length - 2);
+            else if (modePart.EndsWith("r"))
+                modePart = modePart.Substring(0, modePart.Length - 1);
+            else if (modePart.EndsWith("er"))
+                modePart = modePart.Substring(0, modePart.Length - 2);
+                
+            if (System.Enum.TryParse<GameMode>(modePart, true, out GameMode gameMode))
+            {
+                return gameMode;
+            }
         }
+        return null;
     }
 
     private static bool SceneExists(string sceneName)
@@ -181,12 +192,12 @@ public partial class SceneLoader : MonoBehaviour
     public static void NextLevel()
     {
         string currentScene = SceneLoader.currentScene;
-        string gameMode = DetermineGameMode(currentScene);
+        GameMode? gameMode = DetermineGameMode(currentScene);
 
         // If we found a valid game mode, load the next level
-        if (!string.IsNullOrEmpty(gameMode))
+        if (gameMode.HasValue)
         {
-            string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode)} {GetLevelNumberFromCurrentScene() + 1}";
+            string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode.Value)} {GetLevelNumberFromCurrentScene() + 1}";
             if (SceneExists(nextScene))
             {
                 SceneLoader.ChangeScene(nextScene);

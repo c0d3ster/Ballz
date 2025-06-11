@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections;
+using Enums;
 
 [System.Serializable]
 public partial class BalanceLevelStart : MonoBehaviour
 {
-    public virtual void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
@@ -12,7 +13,7 @@ public partial class BalanceLevelStart : MonoBehaviour
             other.gameObject.SetActive(false);
             if (SceneLoader.currentScene == "Active Main Menu")
             {
-                SceneLoader.ChangeScene("Ball Balancer " + LevelProgressManager.Instance.GetHighestLevelNumber("Balance"));
+                SceneLoader.ChangeScene("Ball Balancer " + SceneLoader.balanceCounter);
             }
             else
             {

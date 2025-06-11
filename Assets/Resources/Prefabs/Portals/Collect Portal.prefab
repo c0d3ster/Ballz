@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6950716344878113185}
   - component: {fileID: 2693153781094982312}
   - component: {fileID: 12812103786776071}
+  - component: {fileID: -8664717904955123585}
   m_Layer: 0
   m_Name: Collect Portal
   m_TagString: Untagged
@@ -162,3 +163,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2aebca9d1372dd40ba795d25218ef86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-8664717904955123585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6541389165130232761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13304734d58ebbd4e87bb4545390320b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pulseSpeed: 2
+  pulseAmount: 0.2
+  minAlpha: 0.5
+  maxAlpha: 0.75
+  emissionIntensity: 1

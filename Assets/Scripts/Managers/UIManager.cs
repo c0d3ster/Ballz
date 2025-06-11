@@ -9,14 +9,17 @@ public class UIManager : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log($"[UIManager] Awake called, parent: {transform.parent?.name ?? "null"}");
         if (Instance == null)
         {
+            Debug.Log("[UIManager] Setting instance and DontDestroyOnLoad");
             Instance = this;
             DontDestroyOnLoad(gameObject);
             
             // Find canvas if not assigned
             if (touchControllerCanvas == null)
             {
+                Debug.Log("[UIManager] Looking for Canvas in children");
                 touchControllerCanvas = GetComponentInChildren<Canvas>();
                 if (touchControllerCanvas == null)
                 {
@@ -24,14 +27,13 @@ public class UIManager : MonoBehaviour
                     return;
                 }
             }
-            
-            DontDestroyOnLoad(touchControllerCanvas.gameObject);
 
             // Subscribe to scene changes
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
+            Debug.Log("[UIManager] Instance already exists, destroying this object");
             Destroy(gameObject);
         }
     }
