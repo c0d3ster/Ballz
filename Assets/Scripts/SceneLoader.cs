@@ -159,20 +159,43 @@ public partial class SceneLoader : MonoBehaviour
         return null;
     }
 
+    private string GetGameModeSuffix(string gameMode)
+    {
+        switch (gameMode)
+        {
+            case "Collect":
+                return "or";
+            case "Balance":
+            case "Dodge":
+                return "r";
+            default:
+                return "er";
+        }
+    }
+
+    private bool SceneExists(string sceneName)
+    {
+        return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/Scenes/{sceneName}.unity") != -1;
+    }
+
     public static void NextLevel()
     {
         string currentScene = SceneLoader.currentScene;
         string gameMode = DetermineGameMode(currentScene);
-        string suffix = "er";
 
         // If we found a valid game mode, load the next level
         if (!string.IsNullOrEmpty(gameMode))
         {
-            if (gameMode == "Collect")
+            string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode)} {GetLevelNumberFromCurrentScene() + 1}";
+            if (SceneExists(nextScene))
             {
-                suffix = "or";
+                SceneLoader.ChangeScene(nextScene);
             }
-            SceneLoader.ChangeScene($"Ball {gameMode}{suffix} {GetLevelNumberFromCurrentScene() + 1}");
+            else
+            {
+                // If next level doesn't exist, go to main menu
+                SceneLoader.ChangeScene("Active Main Menu");
+            }
         }
         else
         {

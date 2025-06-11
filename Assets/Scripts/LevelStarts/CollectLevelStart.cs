@@ -6,6 +6,7 @@ public partial class CollectLevelStart : MonoBehaviour
 {
     public virtual void OnTriggerEnter(Collider other)
     {
+        Debug.Log("[CollectLevelStart] OnTriggerEnter called highest level: " + LevelProgressManager.Instance.GetHighestLevelNumber("Collect"));
         if (other.gameObject.CompareTag("Player"))
         {
             other.gameObject.SetActive(false);

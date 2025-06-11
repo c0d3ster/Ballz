@@ -33,16 +33,12 @@ public class LevelProgressManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (instance != null)
         {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+            Destroy(instance.gameObject);
         }
-        else
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDestroy()
@@ -54,6 +50,7 @@ public class LevelProgressManager : MonoBehaviour
     {
         if (scene.name == "Active Main Menu")
         {
+            LoadProgress();
             UpdateGameModeVisibility();
         }
     }
@@ -211,17 +208,17 @@ public class LevelProgressManager : MonoBehaviour
 
     public int GetHighestLevelNumber(string gameMode)
     {
-        switch (gameMode.ToLower())
+        switch (gameMode)
         {
-            case "collect":
+            case "Collect":
                 return collectLevel;
-            case "balance":
+            case "Balance":
                 return balanceLevel;
-            case "dodge":
+            case "Dodge":
                 return dodgeLevel;
-            case "jump":
+            case "Jump":
                 return jumpLevel;
-            case "push":
+            case "Push":
                 return pushLevel;
             default:
                 return 1;
