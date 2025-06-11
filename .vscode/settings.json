@@ -9,5 +9,4 @@
   },
   "omnisharp.useEditorFormattingSettings": true,
   "omnisharp.enableEditorConfigSupport": true,
-  "omnisharp.enableRoslynAnalyzers": true
 }
