@@ -115,7 +115,7 @@ public partial class SceneLoader : MonoBehaviour
     {
         // Complete the current level and save progress
         GameMode? gameMode = DetermineGameMode(currentScene);
-        Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}, Game mode value: {gameMode.Value}");
+        Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}");
         if (gameMode.HasValue)
         {
             LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
@@ -166,19 +166,17 @@ public partial class SceneLoader : MonoBehaviour
         {
             string modePart = sceneName.Substring(5).Split(' ')[0];
             
-            // Remove the suffix to match enum values
-            if (modePart == "Pusher")
-                modePart = "Push";
-            else if (modePart.EndsWith("or"))
-                modePart = modePart.Substring(0, modePart.Length - 2);
-            else if (modePart.EndsWith("r"))
-                modePart = modePart.Substring(0, modePart.Length - 1);
-            else if (modePart.EndsWith("er"))
-                modePart = modePart.Substring(0, modePart.Length - 2);
-                
-            if (System.Enum.TryParse<GameMode>(modePart, true, out GameMode gameMode))
+            // Try each game mode
+            foreach (GameMode mode in System.Enum.GetValues(typeof(GameMode)))
             {
-                return gameMode;
+                var field = mode.GetType().GetField(mode.ToString());
+                var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
+                
+                // Check if the mode part matches the game mode with its suffix
+                if (modePart == mode.ToString() + attribute.Suffix)
+                {
+                    return mode;
+                }
             }
         }
         return null;
