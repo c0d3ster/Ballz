@@ -7,13 +7,13 @@ using UnityEditor;
 
 namespace UnityStandardAssets.Utility
 {
-    public class AutoMobileShaderSwitch : MonoBehaviour
-    {
-        [SerializeField] private ReplacementList m_ReplacementList;
+  public class AutoMobileShaderSwitch : MonoBehaviour
+  {
+    [SerializeField] private ReplacementList m_ReplacementList;
 
-        // Use this for initialization
-        private void OnEnable()
-        {
+    // Use this for initialization
+    private void OnEnable()
+    {
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_BLACKBERRY
 			var renderers = FindObjectsOfType<Renderer>();
 			Debug.Log (renderers.Length+" renderers");
@@ -63,22 +63,22 @@ namespace UnityStandardAssets.Utility
 				Debug.Log (oldMaterials[n].name+" ("+oldMaterials[n].shader.name+")"+" replaced with "+newMaterials[n].name+" ("+newMaterials[n].shader.name+")");
 			}
 #endif
-        }
-
-
-        [Serializable]
-        public class ReplacementDefinition
-        {
-            public Shader original = null;
-            public Shader replacement = null;
-        }
-
-        [Serializable]
-        public class ReplacementList
-        {
-            public ReplacementDefinition[] items = new ReplacementDefinition[0];
-        }
     }
+
+
+    [Serializable]
+    public class ReplacementDefinition
+    {
+      public Shader original = null;
+      public Shader replacement = null;
+    }
+
+    [Serializable]
+    public class ReplacementList
+    {
+      public ReplacementDefinition[] items = new ReplacementDefinition[0];
+    }
+  }
 }
 
 namespace UnityStandardAssets.Utility.Inspector
