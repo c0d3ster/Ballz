@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 [System.Serializable]
-public partial class GAMEOVER : MonoBehaviour
+public partial class GAME_OVER : MonoBehaviour
 {
   //creates two buttons for main menu and try again
   public virtual void OnGUI()

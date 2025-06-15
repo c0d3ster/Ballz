@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 723584571771369230}
   - component: {fileID: 8431090488368804844}
   - component: {fileID: 4841967928153220482}
-  - component: {fileID: 4366069992330648363}
   - component: {fileID: 4242801910731674807}
+  - component: {fileID: 1965228837204836862}
   m_Layer: 0
   m_Name: Push Portal
   m_TagString: Untagged
@@ -110,18 +110,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4366069992330648363
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7614544658541885819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba8a6ec8ae083ce43a4900c5b4d85165, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &4242801910731674807
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,3 +127,16 @@ MonoBehaviour:
   minAlpha: 0.5
   maxAlpha: 0.75
   emissionIntensity: 1
+--- !u!114 &1965228837204836862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7614544658541885819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1617e1c8ad371f5488a605c0b9cbaf21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameMode: 4

@@ -4883,6 +4883,19 @@ MonoBehaviour:
   minAlpha: 0.5
   maxAlpha: 0.75
   emissionIntensity: 0
+--- !u!114 &1957799790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1957799775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1617e1c8ad371f5488a605c0b9cbaf21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameMode: 0
 --- !u!1 &1963572319
 GameObject:
   m_ObjectHideFlags: 0
@@ -6396,13 +6409,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Collect Portal
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 12812103786776071, guid: 70004951512ab2c42b9c92a69f058a94, type: 3}
+    - {fileID: 2813391890469340915, guid: 70004951512ab2c42b9c92a69f058a94, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6541389165130232761, guid: 70004951512ab2c42b9c92a69f058a94, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1957799782}
+    - targetCorrespondingSourceObject: {fileID: 6541389165130232761, guid: 70004951512ab2c42b9c92a69f058a94, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1957799790}
   m_SourcePrefab: {fileID: 100100000, guid: 70004951512ab2c42b9c92a69f058a94, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

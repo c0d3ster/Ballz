@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 3394496}
   - component: {fileID: 6536818}
   - component: {fileID: 2309982}
-  - component: {fileID: 11483370}
   - component: {fileID: 11448256}
   - component: {fileID: -6045993195239263656}
+  - component: {fileID: 871826800558715097}
   m_Layer: 0
   m_Name: Balance Portal
   m_TagString: Untagged
@@ -111,18 +111,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &11483370
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 128640}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 282c6a176bb013a4d992280663000f89, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &11448256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -153,3 +141,16 @@ MonoBehaviour:
   minAlpha: 0.5
   maxAlpha: 0.75
   emissionIntensity: 1
+--- !u!114 &871826800558715097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 128640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1617e1c8ad371f5488a605c0b9cbaf21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameMode: 1
