@@ -79,7 +79,6 @@ public class MoveController : MonoBehaviour
 
     if (!outerCircle || !innerCircle)
     {
-      Debug.LogWarning("MoveController missing circle references!");
       enabled = false;
       return;
     }
@@ -87,7 +86,6 @@ public class MoveController : MonoBehaviour
     innerImage = innerCircle.GetComponent<Image>();
     if (!innerImage)
     {
-      Debug.LogWarning("Inner circle missing Image component!");
       enabled = false;
       return;
     }
@@ -196,11 +194,24 @@ public class MoveController : MonoBehaviour
         HandlePointerInput(Input.mousePosition);
         usingTouchInput = true;
       }
+      else if (Input.GetMouseButtonUp(0))
+      {
+        ResetMovement();
+      }
     }
     else if (Input.touchCount == 1 && !IsClickingButton()) // Single touch for joystick/target
     {
-      HandlePointerInput(Input.GetTouch(0).position);
-      usingTouchInput = true;
+      // Handle touch input exactly like mouse input
+      Touch touch = Input.GetTouch(0);
+      if (touch.phase == TouchPhase.Began || touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
+      {
+        HandlePointerInput(touch.position);
+        usingTouchInput = true;
+      }
+      else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+      {
+        ResetMovement();
+      }
     }
     else if (Input.touchCount == 2) // Two finger touch for accelerometer recalibration
     {
@@ -232,29 +243,22 @@ public class MoveController : MonoBehaviour
 
     if (!isInitialized || !outerCircle || !innerCircle) return;
 
-    // First, determine if this is a joystick input
+    // Always check if we're over the joystick, regardless of isPressed state
+    Vector2 localPoint;
+    bool isOverJoystick = RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
+                         RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
+
+    // If this is a new touch, set the initial mode
     if (!isPressed)
     {
-      Vector2 localPoint;
-      bool isOverJoystick = RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint) &&
-                           RectTransformUtility.RectangleContainsScreenPoint(outerCircle, pointerPos, null);
-
-      // Only use joystick mode if both useJoystick is true AND we're touching the joystick area
-      usingJoystickMode = Optionz.useJoystick && isOverJoystick;
-
-      // If we're not in joystick mode and target mode is enabled, we're in target mode
-      if (!usingJoystickMode && Optionz.useTarget)
-      {
-        usingJoystickMode = false; // Ensure we're not in joystick mode
-      }
-
+      // Only use joystick mode if we're over the joystick AND joystick mode is enabled
+      usingJoystickMode = isOverJoystick && Optionz.useJoystick;
       isPressed = true;
     }
 
     // Handle input based on the mode
     if (usingJoystickMode)
     {
-      Vector2 localPoint;
       if (RectTransformUtility.ScreenPointToLocalPointInRectangle(outerCircle, pointerPos, null, out localPoint))
       {
         // Calculate direction and magnitude
@@ -274,7 +278,6 @@ public class MoveController : MonoBehaviour
     }
     else if (Optionz.useTarget)
     {
-      // Handle target movement
       GameObject player = GameObject.FindWithTag("Player");
       if (!player) return;
 
