@@ -59,7 +59,7 @@ public partial class SceneLoader : MonoBehaviour
   {
     Debug.Log($"[Scene] OnSceneLoaded - Old current: '{currentScene}', New scene: '{scene.name}', Mode: {mode}");
 
-    // Only update currentScene if this is not an additive load
+    // Only update currentScene if this is not an overlay scene
     if (mode != LoadSceneMode.Additive)
     {
       SceneLoader.currentScene = scene.name;
@@ -67,7 +67,7 @@ public partial class SceneLoader : MonoBehaviour
     }
     else
     {
-      Debug.Log($"[Scene] Additive load - keeping current scene as: '{currentScene}'");
+      Debug.Log($"[Scene] Overlay scene loaded - keeping current scene as: '{currentScene}'");
     }
   }
 
@@ -118,7 +118,12 @@ public partial class SceneLoader : MonoBehaviour
     Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}");
     if (gameMode.HasValue)
     {
-      LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
+      // Check if next level exists before incrementing
+      string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode.Value)} {GetLevelNumberFromCurrentScene() + 1}";
+      if (SceneExists(nextScene))
+      {
+        LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
+      }
     }
 
     // Load the win scene
@@ -153,7 +158,7 @@ public partial class SceneLoader : MonoBehaviour
     return 0; // Default return if no number found
   }
 
-  private static string GetGameModeSuffix(GameMode gameMode)
+  public static string GetGameModeSuffix(GameMode gameMode)
   {
     var field = gameMode.GetType().GetField(gameMode.ToString());
     var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
@@ -182,9 +187,25 @@ public partial class SceneLoader : MonoBehaviour
     return null;
   }
 
-  private static bool SceneExists(string sceneName)
+  private static string GetSeriesFolderName(string sceneName)
   {
-    return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/Scenes/{sceneName}.unity") != -1;
+    GameMode? gameMode = DetermineGameMode(sceneName);
+    if (!gameMode.HasValue)
+    {
+      Debug.LogError($"Could not determine game mode from scene name: {sceneName}");
+      return string.Empty;
+    }
+    return $"{gameMode}{GetGameModeSuffix(gameMode.Value)} Series";
+  }
+
+  public static bool SceneExists(string sceneName)
+  {
+    string seriesFolder = GetSeriesFolderName(sceneName);
+    if (string.IsNullOrEmpty(seriesFolder))
+    {
+      return false;
+    }
+    return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/_Scenes/{seriesFolder}/{sceneName}.unity") != -1;
   }
 
   public static void NextLevel()

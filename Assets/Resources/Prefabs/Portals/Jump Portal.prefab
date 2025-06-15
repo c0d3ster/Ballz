@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: -8524031063883478514}
   - component: {fileID: 2326598}
   - component: {fileID: 11445826}
-  - component: {fileID: 11493666}
   - component: {fileID: 6906427082450328136}
+  - component: {fileID: 87518370459548088}
   m_Layer: 0
   m_Name: Jump Portal
   m_TagString: Untagged
@@ -125,18 +125,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56d443f61558cc34f8d1ba3c97d42fd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &11493666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 168538}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e14682e8982d3842912902c8d59e712, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &6906427082450328136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,3 +142,16 @@ MonoBehaviour:
   minAlpha: 0.5
   maxAlpha: 0.75
   emissionIntensity: 1
+--- !u!114 &87518370459548088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 168538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1617e1c8ad371f5488a605c0b9cbaf21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameMode: 3

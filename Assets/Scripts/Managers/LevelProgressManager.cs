@@ -132,43 +132,35 @@ public class LevelProgressManager : MonoBehaviour
   // Level progression methods
   public void CompleteLevel(GameMode gameMode)
   {
-    switch (gameMode)
+    string currentScene = SceneLoader.currentScene;
+    string baseName = $"Ball {gameMode}{SceneLoader.GetGameModeSuffix(gameMode)}";
+    string currentLevelName = $"{baseName} {GetHighestLevelNumber(gameMode)}";
+
+    if (currentScene == currentLevelName)
     {
-      case GameMode.Collect:
-        if (SceneLoader.currentScene == "Ball Collector " + collectLevel)
+      string nextLevelName = $"{baseName} {GetHighestLevelNumber(gameMode) + 1}";
+      if (SceneLoader.SceneExists(nextLevelName))
+      {
+        switch (gameMode)
         {
-          collectLevel++;
-          UpdateGameModeVisibility();
+          case GameMode.Collect:
+            collectLevel++;
+            break;
+          case GameMode.Balance:
+            balanceLevel++;
+            break;
+          case GameMode.Dodge:
+            dodgeLevel++;
+            break;
+          case GameMode.Jump:
+            jumpLevel++;
+            break;
+          case GameMode.Push:
+            pushLevel++;
+            break;
         }
-        break;
-      case GameMode.Balance:
-        if (SceneLoader.currentScene == "Ball Balancer " + balanceLevel)
-        {
-          balanceLevel++;
-          UpdateGameModeVisibility();
-        }
-        break;
-      case GameMode.Dodge:
-        if (SceneLoader.currentScene == "Ball Dodger " + dodgeLevel)
-        {
-          dodgeLevel++;
-          UpdateGameModeVisibility();
-        }
-        break;
-      case GameMode.Jump:
-        if (SceneLoader.currentScene == "Ball Jumper " + jumpLevel)
-        {
-          jumpLevel++;
-          UpdateGameModeVisibility();
-        }
-        break;
-      case GameMode.Push:
-        if (SceneLoader.currentScene == "Ball Pusher " + pushLevel)
-        {
-          pushLevel++;
-          UpdateGameModeVisibility();
-        }
-        break;
+        UpdateGameModeVisibility();
+      }
     }
     SaveProgress();
   }

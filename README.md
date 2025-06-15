@@ -67,7 +67,7 @@ Assets/
 │   ├── Pusher Series/            # Push mode levels
 │   ├── Jumper Series/            # Jump mode levels
 │   ├── Dodger Series/            # Dodge mode levels
-│   ├── Additive Levels/          # Overlay scenes that load on top of main scenes
+│   ├── Overlay Scenes/           # Scenes that load on top of main scenes (named in UPPERCASE)
 │   └── Test Scenes/              # Development and testing scenes
 │
 ├── Resources/         # Runtime loaded assets
