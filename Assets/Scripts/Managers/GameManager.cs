@@ -26,6 +26,15 @@ public class GameManager : MonoBehaviour
       // Initialize SceneLoader
       go.AddComponent<SceneLoader>();
 
+      // Create LevelProgressManager if it doesn't exist
+      if (FindFirstObjectByType<LevelProgressManager>() == null)
+      {
+        GameObject lpm = new GameObject("LevelProgressManager");
+        lpm.transform.SetParent(null);
+        lpm.AddComponent<LevelProgressManager>();
+        DontDestroyOnLoad(lpm);
+      }
+
       // Setup UI
       instance.InitializeUI();
     }
