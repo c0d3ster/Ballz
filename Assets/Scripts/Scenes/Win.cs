@@ -14,7 +14,6 @@ public partial class Win : MonoBehaviour
     if (gameMode.HasValue)
     {
       LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
-      LevelProgressManager.Instance.SaveProgress(); // Save progress after completing a level
     }
   }
 

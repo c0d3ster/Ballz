@@ -138,31 +138,27 @@ public class LevelProgressManager : MonoBehaviour
 
     if (currentScene == currentLevelName)
     {
-      string nextLevelName = $"{baseName} {GetHighestLevelNumber(gameMode) + 1}";
-      if (SceneLoader.SceneExists(nextLevelName))
+      switch (gameMode)
       {
-        switch (gameMode)
-        {
-          case GameMode.Collect:
-            collectLevel++;
-            break;
-          case GameMode.Balance:
-            balanceLevel++;
-            break;
-          case GameMode.Dodge:
-            dodgeLevel++;
-            break;
-          case GameMode.Jump:
-            jumpLevel++;
-            break;
-          case GameMode.Push:
-            pushLevel++;
-            break;
-        }
-        UpdateGameModeVisibility();
+        case GameMode.Collect:
+          collectLevel++;
+          break;
+        case GameMode.Balance:
+          balanceLevel++;
+          break;
+        case GameMode.Dodge:
+          dodgeLevel++;
+          break;
+        case GameMode.Jump:
+          jumpLevel++;
+          break;
+        case GameMode.Push:
+          pushLevel++;
+          break;
       }
+      UpdateGameModeVisibility();
+      SaveProgress();
     }
-    SaveProgress();
   }
 
   public void SaveProgress()
