@@ -13,7 +13,13 @@ public partial class JumpLevelStart : MonoBehaviour
       other.gameObject.SetActive(false);
       if (SceneLoader.currentScene == "Active Main Menu")
       {
-        SceneLoader.ChangeScene("Ball Jumper " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Jump));
+        int level = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Jump);
+        string scene = $"Ball Jumper {level}";
+        if (!SceneLoader.SceneExists(scene))
+        {
+          level--;
+        }
+        SceneLoader.ChangeScene($"Ball Jumper {level}");
       }
       else
       {

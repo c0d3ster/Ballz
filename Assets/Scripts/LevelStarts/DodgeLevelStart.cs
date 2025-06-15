@@ -11,7 +11,13 @@ public partial class DodgeLevelStart : MonoBehaviour
     other.gameObject.SetActive(false);
     if (SceneLoader.currentScene == "Active Main Menu")
     {
-      SceneLoader.ChangeScene("Ball Dodger " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Dodge));
+      int level = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Dodge);
+      string scene = $"Ball Dodger {level}";
+      if (!SceneLoader.SceneExists(scene))
+      {
+        level--;
+      }
+      SceneLoader.ChangeScene($"Ball Dodger {level}");
     }
     else
     {

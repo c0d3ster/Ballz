@@ -9,7 +9,13 @@ public partial class PushLevelStart : MonoBehaviour
   {
     if (other.CompareTag("Pick Up"))
     {
-      SceneLoader.ChangeScene("Ball Pusher " + LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push));
+      int level = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push);
+      string scene = $"Ball Pusher {level}";
+      if (!SceneLoader.SceneExists(scene))
+      {
+        level--;
+      }
+      SceneLoader.ChangeScene($"Ball Pusher {level}");
     }
   }
 }
