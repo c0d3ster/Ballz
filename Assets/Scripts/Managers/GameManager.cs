@@ -35,6 +35,21 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(lpm);
       }
 
+      // Create LivesManager if it doesn't exist
+      if (FindFirstObjectByType<LivesManager>() == null)
+      {
+        Debug.Log("[GameManager] Creating LivesManager");
+        GameObject lm = new GameObject("LivesManager");
+        lm.transform.SetParent(null);
+        LivesManager livesManager = lm.AddComponent<LivesManager>();
+        DontDestroyOnLoad(lm);
+        Debug.Log($"[GameManager] LivesManager created. Instance: {LivesManager.Instance != null}");
+      }
+      else
+      {
+        Debug.Log("[GameManager] LivesManager already exists");
+      }
+
       // Setup UI
       instance.InitializeUI();
     }

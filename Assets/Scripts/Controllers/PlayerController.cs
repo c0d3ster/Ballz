@@ -152,7 +152,7 @@ public class PlayerController : MonoBehaviour
     // Check if player fell off the map
     if (this.rb.transform.position.y <= -10)
     {
-      if (!!string.IsNullOrEmpty(SceneLoader.currentScene) || (SceneLoader.currentScene == "Active Main Menu"))
+      if (string.IsNullOrEmpty(SceneLoader.currentScene) || (SceneLoader.currentScene == "Active Main Menu"))
       {
         SceneLoader.ChangeScene("Active Main Menu");
       }

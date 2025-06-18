@@ -7,6 +7,11 @@ public class UIManager : MonoBehaviour
   public static UIManager Instance { get; private set; }
   public Canvas touchControllerCanvas;
 
+  [Header("Lives Display")]
+  [SerializeField] private Transform livesContainer;
+
+  private LivesDisplay livesDisplay;
+
   void Awake()
   {
     Debug.Log($"[UIManager] Awake called, parent: {transform.parent?.name ?? "null"}");
@@ -28,6 +33,9 @@ public class UIManager : MonoBehaviour
         }
       }
 
+      // Setup lives display
+      SetupLivesDisplay();
+
       // Subscribe to scene changes
       SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -42,13 +50,34 @@ public class UIManager : MonoBehaviour
   {
     if (touchControllerCanvas == null) return;
 
+    Debug.Log($"[UIManager] Scene loaded: {scene.name}");
+
     if (SceneLoader.IsCurrentSceneNonInteractive)
     {
       touchControllerCanvas.enabled = false;
+      Debug.Log("[UIManager] Disabling canvas for non-interactive scene");
     }
     else
     {
       touchControllerCanvas.enabled = true;
+
+      // Hide lives display on main menu
+      if (scene.name == "Active Main Menu")
+      {
+        if (livesContainer != null)
+        {
+          livesContainer.gameObject.SetActive(false);
+          Debug.Log("[UIManager] Hiding lives display on main menu");
+        }
+      }
+      else
+      {
+        if (livesContainer != null)
+        {
+          livesContainer.gameObject.SetActive(true);
+          Debug.Log("[UIManager] Showing lives display on game scene");
+        }
+      }
     }
   }
 
@@ -66,6 +95,30 @@ public class UIManager : MonoBehaviour
     {
       TogglePause();
     }
+  }
+
+  private void SetupLivesDisplay()
+  {
+    // Create lives container if it doesn't exist
+    if (livesContainer == null)
+    {
+      GameObject containerObj = new GameObject("LivesContainer");
+      containerObj.transform.SetParent(touchControllerCanvas.transform);
+
+      RectTransform rectTransform = containerObj.AddComponent<RectTransform>();
+      rectTransform.anchorMin = new Vector2(0, 1); // Top left
+      rectTransform.anchorMax = new Vector2(0, 1);
+      rectTransform.pivot = new Vector2(0, 1);
+      // Position below CountText: CountText is at y: -20, size 100, so we start at y: -130
+      rectTransform.anchoredPosition = new Vector2(20, -130);
+
+      livesContainer = containerObj.transform;
+      Debug.Log("[UIManager] Created LivesContainer at position (20, -130)");
+    }
+
+    // Add LivesDisplay component
+    livesDisplay = gameObject.AddComponent<LivesDisplay>();
+    Debug.Log("[UIManager] Added LivesDisplay component");
   }
 
   public void TogglePause()
