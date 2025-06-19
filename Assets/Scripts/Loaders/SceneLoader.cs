@@ -62,9 +62,6 @@ public partial class SceneLoader : MonoBehaviour
 
       // Register scene load callback
       SceneManager.sceneLoaded += this.OnSceneLoaded;
-
-      // Initialize lives display for the first scene (since OnSceneLoaded won't be called)
-      StartCoroutine(InitializeLivesForFirstScene());
     }
     else
     {
@@ -72,14 +69,6 @@ public partial class SceneLoader : MonoBehaviour
     }
   }
 
-  private System.Collections.IEnumerator InitializeLivesForFirstScene()
-  {
-    // Wait a frame to ensure UIManager is fully initialized
-    yield return null;
-
-    // LivesManager now handles its own LivesDisplay initialization
-    Debug.Log("[SceneLoader] LivesManager handles its own LivesDisplay initialization");
-  }
 
   public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
   {

@@ -68,6 +68,21 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] CountManager already exists");
       }
 
+      // Create TimerManager if it doesn't exist
+      if (FindFirstObjectByType<TimerManager>() == null)
+      {
+        Debug.Log("[GameManager] Creating TimerManager");
+        GameObject tm = new GameObject("TimerManager");
+        tm.transform.SetParent(null);
+        TimerManager timerManager = tm.AddComponent<TimerManager>();
+        DontDestroyOnLoad(tm);
+        Debug.Log($"[GameManager] TimerManager created. Instance: {TimerManager.Instance != null}");
+      }
+      else
+      {
+        Debug.Log("[GameManager] TimerManager already exists");
+      }
+
       // Setup UI
       instance.InitializeUI();
     }

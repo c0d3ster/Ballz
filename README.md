@@ -83,6 +83,13 @@ Assets/
     └── meadow_assets/     # Environment assets
 ```
 
+## Documentation
+For detailed documentation on specific systems and features, see the [Documentation](./Documentation/) folder:
+
+- **[Architecture](./Documentation/Architecture.md)** - Game architecture, manager system, and component communication
+- **[Timer System](./Documentation/TimerSystem.md)** - Centralized timer system documentation
+- *More documentation will be added here as the project grows*
+
 ## Development
 - Built with Unity
 - Uses Angular commit conventions for version control

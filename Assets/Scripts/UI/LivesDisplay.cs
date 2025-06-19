@@ -128,7 +128,7 @@ public class LivesDisplay : MonoBehaviour
       Debug.LogWarning("[LivesDisplay] No player found with 'Player' tag!");
 
       // Try to find any object with "Player" in the name as fallback
-      GameObject[] allObjects = FindObjectsOfType<GameObject>();
+      GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
       foreach (GameObject obj in allObjects)
       {
         if (obj.name.ToLower().Contains("player"))
@@ -279,7 +279,6 @@ public class LivesDisplay : MonoBehaviour
               Mathf.Min(1f, playerColor.b * 1.3f),
               playerColor.a
             );
-            Debug.Log($"[LivesDisplay] Life {i}: Using player material color {playerColor} -> enhanced {targetColor}");
           }
           else
           {
