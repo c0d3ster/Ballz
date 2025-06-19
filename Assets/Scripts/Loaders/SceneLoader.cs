@@ -77,16 +77,8 @@ public partial class SceneLoader : MonoBehaviour
     // Wait a frame to ensure UIManager is fully initialized
     yield return null;
 
-    // Initialize lives display for the first scene
-    if (UIManager.Instance != null)
-    {
-      LivesDisplay livesDisplay = UIManager.Instance.GetComponent<LivesDisplay>();
-      if (livesDisplay != null)
-      {
-        livesDisplay.RefreshLives();
-        Debug.Log("[SceneLoader] Initialized lives display for first scene");
-      }
-    }
+    // LivesManager now handles its own LivesDisplay initialization
+    Debug.Log("[SceneLoader] LivesManager handles its own LivesDisplay initialization");
   }
 
   public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -104,15 +96,8 @@ public partial class SceneLoader : MonoBehaviour
       Debug.Log($"[Scene] Overlay scene loaded - keeping current scene as: '{currentScene}'");
     }
 
-    // Notify LivesDisplay that scene has loaded
-    if (UIManager.Instance != null)
-    {
-      LivesDisplay livesDisplay = UIManager.Instance.GetComponent<LivesDisplay>();
-      if (livesDisplay != null)
-      {
-        livesDisplay.RefreshLives();
-      }
-    }
+    // LivesManager and CountManager handle their own UI initialization
+    Debug.Log("[SceneLoader] Scene loaded - managers handle their own UI initialization");
   }
 
   public void OnDestroy()

@@ -6,12 +6,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
   public static UIManager Instance { get; private set; }
-  public Canvas touchControllerCanvas;
-
-  [Header("Lives Display")]
-  [SerializeField] private Transform livesContainer;
-
-  private LivesDisplay livesDisplay;
+  [Header("UI References")]
+  public Canvas gameUICanvas;
 
   void Awake()
   {
@@ -23,19 +19,16 @@ public class UIManager : MonoBehaviour
       DontDestroyOnLoad(gameObject);
 
       // Find canvas if not assigned
-      if (touchControllerCanvas == null)
+      if (gameUICanvas == null)
       {
         Debug.Log("[UIManager] Looking for Canvas in children");
-        touchControllerCanvas = GetComponentInChildren<Canvas>();
-        if (touchControllerCanvas == null)
+        gameUICanvas = GetComponentInChildren<Canvas>();
+        if (gameUICanvas == null)
         {
           Debug.LogError("No Canvas found in UIManager prefab!");
           return;
         }
       }
-
-      // Setup lives display
-      SetupLivesDisplay();
 
       // Subscribe to scene changes
       SceneManager.sceneLoaded += OnSceneLoaded;
@@ -49,18 +42,18 @@ public class UIManager : MonoBehaviour
 
   void OnSceneLoaded(Scene scene, LoadSceneMode mode)
   {
-    if (touchControllerCanvas == null) return;
+    if (gameUICanvas == null) return;
 
     Debug.Log($"[UIManager] Scene loaded: {scene.name}");
 
     if (SceneLoader.Instance.IsCurrentSceneNonInteractive)
     {
-      touchControllerCanvas.enabled = false;
+      gameUICanvas.enabled = false;
       Debug.Log("[UIManager] Disabling canvas for non-interactive scene");
     }
     else
     {
-      touchControllerCanvas.enabled = true;
+      gameUICanvas.enabled = true;
       Debug.Log("[UIManager] Enabling canvas for interactive scene");
     }
   }
@@ -79,29 +72,6 @@ public class UIManager : MonoBehaviour
     {
       TogglePause();
     }
-  }
-
-  private void SetupLivesDisplay()
-  {
-    // Create lives container if it doesn't exist
-    if (livesContainer == null)
-    {
-      GameObject containerObj = new GameObject("LivesContainer");
-      containerObj.transform.SetParent(touchControllerCanvas.transform);
-
-      RectTransform rectTransform = containerObj.AddComponent<RectTransform>();
-      rectTransform.anchorMin = new Vector2(0, 1); // Top left
-      rectTransform.anchorMax = new Vector2(0, 1);
-      rectTransform.pivot = new Vector2(0, 1);
-      rectTransform.anchoredPosition = new Vector2(35, -35);
-
-      livesContainer = containerObj.transform;
-      Debug.Log("[UIManager] Created LivesContainer at position (20, -20)");
-    }
-
-    // Add LivesDisplay component
-    livesDisplay = gameObject.AddComponent<LivesDisplay>();
-    Debug.Log("[UIManager] Added LivesDisplay component");
   }
 
   public void TogglePause()

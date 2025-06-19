@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using UnityEngine.SceneManagement;
 
 public class LivesManager : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class LivesManager : MonoBehaviour
   private DateTime lastLifeLostTime;
   private const string LIVES_KEY = "PlayerLives";
   private const string LAST_LIFE_LOST_KEY = "LastLifeLostTime";
+  private LivesDisplay livesDisplay;
+  private Transform livesContainer;
+  private bool isInitialized = false;
 
   private void Awake()
   {
@@ -39,9 +43,82 @@ public class LivesManager : MonoBehaviour
     if (Instance == this)
     {
       Debug.Log("[LivesManager] Start - Loading lives");
+      InitializeLivesManager();
       LoadLives();
+      SceneManager.sceneLoaded += OnSceneLoaded;
       Debug.Log($"[LivesManager] Start - Initialized with {CurrentLives}/{maxLives} lives");
     }
+  }
+
+  private void OnDestroy()
+  {
+    if (Instance == this)
+    {
+      SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+  }
+
+  private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+  {
+    // Only process non-additive scene loads
+    if (mode != LoadSceneMode.Additive)
+    {
+      Debug.Log($"[LivesManager] Scene loaded: {scene.name}");
+
+      // Notify LivesDisplay that scene has loaded so it can find player material
+      if (livesDisplay != null)
+      {
+        livesDisplay.RefreshLives();
+      }
+    }
+  }
+
+  private void InitializeLivesManager()
+  {
+    if (isInitialized) return;
+
+    // Create LivesDisplay
+    CreateLivesDisplay();
+
+    isInitialized = true;
+    Debug.Log("[LivesManager] Initialized lives manager");
+  }
+
+  private void CreateLivesDisplay()
+  {
+    // Create lives container first
+    CreateLivesContainer();
+
+    // Add LivesDisplay component to this GameObject
+    livesDisplay = gameObject.AddComponent<LivesDisplay>();
+
+    if (livesDisplay != null)
+    {
+      Debug.Log("[LivesManager] Created LivesDisplay component");
+    }
+  }
+
+  private void CreateLivesContainer()
+  {
+    Canvas canvas = UIManager.Instance?.gameUICanvas;
+    if (canvas == null)
+    {
+      Debug.LogError("[LivesManager] No canvas found for lives container!");
+      return;
+    }
+
+    // Create lives container
+    GameObject containerObj = new GameObject("LivesContainer");
+    containerObj.transform.SetParent(canvas.transform, false);
+
+    RectTransform rectTransform = containerObj.AddComponent<RectTransform>();
+    rectTransform.anchorMin = new Vector2(0, 1); // Top left
+    rectTransform.anchorMax = new Vector2(0, 1);
+    rectTransform.pivot = new Vector2(0, 1);
+    rectTransform.anchoredPosition = new Vector2(35, -35);
+
+    livesContainer = containerObj.transform;
+    Debug.Log("[LivesManager] Created LivesContainer at position (35, -35)");
   }
 
   private void Update()

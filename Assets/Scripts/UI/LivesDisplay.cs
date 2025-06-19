@@ -47,7 +47,7 @@ public class LivesDisplay : MonoBehaviour
     if (livesContainer == null)
     {
       // Find the lives container in the UIManager's canvas
-      Transform canvasTransform = uiManager.touchControllerCanvas.transform;
+      Transform canvasTransform = uiManager.gameUICanvas.transform;
       livesContainer = canvasTransform.Find("LivesContainer");
     }
 
@@ -59,6 +59,10 @@ public class LivesDisplay : MonoBehaviour
     UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
 
     Debug.Log($"[LivesDisplay] Initialized with {livesManager.CurrentLives} lives");
+
+    // Try to find player material immediately and update display
+    FindPlayerMaterial();
+    UpdateLivesDisplay(livesManager.CurrentLives);
   }
 
   private void Update()
@@ -80,8 +84,8 @@ public class LivesDisplay : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != UnityEngine.SceneManagement.LoadSceneMode.Additive)
     {
-      FindPlayerMaterial();
-      UpdateLivesDisplay(livesManager.CurrentLives);
+      Debug.Log($"[LivesDisplay] Scene loaded: {scene.name}, starting delayed material search");
+      StartCoroutine(FindPlayerMaterialDelayed());
     }
   }
 
@@ -89,6 +93,9 @@ public class LivesDisplay : MonoBehaviour
   {
     // Wait a frame to ensure scene is fully loaded
     yield return null;
+
+    // Wait a bit more to ensure all objects are instantiated
+    yield return new WaitForSeconds(0.1f);
 
     FindPlayerMaterial();
 
@@ -98,15 +105,43 @@ public class LivesDisplay : MonoBehaviour
 
   private void FindPlayerMaterial()
   {
+    Debug.Log("[LivesDisplay] Searching for player material...");
+
     // Try to find the player in the current scene
     GameObject player = GameObject.FindGameObjectWithTag("Player");
     if (player != null)
     {
+      Debug.Log($"[LivesDisplay] Found player: {player.name}");
       Renderer playerRenderer = player.GetComponent<Renderer>();
       if (playerRenderer != null && playerRenderer.material != null)
       {
         playerMaterial = playerRenderer.material;
-        Debug.Log($"[LivesDisplay] Found player material: {playerMaterial.name}");
+        Debug.Log($"[LivesDisplay] Found player material: {playerMaterial.name}, color: {playerMaterial.color}");
+      }
+      else
+      {
+        Debug.LogWarning("[LivesDisplay] Player found but no Renderer or material!");
+      }
+    }
+    else
+    {
+      Debug.LogWarning("[LivesDisplay] No player found with 'Player' tag!");
+
+      // Try to find any object with "Player" in the name as fallback
+      GameObject[] allObjects = FindObjectsOfType<GameObject>();
+      foreach (GameObject obj in allObjects)
+      {
+        if (obj.name.ToLower().Contains("player"))
+        {
+          Debug.Log($"[LivesDisplay] Found potential player object: {obj.name}");
+          Renderer renderer = obj.GetComponent<Renderer>();
+          if (renderer != null && renderer.material != null)
+          {
+            playerMaterial = renderer.material;
+            Debug.Log($"[LivesDisplay] Using material from {obj.name}: {playerMaterial.name}, color: {playerMaterial.color}");
+            break;
+          }
+        }
       }
     }
 
@@ -150,7 +185,7 @@ public class LivesDisplay : MonoBehaviour
       image.sprite = CreateCircleWithOutlineSprite();
 
       // Don't set color here - let UpdateLivesDisplay handle it
-      image.color = Color.white; // Default white, will be tinted by UpdateLivesDisplay
+      image.color = Color.clear; // Start clear, will be tinted by UpdateLivesDisplay
 
       image.preserveAspect = true;
 
@@ -221,7 +256,7 @@ public class LivesDisplay : MonoBehaviour
   {
     if (lifeIcons == null) return;
 
-    Debug.Log($"[LivesDisplay] Updating display: {currentLives} lives remaining");
+    Debug.Log($"[LivesDisplay] Updating display: {currentLives} lives remaining, playerMaterial: {(playerMaterial != null ? playerMaterial.name : "null")}");
 
     for (int i = 0; i < lifeIcons.Length; i++)
     {
@@ -244,16 +279,19 @@ public class LivesDisplay : MonoBehaviour
               Mathf.Min(1f, playerColor.b * 1.3f),
               playerColor.a
             );
+            Debug.Log($"[LivesDisplay] Life {i}: Using player material color {playerColor} -> enhanced {targetColor}");
           }
           else
           {
             targetColor = availableLifeColor;
+            Debug.Log($"[LivesDisplay] Life {i}: No player material, using fallback color {targetColor}");
           }
         }
         else
         {
           // Depleted life - very translucent
           targetColor = depletedLifeColor;
+          Debug.Log($"[LivesDisplay] Life {i}: Depleted life, using color {targetColor}");
         }
 
         lifeIcons[i].color = targetColor;
@@ -282,7 +320,7 @@ public class LivesDisplay : MonoBehaviour
 
   private void CreateCountdownText()
   {
-    Canvas canvas = UIManager.Instance?.touchControllerCanvas;
+    Canvas canvas = UIManager.Instance?.gameUICanvas;
     if (canvas == null)
     {
       Debug.LogError("[LivesDisplay] No canvas found for countdown text!");

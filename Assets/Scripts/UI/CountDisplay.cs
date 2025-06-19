@@ -43,7 +43,7 @@ public class CountDisplay : MonoBehaviour
 
   private void CreateCountText()
   {
-    Canvas canvas = UIManager.Instance?.touchControllerCanvas;
+    Canvas canvas = UIManager.Instance?.gameUICanvas;
     if (canvas == null)
     {
       Debug.LogError("[CountDisplay] No canvas found!");
