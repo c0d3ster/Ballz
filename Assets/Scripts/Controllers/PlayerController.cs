@@ -9,9 +9,6 @@ public class PlayerController : MonoBehaviour
   public Rigidbody rb;
   public float speed = 10f;
   public bool canJump;
-  public int count;
-  public Text countText;
-  private GameObject[] totalBoxes;
   public Camera cam;
   public static Vector3 camOffset;
   public Vector3 camShift;
@@ -52,8 +49,6 @@ public class PlayerController : MonoBehaviour
       }
     }
     this.rb = this.GetComponent<Rigidbody>();
-    this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
-    this.count = 0;
 
     // Debug joystick setup
     GameObject outer = GameObject.Find("TouchControllerOuter");
@@ -73,11 +68,6 @@ public class PlayerController : MonoBehaviour
       }
     }
 
-    if (this.countText)
-    {
-      this.countText.text = "";
-      this.SetCountText();
-    }
     if (Optionz.diff != 0)
     {
       this.speed = (float)(this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
@@ -152,13 +142,13 @@ public class PlayerController : MonoBehaviour
     // Check if player fell off the map
     if (this.rb.transform.position.y <= -10)
     {
-      if (!!string.IsNullOrEmpty(SceneLoader.currentScene) || (SceneLoader.currentScene == "Active Main Menu"))
+      if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || (SceneLoader.Instance.currentScene == "Active Main Menu"))
       {
-        SceneLoader.ChangeScene("Active Main Menu");
+        SceneLoader.Instance.ChangeScene("Active Main Menu");
       }
       else
       {
-        SceneLoader.GameOver();
+        SceneLoader.Instance.GameOver();
       }
     }
   }
@@ -174,29 +164,11 @@ public class PlayerController : MonoBehaviour
   {
     if (other.gameObject.CompareTag("Pick Up"))
     {
-      other.gameObject.SetActive(false);
-      this.count = this.count + 1;
-      if (this.countText != null)
+      // Use CountManager to handle pickup collection
+      if (CountManager.Instance != null)
       {
-        this.SetCountText();
+        CountManager.Instance.CollectPickup(other.gameObject);
       }
-    }
-  }
-
-  public virtual void SetCountText()
-  {
-    if (this.countText == null) return;
-
-    if (this.totalBoxes.Length == 0)
-    {
-      this.countText.text = "";
-      return;
-    }
-
-    this.countText.text = (("Count: " + this.count.ToString()) + "/") + this.totalBoxes.Length.ToString();
-    if (this.totalBoxes.Length > 0 && this.count >= this.totalBoxes.Length)
-    {
-      SceneLoader.Win();
     }
   }
 
@@ -208,10 +180,8 @@ public class PlayerController : MonoBehaviour
     }
   }
 
-
   public bool IsGrounded()
   {
     return Physics.Raycast(transform.position, Vector3.down, .6f);
   }
-
 }

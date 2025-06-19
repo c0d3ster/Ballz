@@ -6,20 +6,24 @@ using Enums;
 [System.Serializable]
 public partial class SceneLoader : MonoBehaviour
 {
+  // Singleton instance
+  private static SceneLoader instance;
+  public static SceneLoader Instance { get { return instance; } }
+
   // stores scene names for reference
-  public static string lastScene;
-  public static string currentScene;
-  public static bool isPaused;
+  public string lastScene;
+  public string currentScene;
+  public bool isPaused;
 
   // Scenes that don't have gameplay interaction
-  private static readonly string[] nonInteractiveScenes = new string[]
+  private readonly string[] nonInteractiveScenes = new string[]
   {
         "Splash Screen",
         "GAME OVER",
         "WIN"
   };
 
-  public static bool IsCurrentSceneNonInteractive
+  public bool IsCurrentSceneNonInteractive
   {
     get
     {
@@ -35,83 +39,107 @@ public partial class SceneLoader : MonoBehaviour
     }
   }
 
-  public static bool IsNonInteractiveScene(string sceneName)
+  public bool IsNonInteractiveScene(string sceneName)
   {
     return System.Array.Exists(nonInteractiveScenes, scene => scene == sceneName);
   }
 
   //keeps object between scenes to manage all scene movements
-  public virtual void Awake()
+  public void Awake()
   {
-    Time.timeScale = 1;
-    SceneLoader.isPaused = false;
+    if (instance == null)
+    {
+      instance = this;
+      DontDestroyOnLoad(gameObject);
 
-    // Set initial scene immediately in Awake
-    SceneLoader.currentScene = SceneManager.GetActiveScene().name;
-    SceneLoader.lastScene = SceneLoader.currentScene;
-    Debug.Log("Initial scene set in Awake to: " + SceneLoader.currentScene);
+      Time.timeScale = 1;
+      this.isPaused = false;
 
-    // Register scene load callback
-    SceneManager.sceneLoaded += this.OnSceneLoaded;
+      // Set initial scene immediately in Awake
+      this.currentScene = SceneManager.GetActiveScene().name;
+      this.lastScene = this.currentScene;
+      Debug.Log("Initial scene set in Awake to: " + this.currentScene);
+
+      // Register scene load callback
+      SceneManager.sceneLoaded += this.OnSceneLoaded;
+
+      // Initialize lives display for the first scene (since OnSceneLoaded won't be called)
+      StartCoroutine(InitializeLivesForFirstScene());
+    }
+    else
+    {
+      Destroy(gameObject);
+    }
   }
 
-  public virtual void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+  private System.Collections.IEnumerator InitializeLivesForFirstScene()
+  {
+    // Wait a frame to ensure UIManager is fully initialized
+    yield return null;
+
+    // LivesManager now handles its own LivesDisplay initialization
+    Debug.Log("[SceneLoader] LivesManager handles its own LivesDisplay initialization");
+  }
+
+  public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
   {
     Debug.Log($"[Scene] OnSceneLoaded - Old current: '{currentScene}', New scene: '{scene.name}', Mode: {mode}");
 
     // Only update currentScene if this is not an overlay scene
     if (mode != LoadSceneMode.Additive)
     {
-      SceneLoader.currentScene = scene.name;
+      this.currentScene = scene.name;
       Debug.Log($"[Scene] Updated current scene to: '{currentScene}', Last: '{lastScene}'");
     }
     else
     {
       Debug.Log($"[Scene] Overlay scene loaded - keeping current scene as: '{currentScene}'");
     }
+
+    // LivesManager and CountManager handle their own UI initialization
+    Debug.Log("[SceneLoader] Scene loaded - managers handle their own UI initialization");
   }
 
-  public virtual void OnDestroy()
+  public void OnDestroy()
   {
-    // Clean up event listener
-    SceneManager.sceneLoaded -= this.OnSceneLoaded;
+    if (instance == this)
+    {
+      // Clean up event listener
+      SceneManager.sceneLoaded -= this.OnSceneLoaded;
+      instance = null;
+    }
   }
 
-  public static void ChangeScene(string sceneName)
+  public void ChangeScene(string sceneName)
   {
     Debug.Log($"[Scene] ChangeScene called - Current: '{currentScene}', Last: '{lastScene}', Changing to: '{sceneName}'");
-    SceneLoader.lastScene = SceneLoader.currentScene;
-    SceneLoader.currentScene = sceneName;
+    this.lastScene = this.currentScene;
+    this.currentScene = sceneName;
     Debug.Log($"[Scene] After update - Current: '{currentScene}', Last: '{lastScene}'");
-    SceneManager.LoadScene(SceneLoader.currentScene);
+    SceneManager.LoadScene(this.currentScene);
   }
 
-  public static void ReloadScene()
+  public void ReloadScene()
   {
     Debug.Log($"[Scene] ReloadScene called - Current: '{currentScene}', Last: '{lastScene}'");
     // Don't update lastScene when reloading
-    SceneManager.LoadScene(SceneLoader.currentScene);
+    SceneManager.LoadScene(this.currentScene);
   }
 
-  public static void LoadLastScene()
+  public void LoadLastScene()
   {
     Debug.Log($"[Scene] LoadLastScene called - Current: '{currentScene}', Last: '{lastScene}'");
     if (lastScene != null)
     {
-      SceneLoader.ChangeScene(lastScene);
+      this.ChangeScene(lastScene);
     }
     else
     {
-      SceneLoader.ChangeScene("Active Main Menu");
+      this.ChangeScene("Active Main Menu");
     }
   }
 
-  public static void GameOver()
-  {
-    SceneLoader.ChangeScene("GAME OVER");
-  }
-
-  public static void Win()
+  public void Win()
   {
     // Complete the current level and save progress
     GameMode? gameMode = DetermineGameMode(currentScene);
@@ -130,27 +158,27 @@ public partial class SceneLoader : MonoBehaviour
     SceneManager.LoadScene("WIN", LoadSceneMode.Additive);
   }
 
-  public static void Pause()
+  public void Pause()
   {
     SceneManager.LoadScene("PAUSE", LoadSceneMode.Additive);
   }
 
-  public static void LevelSelect()
+  public void LevelSelect()
   {
     SceneManager.LoadScene("LEVEL SELECT", LoadSceneMode.Additive);
   }
 
-  public static int GetLevelNumberFromCurrentScene()
+  public int GetLevelNumberFromCurrentScene()
   {
     // Try to find a number at the end of the string
-    if (!string.IsNullOrEmpty(SceneLoader.currentScene))
+    if (!string.IsNullOrEmpty(this.currentScene))
     {
-      int i = SceneLoader.currentScene.Length - 1;
+      int i = this.currentScene.Length - 1;
       while (i >= 0)
       {
-        if (char.IsDigit(SceneLoader.currentScene[i]))
+        if (char.IsDigit(this.currentScene[i]))
         {
-          return int.Parse(SceneLoader.currentScene[i].ToString());
+          return int.Parse(this.currentScene[i].ToString());
         }
         i--;
       }
@@ -158,14 +186,14 @@ public partial class SceneLoader : MonoBehaviour
     return 0; // Default return if no number found
   }
 
-  public static string GetGameModeSuffix(GameMode gameMode)
+  public string GetGameModeSuffix(GameMode gameMode)
   {
     var field = gameMode.GetType().GetField(gameMode.ToString());
     var attribute = (SceneSuffixAttribute)field.GetCustomAttributes(typeof(SceneSuffixAttribute), false)[0];
     return attribute.Suffix;
   }
 
-  public static GameMode? DetermineGameMode(string sceneName)
+  public GameMode? DetermineGameMode(string sceneName)
   {
     if (sceneName.StartsWith("Ball "))
     {
@@ -187,7 +215,7 @@ public partial class SceneLoader : MonoBehaviour
     return null;
   }
 
-  private static string GetSeriesFolderName(string sceneName)
+  private string GetSeriesFolderName(string sceneName)
   {
     GameMode? gameMode = DetermineGameMode(sceneName);
     if (!gameMode.HasValue)
@@ -198,7 +226,7 @@ public partial class SceneLoader : MonoBehaviour
     return $"{gameMode}{GetGameModeSuffix(gameMode.Value)} Series";
   }
 
-  public static bool SceneExists(string sceneName)
+  public bool SceneExists(string sceneName)
   {
     string seriesFolder = GetSeriesFolderName(sceneName);
     if (string.IsNullOrEmpty(seriesFolder))
@@ -208,9 +236,9 @@ public partial class SceneLoader : MonoBehaviour
     return UnityEngine.SceneManagement.SceneUtility.GetBuildIndexByScenePath($"Assets/_Scenes/{seriesFolder}/{sceneName}.unity") != -1;
   }
 
-  public static void NextLevel()
+  public void NextLevel()
   {
-    string currentScene = SceneLoader.currentScene;
+    string currentScene = this.currentScene;
     GameMode? gameMode = DetermineGameMode(currentScene);
 
     // If we found a valid game mode, load the next level
@@ -219,18 +247,24 @@ public partial class SceneLoader : MonoBehaviour
       string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode.Value)} {GetLevelNumberFromCurrentScene() + 1}";
       if (SceneExists(nextScene))
       {
-        SceneLoader.ChangeScene(nextScene);
+        this.ChangeScene(nextScene);
       }
       else
       {
         // If next level doesn't exist, go to main menu
-        SceneLoader.ChangeScene("Active Main Menu");
+        this.ChangeScene("Active Main Menu");
       }
     }
     else
     {
       // If we're not on a valid level, go to main menu
-      SceneLoader.ChangeScene("Active Main Menu");
+      this.ChangeScene("Active Main Menu");
     }
+  }
+
+  public void GameOver()
+  {
+    Debug.Log($"[SceneLoader] GameOver called - Current scene: {currentScene}");
+    this.ChangeScene("GAME OVER");
   }
 }

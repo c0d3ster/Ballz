@@ -55,7 +55,7 @@ public class JumpButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
   private void Update()
   {
-    if (SceneLoader.IsCurrentSceneNonInteractive)
+    if (SceneLoader.Instance != null && SceneLoader.Instance.IsCurrentSceneNonInteractive)
     {
       return;
     }

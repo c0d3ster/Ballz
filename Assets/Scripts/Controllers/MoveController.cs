@@ -165,7 +165,7 @@ public class MoveController : MonoBehaviour
     }
 
     // If paused, ignore all input
-    if (SceneLoader.isPaused)
+    if (SceneLoader.Instance.isPaused)
     {
       ResetMovement();
       return;
@@ -239,7 +239,7 @@ public class MoveController : MonoBehaviour
   public virtual void HandlePointerInput(Vector2 pointerPos)
   {
     // Ignore input if paused
-    if (SceneLoader.isPaused) return;
+    if (SceneLoader.Instance.isPaused) return;
 
     if (!isInitialized || !outerCircle || !innerCircle) return;
 
@@ -307,7 +307,7 @@ public class MoveController : MonoBehaviour
   public virtual void HandleKeyboardInput()
   {
     // Ignore input if paused
-    if (SceneLoader.isPaused) return;
+    if (SceneLoader.Instance.isPaused) return;
 
     if (!isInitialized) return;
 

@@ -75,13 +75,13 @@ public class LevelProgressManager : MonoBehaviour
         // Press C to complete current level (only in editor)
         if (Input.GetKeyDown(KeyCode.C))
         {
-            GameMode? gameMode = SceneLoader.DetermineGameMode(SceneLoader.currentScene);
+            GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
             if (gameMode.HasValue)
             {
-                Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.currentScene}");
+                Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.Instance.currentScene}");
                 Debug.Log($"[LevelProgress] Determined game mode: {gameMode}");
                 Debug.Log($"[LevelProgress] Completing level for game mode: {gameMode.Value}");
-                SceneLoader.Win();
+                SceneLoader.Instance.Win();
             }
         }
 #endif
@@ -132,8 +132,8 @@ public class LevelProgressManager : MonoBehaviour
   // Level progression methods
   public void CompleteLevel(GameMode gameMode)
   {
-    string currentScene = SceneLoader.currentScene;
-    string baseName = $"Ball {gameMode}{SceneLoader.GetGameModeSuffix(gameMode)}";
+    string currentScene = SceneLoader.Instance.currentScene;
+    string baseName = $"Ball {gameMode}{SceneLoader.Instance.GetGameModeSuffix(gameMode)}";
     string currentLevelName = $"{baseName} {GetHighestLevelNumber(gameMode)}";
 
     if (currentScene == currentLevelName)

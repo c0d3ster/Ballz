@@ -33,7 +33,7 @@ public partial class Timer : MonoBehaviour
     this.timerText.text = "Time Remaining: " + (Mathf.Round(this.timer * 100f) / 100f);
     if (this.timer < 0)
     {
-      SceneLoader.GameOver();
+      SceneLoader.Instance.GameOver();
     }
   }
 
