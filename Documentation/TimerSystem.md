@@ -1,22 +1,21 @@
 # Centralized Timer System
 
-This document explains the new centralized timer system that replaces individual TimerText GameObjects in each scene.
+This document explains the centralized timer system that manages time limits across game scenes.
 
 ## Overview
 
-The new timer system consists of:
+The timer system consists of:
 - **TimerManager**: Centralized manager that handles all timer functionality
 - **SceneTimerConfig**: Configuration class for storing time limits per scene
-- **TimeBonus**: Script for adding time bonuses to the timer
 
 ## Benefits
 
-1. **No more individual TimerText GameObjects**: All timer functionality is now centralized
+1. **Centralized timer functionality**: All timer logic is managed in one place
 2. **Easy configuration**: Time limits are stored in code and easily configurable
 3. **Automatic scene detection**: Timer automatically initializes based on the current scene
 4. **Pause/resume support**: Timer automatically pauses when game is paused
 5. **Difficulty integration**: Timer respects the existing difficulty system
-6. **Extensible**: Easy to add new scenes and time bonuses
+6. **Extensible**: Easy to add new scenes and features
 
 ## How It Works
 
@@ -90,19 +89,19 @@ TimerManager.Instance.OnTimeUp += () => {
 }
 ```
 
-## Migration from Old System
+## Migration from Individual TimerText GameObjects
 
 ### Removing Old TimerText GameObjects
 
 1. In each scene, find the "Timer Text" GameObject
 2. Delete the GameObject (it contains the old Timer script)
-3. The new system will automatically handle timer display
+3. The centralized system will automatically handle timer display
 
 ### Updating Time Limits
 
 1. Check the current time limits in your scenes
 2. Update the values in `SceneTimerConfig.cs` to match
-3. Test to ensure the new system works correctly
+3. Test to ensure the system works correctly
 
 ## Configuration Options
 
@@ -113,13 +112,6 @@ In the `TimerManager` component, you can configure:
 - **Font Size**: Size of the timer text
 - **Text Color**: Color of the timer text
 - **Timer Position**: Position of the timer on screen
-
-### TimeBonus Settings
-
-In the `TimeBonus` component, you can configure:
-- **Time To Add**: Amount of time to add when collected
-- **Destroy On Collect**: Whether to hide the bonus object after collection
-- **Player Tag**: Tag of the object that can collect the bonus
 
 ## Troubleshooting
 
@@ -132,11 +124,6 @@ In the `TimeBonus` component, you can configure:
 - Verify the scene has a time limit configured
 - Check that `IsTimerActive` is true
 - Ensure the game is not paused
-
-### Time Bonus Not Working
-- Verify the GameObject has a Collider set to trigger
-- Check that the player has the correct tag
-- Ensure `TimerManager.Instance` is not null
 
 ## Adding New Features
 
