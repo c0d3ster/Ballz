@@ -86,13 +86,6 @@ public partial class SceneLoader : MonoBehaviour
         livesDisplay.RefreshLives();
         Debug.Log("[SceneLoader] Initialized lives display for first scene");
       }
-
-      CountDisplay countDisplay = UIManager.Instance.GetComponent<CountDisplay>();
-      if (countDisplay != null)
-      {
-        countDisplay.OnSceneLoaded();
-        Debug.Log("[SceneLoader] Initialized count display for first scene");
-      }
     }
   }
 
@@ -118,12 +111,6 @@ public partial class SceneLoader : MonoBehaviour
       if (livesDisplay != null)
       {
         livesDisplay.RefreshLives();
-      }
-
-      CountDisplay countDisplay = UIManager.Instance.GetComponent<CountDisplay>();
-      if (countDisplay != null)
-      {
-        countDisplay.OnSceneLoaded();
       }
     }
   }

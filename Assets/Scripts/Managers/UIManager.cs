@@ -12,7 +12,6 @@ public class UIManager : MonoBehaviour
   [SerializeField] private Transform livesContainer;
 
   private LivesDisplay livesDisplay;
-  private CountDisplay countDisplay;
 
   void Awake()
   {
@@ -103,10 +102,6 @@ public class UIManager : MonoBehaviour
     // Add LivesDisplay component
     livesDisplay = gameObject.AddComponent<LivesDisplay>();
     Debug.Log("[UIManager] Added LivesDisplay component");
-
-    // Add CountDisplay component
-    countDisplay = gameObject.AddComponent<CountDisplay>();
-    Debug.Log("[UIManager] Added CountDisplay component");
   }
 
   public void TogglePause()

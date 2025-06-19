@@ -53,6 +53,21 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] LivesManager already exists");
       }
 
+      // Create CountManager if it doesn't exist
+      if (FindFirstObjectByType<CountManager>() == null)
+      {
+        Debug.Log("[GameManager] Creating CountManager");
+        GameObject cm = new GameObject("CountManager");
+        cm.transform.SetParent(null);
+        CountManager countManager = cm.AddComponent<CountManager>();
+        DontDestroyOnLoad(cm);
+        Debug.Log($"[GameManager] CountManager created. Instance: {CountManager.Instance != null}");
+      }
+      else
+      {
+        Debug.Log("[GameManager] CountManager already exists");
+      }
+
       // Setup UI
       instance.InitializeUI();
     }

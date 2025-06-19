@@ -116,4 +116,28 @@ public class CountDisplay : MonoBehaviour
     ClearCount();
     Debug.Log("[CountDisplay] Scene loaded, cleared count display");
   }
+
+  // Configuration methods for CountManager
+  public void SetFormat(string format)
+  {
+    countFormat = format;
+  }
+
+  public void SetFontSize(int size)
+  {
+    fontSize = size;
+    if (countText != null)
+    {
+      countText.fontSize = size;
+    }
+  }
+
+  public void SetTextColor(Color color)
+  {
+    textColor = color;
+    if (countText != null)
+    {
+      countText.color = color;
+    }
+  }
 }

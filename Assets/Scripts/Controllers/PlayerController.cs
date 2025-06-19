@@ -9,7 +9,6 @@ public class PlayerController : MonoBehaviour
   public Rigidbody rb;
   public float speed = 10f;
   public bool canJump;
-  public int count;
   public Camera cam;
   public static Vector3 camOffset;
   public Vector3 camShift;
@@ -21,8 +20,6 @@ public class PlayerController : MonoBehaviour
 
   private bool isHoldingSpace = false;
   private Coroutine spaceHoldCoroutine;
-  private CountDisplay countDisplay;
-  private GameObject[] totalBoxes;
 
   public virtual void Awake()
   {
@@ -52,14 +49,6 @@ public class PlayerController : MonoBehaviour
       }
     }
     this.rb = this.GetComponent<Rigidbody>();
-    this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
-    this.count = 0;
-
-    // Get CountDisplay reference
-    if (UIManager.Instance != null)
-    {
-      countDisplay = UIManager.Instance.GetComponent<CountDisplay>();
-    }
 
     // Debug joystick setup
     GameObject outer = GameObject.Find("TouchControllerOuter");
@@ -77,12 +66,6 @@ public class PlayerController : MonoBehaviour
         innerImage.raycastTarget = true;
         Optionz.useJoystick = true;
       }
-    }
-
-    // Initialize count display
-    if (countDisplay != null)
-    {
-      countDisplay.UpdateCount(0, this.totalBoxes.Length);
     }
 
     if (Optionz.diff != 0)
@@ -181,30 +164,11 @@ public class PlayerController : MonoBehaviour
   {
     if (other.gameObject.CompareTag("Pick Up"))
     {
-      other.gameObject.SetActive(false);
-      this.count = this.count + 1;
-
-      // Update count display and check for level completion
-      this.SetCountText();
-    }
-  }
-
-  public virtual void SetCountText()
-  {
-    if (countDisplay == null) return;
-
-    if (this.totalBoxes.Length == 0)
-    {
-      countDisplay.ClearCount();
-      return;
-    }
-
-    countDisplay.UpdateCount(this.count, this.totalBoxes.Length);
-
-    if (this.totalBoxes.Length > 0 && this.count >= this.totalBoxes.Length)
-    {
-      Debug.Log($"[PlayerController] Level completion triggered! count: {this.count}, total: {this.totalBoxes.Length}");
-      SceneLoader.Instance.Win();
+      // Use CountManager to handle pickup collection
+      if (CountManager.Instance != null)
+      {
+        CountManager.Instance.CollectPickup(other.gameObject);
+      }
     }
   }
 
@@ -216,10 +180,8 @@ public class PlayerController : MonoBehaviour
     }
   }
 
-
   public bool IsGrounded()
   {
     return Physics.Raycast(transform.position, Vector3.down, .6f);
   }
-
 }

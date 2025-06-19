@@ -63,10 +63,6 @@ public class LivesManager : MonoBehaviour
     // Check if this is the first time running (no saved data)
     bool isFirstRun = !PlayerPrefs.HasKey(LIVES_KEY);
 
-    Debug.Log($"[LivesManager] LoadLives - isFirstRun: {isFirstRun}");
-    Debug.Log($"[LivesManager] LoadLives - PlayerPrefs.HasKey({LIVES_KEY}): {PlayerPrefs.HasKey(LIVES_KEY)}");
-    Debug.Log($"[LivesManager] LoadLives - PlayerPrefs.GetInt({LIVES_KEY}, {maxLives}): {PlayerPrefs.GetInt(LIVES_KEY, maxLives)}");
-
     if (isFirstRun)
     {
       // First time running - start with max lives
