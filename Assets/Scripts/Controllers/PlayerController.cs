@@ -184,11 +184,8 @@ public class PlayerController : MonoBehaviour
       other.gameObject.SetActive(false);
       this.count = this.count + 1;
 
-      // Update count display
-      if (countDisplay != null)
-      {
-        countDisplay.SetCount(this.count);
-      }
+      // Update count display and check for level completion
+      this.SetCountText();
     }
   }
 
@@ -206,6 +203,7 @@ public class PlayerController : MonoBehaviour
 
     if (this.totalBoxes.Length > 0 && this.count >= this.totalBoxes.Length)
     {
+      Debug.Log($"[PlayerController] Level completion triggered! count: {this.count}, total: {this.totalBoxes.Length}");
       SceneLoader.Instance.Win();
     }
   }

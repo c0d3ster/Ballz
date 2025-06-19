@@ -293,6 +293,6 @@ public partial class SceneLoader : MonoBehaviour
   public void GameOver()
   {
     Debug.Log($"[SceneLoader] GameOver called - Current scene: {currentScene}");
-    SceneManager.LoadScene("GAME OVER", LoadSceneMode.Additive);
+    this.ChangeScene("GAME OVER");
   }
 }

@@ -8,7 +8,7 @@ public class CountDisplay : MonoBehaviour
 
   [Header("Display Settings")]
   [SerializeField] private string countFormat = "Count: {0}/{1}";
-  [SerializeField] private int fontSize = 24;
+  [SerializeField] private int fontSize = 36;
   [SerializeField] private Color textColor = Color.white;
 
   private int currentCount = 0;
@@ -34,7 +34,7 @@ public class CountDisplay : MonoBehaviour
       countText.fontSize = fontSize;
       countText.color = textColor;
       countText.alignment = TextAlignmentOptions.TopLeft;
-      countText.enableWordWrapping = false;
+      countText.textWrappingMode = TextWrappingModes.NoWrap;
     }
 
     isInitialized = true;
@@ -59,14 +59,14 @@ public class CountDisplay : MonoBehaviour
     tmp.fontSize = fontSize;
     tmp.color = textColor;
     tmp.alignment = TextAlignmentOptions.TopLeft;
-    tmp.enableWordWrapping = false;
+    tmp.textWrappingMode = TextWrappingModes.NoWrap;
 
     RectTransform rectTransform = countTextObj.GetComponent<RectTransform>();
     rectTransform.anchorMin = new Vector2(0, 1);
     rectTransform.anchorMax = new Vector2(0, 1);
     rectTransform.pivot = new Vector2(0, 1);
-    rectTransform.anchoredPosition = new Vector2(50, -60);
-    rectTransform.sizeDelta = new Vector2(200, 50);
+    rectTransform.anchoredPosition = new Vector2(38, -120);
+    rectTransform.sizeDelta = new Vector2(200, 75);
     rectTransform.localScale = Vector3.one;
 
     countText = tmp;
@@ -84,10 +84,16 @@ public class CountDisplay : MonoBehaviour
 
     if (countText != null)
     {
-      countText.text = string.Format(countFormat, count, total);
-    }
+      // Hide the count text if total is 0 (nothing to count) or if on main menu
+      bool isMainMenu = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Active Main Menu";
+      bool shouldShow = total > 0 && !isMainMenu;
+      countText.gameObject.SetActive(shouldShow);
 
-    Debug.Log($"[CountDisplay] Updated count: {count}/{total}");
+      if (shouldShow)
+      {
+        countText.text = string.Format(countFormat, count, total);
+      }
+    }
   }
 
   public void SetCount(int count)
@@ -109,19 +115,5 @@ public class CountDisplay : MonoBehaviour
   {
     ClearCount();
     Debug.Log("[CountDisplay] Scene loaded, cleared count display");
-  }
-
-  // Method to copy settings from an existing text component (for quality matching)
-  public void CopyTextSettings(TextMeshProUGUI sourceText)
-  {
-    if (countText != null && sourceText != null)
-    {
-      countText.fontSize = sourceText.fontSize;
-      countText.color = sourceText.color;
-      countText.alignment = sourceText.alignment;
-      countText.enableWordWrapping = sourceText.enableWordWrapping;
-
-      Debug.Log("[CountDisplay] Copied text settings from source text");
-    }
   }
 }

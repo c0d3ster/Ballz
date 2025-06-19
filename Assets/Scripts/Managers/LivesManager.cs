@@ -11,11 +11,11 @@ public class LivesManager : MonoBehaviour
 
   public int CurrentLives { get; private set; }
   public int MaxLives => maxLives;
-  public float TimeUntilNextLife => Mathf.Max(0f, regenerationTimeMinutes * 60f - (Time.time - lastLifeLostTime));
+  public float TimeUntilNextLife => GetTimeUntilNextLife();
 
   public event Action<int> OnLivesChanged;
 
-  private float lastLifeLostTime;
+  private DateTime lastLifeLostTime;
   private const string LIVES_KEY = "PlayerLives";
   private const string LAST_LIFE_LOST_KEY = "LastLifeLostTime";
 
@@ -71,38 +71,71 @@ public class LivesManager : MonoBehaviour
     {
       // First time running - start with max lives
       CurrentLives = maxLives;
-      lastLifeLostTime = 0f;
+      lastLifeLostTime = DateTime.UtcNow;
       Debug.Log($"[LivesManager] First run detected. Initializing with {CurrentLives}/{maxLives} lives");
     }
     else
     {
       // Load saved data
       CurrentLives = PlayerPrefs.GetInt(LIVES_KEY, maxLives);
-      lastLifeLostTime = PlayerPrefs.GetFloat(LAST_LIFE_LOST_KEY, 0f);
+
+      // Load the last life lost time as a binary timestamp
+      string lastLifeLostTicksString = PlayerPrefs.GetString(LAST_LIFE_LOST_KEY, "0");
+      if (long.TryParse(lastLifeLostTicksString, out long ticks))
+      {
+        lastLifeLostTime = new DateTime(ticks, DateTimeKind.Utc);
+      }
+      else
+      {
+        lastLifeLostTime = DateTime.UtcNow;
+      }
+
       Debug.Log($"[LivesManager] Loading saved lives: {CurrentLives}/{maxLives}");
+      Debug.Log($"[LivesManager] Last life lost time: {lastLifeLostTime}");
 
       // Check if enough time has passed to regenerate lives
-      float timeSinceLastLife = Time.time - lastLifeLostTime;
-      if (timeSinceLastLife >= regenerationTimeMinutes * 60f)
-      {
-        int livesToRegenerate = Mathf.FloorToInt(timeSinceLastLife / (regenerationTimeMinutes * 60f));
-        CurrentLives = Mathf.Min(maxLives, CurrentLives + livesToRegenerate);
-
-        if (livesToRegenerate > 0)
-        {
-          Debug.Log($"[LivesManager] Regenerated {livesToRegenerate} lives during load. Current: {CurrentLives}/{maxLives}");
-        }
-      }
+      CheckAndRegenerateLivesOnLoad();
     }
 
     // Save the current state
     SaveLives();
   }
 
+  private void CheckAndRegenerateLivesOnLoad()
+  {
+    TimeSpan timeSinceLastLife = DateTime.UtcNow - lastLifeLostTime;
+    double regenerationTimeSeconds = regenerationTimeMinutes * 60.0;
+
+    if (timeSinceLastLife.TotalSeconds >= regenerationTimeSeconds)
+    {
+      int livesToRegenerate = (int)(timeSinceLastLife.TotalSeconds / regenerationTimeSeconds);
+      int oldLives = CurrentLives;
+      CurrentLives = Mathf.Min(maxLives, CurrentLives + livesToRegenerate);
+
+      if (livesToRegenerate > 0)
+      {
+        Debug.Log($"[LivesManager] Regenerated {livesToRegenerate} lives during load. {oldLives} -> {CurrentLives}/{maxLives}");
+
+        // Update the last life lost time to account for regenerated lives
+        if (CurrentLives < maxLives)
+        {
+          // Calculate when the next life will be ready
+          double remainingTime = timeSinceLastLife.TotalSeconds % regenerationTimeSeconds;
+          lastLifeLostTime = DateTime.UtcNow.AddSeconds(-remainingTime);
+        }
+        else
+        {
+          // At max lives, set to current time
+          lastLifeLostTime = DateTime.UtcNow;
+        }
+      }
+    }
+  }
+
   private void SaveLives()
   {
     PlayerPrefs.SetInt(LIVES_KEY, CurrentLives);
-    PlayerPrefs.SetFloat(LAST_LIFE_LOST_KEY, lastLifeLostTime);
+    PlayerPrefs.SetString(LAST_LIFE_LOST_KEY, lastLifeLostTime.Ticks.ToString());
     PlayerPrefs.Save();
   }
 
@@ -110,16 +143,29 @@ public class LivesManager : MonoBehaviour
   {
     if (CurrentLives >= maxLives) return;
 
-    float timeSinceLastLife = Time.time - lastLifeLostTime;
-    if (timeSinceLastLife >= regenerationTimeMinutes * 60f)
+    TimeSpan timeSinceLastLife = DateTime.UtcNow - lastLifeLostTime;
+    double regenerationTimeSeconds = regenerationTimeMinutes * 60.0;
+
+    if (timeSinceLastLife.TotalSeconds >= regenerationTimeSeconds)
     {
       CurrentLives++;
-      lastLifeLostTime = Time.time;
+      lastLifeLostTime = DateTime.UtcNow;
       SaveLives();
 
       Debug.Log($"[LivesManager] Life regenerated! Current: {CurrentLives}/{maxLives}");
       OnLivesChanged?.Invoke(CurrentLives);
     }
+  }
+
+  private float GetTimeUntilNextLife()
+  {
+    if (CurrentLives >= maxLives) return 0f;
+
+    TimeSpan timeSinceLastLife = DateTime.UtcNow - lastLifeLostTime;
+    double regenerationTimeSeconds = regenerationTimeMinutes * 60.0;
+    double timeUntilNext = regenerationTimeSeconds - timeSinceLastLife.TotalSeconds;
+
+    return Mathf.Max(0f, (float)timeUntilNext);
   }
 
   public void LoseLife()
@@ -130,8 +176,21 @@ public class LivesManager : MonoBehaviour
       return;
     }
 
+    bool wasAtMaxLives = CurrentLives >= maxLives;
     CurrentLives--;
-    lastLifeLostTime = Time.time;
+
+    // Only reset the timer if we were at max lives before losing this life
+    // If we already had a timer running, continue from where it was
+    if (wasAtMaxLives)
+    {
+      lastLifeLostTime = DateTime.UtcNow;
+      Debug.Log($"[LivesManager] Life lost from max lives - timer reset to 15 minutes");
+    }
+    else
+    {
+      Debug.Log($"[LivesManager] Life lost - timer continues from previous life loss");
+    }
+
     SaveLives();
 
     Debug.Log($"[LivesManager] Life lost! Current: {CurrentLives}/{maxLives}");
@@ -172,7 +231,7 @@ public class LivesManager : MonoBehaviour
   public void ResetLives()
   {
     CurrentLives = maxLives;
-    lastLifeLostTime = 0f;
+    lastLifeLostTime = DateTime.UtcNow;
     SaveLives();
 
     Debug.Log($"[LivesManager] Lives reset to {CurrentLives}/{maxLives}");
@@ -201,7 +260,7 @@ public class LivesManager : MonoBehaviour
 
     // Force reset to max lives
     CurrentLives = maxLives;
-    lastLifeLostTime = 0f;
+    lastLifeLostTime = DateTime.UtcNow;
     SaveLives();
     OnLivesChanged?.Invoke(CurrentLives);
     Debug.Log($"[LivesManager] Reset to {CurrentLives}/{maxLives} lives");
@@ -212,24 +271,9 @@ public class LivesManager : MonoBehaviour
   {
     Debug.Log("[LivesManager] Force resetting to 5 lives");
     CurrentLives = 5;
-    lastLifeLostTime = 0f;
+    lastLifeLostTime = DateTime.UtcNow;
     SaveLives();
     OnLivesChanged?.Invoke(CurrentLives);
     Debug.Log($"[LivesManager] Force reset complete: {CurrentLives}/{maxLives} lives");
-  }
-
-  // Debug method to print current state
-  [ContextMenu("Print Current State")]
-  public void PrintCurrentState()
-  {
-    Debug.Log($"[LivesManager] Current State:");
-    Debug.Log($"  - Instance: {Instance != null}");
-    Debug.Log($"  - Current Lives: {CurrentLives}");
-    Debug.Log($"  - Max Lives: {maxLives}");
-    Debug.Log($"  - Has Lives: {HasLives()}");
-    Debug.Log($"  - Last Life Lost Time: {lastLifeLostTime}");
-    Debug.Log($"  - Time Until Next Life: {TimeUntilNextLife}");
-    Debug.Log($"  - PlayerPrefs LIVES_KEY: {PlayerPrefs.GetInt(LIVES_KEY, -1)}");
-    Debug.Log($"  - PlayerPrefs LAST_LIFE_LOST_KEY: {PlayerPrefs.GetFloat(LAST_LIFE_LOST_KEY, -1f)}");
   }
 }

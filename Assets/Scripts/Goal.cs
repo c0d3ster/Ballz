@@ -36,6 +36,8 @@ public partial class Goal : MonoBehaviour
 
   public virtual void SetCountText()
   {
+    Debug.Log($"[Goal] SetCountText called - count: {this.count}, total: {this.totalBoxes.Length}");
+
     if (countDisplay != null)
     {
       countDisplay.UpdateCount(this.count, this.totalBoxes.Length);
@@ -43,6 +45,7 @@ public partial class Goal : MonoBehaviour
 
     if (this.count >= this.totalBoxes.Length)
     {
+      Debug.Log($"[Goal] Level completion triggered! count: {this.count}, total: {this.totalBoxes.Length}");
       SceneLoader.Instance.Win();
     }
   }

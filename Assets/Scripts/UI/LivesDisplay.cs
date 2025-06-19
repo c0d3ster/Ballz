@@ -9,11 +9,11 @@ public class LivesDisplay : MonoBehaviour
   [SerializeField] private Transform livesContainer;
 
   [Header("Display Settings")]
-  [SerializeField] private float iconSpacing = 25f;
+  [SerializeField] private float iconSpacing = 30f;
   [SerializeField] private float iconSize = 25f;
   [SerializeField] private Color availableLifeColor = Color.white;
   [SerializeField] private Color depletedLifeColor = new Color(1f, 1f, 1f, 0.2f); // Very translucent
-  [SerializeField] private float outlineWidth = 2f;
+  [SerializeField] private float outlineWidth = 5f;
   [SerializeField] private Color outlineColor = Color.black;
 
   [Header("Countdown Timer")]
@@ -158,10 +158,11 @@ public class LivesDisplay : MonoBehaviour
       RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
       if (rectTransform != null)
       {
-        // Position horizontally with spacing, aligned with gear Y position
-        float xPosition = i * (iconSize + iconSpacing); // Side by side horizontally
-        float yPosition = 0; // Same Y level as gear
-        rectTransform.anchoredPosition = new Vector2(xPosition, yPosition);
+        float xPosition = i * (iconSize + iconSpacing);
+        rectTransform.anchorMin = new Vector2(0, 1);
+        rectTransform.anchorMax = new Vector2(0, 1);
+        rectTransform.pivot = new Vector2(0, 1);
+        rectTransform.anchoredPosition = new Vector2(xPosition, 0);
         rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
       }
 
@@ -173,10 +174,10 @@ public class LivesDisplay : MonoBehaviour
 
   private Sprite CreateCircleWithOutlineSprite()
   {
-    // Create a circle with outline effect
-    int size = 64;
+    // Create a circle with outline effect - higher resolution for smooth edges
+    int size = 128; // Increased from 64 for better quality
     Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-    texture.filterMode = FilterMode.Point; // Use point filtering for crisp pixels
+    texture.filterMode = FilterMode.Bilinear; // Changed from Point to Bilinear for smooth edges
     texture.wrapMode = TextureWrapMode.Clamp;
 
     Vector2 center = new Vector2(size / 2f, size / 2f);
@@ -196,8 +197,10 @@ public class LivesDisplay : MonoBehaviour
         }
         else if (distance <= outerRadius)
         {
-          // Outline - black
-          texture.SetPixel(x, y, outlineColor);
+          // Outline - black with anti-aliasing
+          float alpha = 1f - Mathf.Clamp01((distance - radius) / outlineWidth);
+          Color outlineColorWithAlpha = new Color(outlineColor.r, outlineColor.g, outlineColor.b, alpha);
+          texture.SetPixel(x, y, outlineColorWithAlpha);
         }
         else
         {
@@ -209,7 +212,7 @@ public class LivesDisplay : MonoBehaviour
 
     texture.Apply();
 
-    // Create sprite from texture with crisp settings
+    // Create sprite from texture with smooth settings
     Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
     return sprite;
   }
@@ -289,19 +292,19 @@ public class LivesDisplay : MonoBehaviour
     GameObject countdownObj = new GameObject("CountdownText");
     countdownObj.transform.SetParent(canvas.transform, false);
 
-    TextMeshProUGUI tmp = countdownObj.AddComponent<TextMeshProUGUI>();
+    var tmp = countdownObj.AddComponent<TMPro.TextMeshProUGUI>();
     tmp.text = "Next life: 00:00";
     tmp.fontSize = 24;
     tmp.color = Color.white;
-    tmp.alignment = TextAlignmentOptions.TopLeft;
-    tmp.enableWordWrapping = false;
+    tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
+    tmp.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
 
     RectTransform rectTransform = countdownObj.GetComponent<RectTransform>();
     rectTransform.anchorMin = new Vector2(0, 1);
     rectTransform.anchorMax = new Vector2(0, 1);
     rectTransform.pivot = new Vector2(0, 1);
-    rectTransform.anchoredPosition = new Vector2(50, -iconSize - 60);
-    rectTransform.sizeDelta = new Vector2(200, 50);
+    rectTransform.anchoredPosition = new Vector2(40, -100);
+    rectTransform.sizeDelta = new Vector2(250, 60);
     rectTransform.localScale = Vector3.one;
 
     countdownText = tmp;
@@ -313,9 +316,12 @@ public class LivesDisplay : MonoBehaviour
 
     // Only show countdown on main menu
     bool isMainMenu = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Active Main Menu";
-    countdownText.gameObject.SetActive(isMainMenu);
 
-    if (isMainMenu)
+    // Hide countdown if not on main menu or if at max lives
+    bool shouldShowCountdown = isMainMenu && livesManager.CurrentLives < livesManager.MaxLives;
+    countdownText.gameObject.SetActive(shouldShowCountdown);
+
+    if (shouldShowCountdown)
     {
       float timeUntilNextLife = livesManager.TimeUntilNextLife;
 
@@ -328,7 +334,8 @@ public class LivesDisplay : MonoBehaviour
       }
       else
       {
-        countdownText.text = "Next life: Ready!";
+        // If time is 0, we should be at max lives, so hide the text
+        countdownText.gameObject.SetActive(false);
 
         // If we were waiting for a life and now it's ready, refresh the display
         if (wasWaitingForLife)

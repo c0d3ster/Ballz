@@ -35,9 +35,6 @@ public class UIManager : MonoBehaviour
         }
       }
 
-      // Ensure canvas has proper quality settings
-      SetupCanvasQuality();
-
       // Setup lives display
       SetupLivesDisplay();
 
@@ -97,8 +94,7 @@ public class UIManager : MonoBehaviour
       rectTransform.anchorMin = new Vector2(0, 1); // Top left
       rectTransform.anchorMax = new Vector2(0, 1);
       rectTransform.pivot = new Vector2(0, 1);
-      // Position to align with gear (same position as CountText)
-      rectTransform.anchoredPosition = new Vector2(20, -20);
+      rectTransform.anchoredPosition = new Vector2(35, -35);
 
       livesContainer = containerObj.transform;
       Debug.Log("[UIManager] Created LivesContainer at position (20, -20)");
@@ -111,24 +107,6 @@ public class UIManager : MonoBehaviour
     // Add CountDisplay component
     countDisplay = gameObject.AddComponent<CountDisplay>();
     Debug.Log("[UIManager] Added CountDisplay component");
-  }
-
-  private void SetupCanvasQuality()
-  {
-    if (touchControllerCanvas != null)
-    {
-      // Just ensure basic canvas setup - no CanvasScaler like scene Count Text
-      touchControllerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-      // Ensure GraphicRaycaster for interaction
-      GraphicRaycaster raycaster = touchControllerCanvas.GetComponent<GraphicRaycaster>();
-      if (raycaster == null)
-      {
-        raycaster = touchControllerCanvas.gameObject.AddComponent<GraphicRaycaster>();
-      }
-
-      Debug.Log("[UIManager] Canvas setup - no CanvasScaler, just like scene Count Text");
-    }
   }
 
   public void TogglePause()
