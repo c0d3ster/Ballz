@@ -91,6 +91,12 @@ public class UIManager : MonoBehaviour
       Time.timeScale = 0;
       SceneLoader.Instance.isPaused = true;
       SceneLoader.Instance.Pause();
+
+      // Pause the timer
+      if (TimerManager.Instance != null)
+      {
+        TimerManager.Instance.PauseTimer();
+      }
     }
     else
     {
@@ -99,6 +105,12 @@ public class UIManager : MonoBehaviour
       Time.timeScale = 1;
       SceneLoader.Instance.isPaused = false;
       UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("PAUSE");
+
+      // Resume the timer
+      if (TimerManager.Instance != null)
+      {
+        TimerManager.Instance.ResumeTimer();
+      }
     }
   }
 }
