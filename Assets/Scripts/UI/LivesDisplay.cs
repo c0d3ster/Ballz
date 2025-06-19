@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+using TMPro;
 
 public class LivesDisplay : MonoBehaviour
 {
@@ -14,10 +16,16 @@ public class LivesDisplay : MonoBehaviour
   [SerializeField] private float outlineWidth = 2f;
   [SerializeField] private Color outlineColor = Color.black;
 
+  [Header("Countdown Timer")]
+  [SerializeField] private TextMeshProUGUI countdownText;
+
   private Image[] lifeIcons;
   private LivesManager livesManager;
   private UIManager uiManager;
   private Material playerMaterial;
+  private float lastCountdownUpdate;
+  private bool wasWaitingForLife = false;
+  private TextMeshProUGUI countText;
 
   private void Start()
   {
@@ -43,16 +51,19 @@ public class LivesDisplay : MonoBehaviour
       livesContainer = canvasTransform.Find("LivesContainer");
     }
 
-    // Find the player to get their material
-    FindPlayerMaterial();
-
     InitializeLivesDisplay();
+    CreateCountdownText();
     livesManager.OnLivesChanged += UpdateLivesDisplay;
 
-    // Update the display with the current lives count
-    UpdateLivesDisplay(livesManager.CurrentLives);
+    // Subscribe to scene changes to find player material
+    UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
 
     Debug.Log($"[LivesDisplay] Initialized with {livesManager.CurrentLives} lives");
+  }
+
+  private void Update()
+  {
+    UpdateCountdownTimer();
   }
 
   private void OnDestroy()
@@ -61,6 +72,28 @@ public class LivesDisplay : MonoBehaviour
     {
       livesManager.OnLivesChanged -= UpdateLivesDisplay;
     }
+    UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+  }
+
+  private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+  {
+    // Only process non-additive scene loads
+    if (mode != UnityEngine.SceneManagement.LoadSceneMode.Additive)
+    {
+      FindPlayerMaterial();
+      UpdateLivesDisplay(livesManager.CurrentLives);
+    }
+  }
+
+  private System.Collections.IEnumerator FindPlayerMaterialDelayed()
+  {
+    // Wait a frame to ensure scene is fully loaded
+    yield return null;
+
+    FindPlayerMaterial();
+
+    // Update the display with the current lives count and new material
+    UpdateLivesDisplay(livesManager.CurrentLives);
   }
 
   private void FindPlayerMaterial()
@@ -92,6 +125,8 @@ public class LivesDisplay : MonoBehaviour
       return;
     }
 
+    Debug.Log($"[LivesDisplay] Creating {livesManager.MaxLives} life icons in container: {livesContainer.name}");
+
     // Clear existing icons
     foreach (Transform child in livesContainer)
     {
@@ -106,6 +141,8 @@ public class LivesDisplay : MonoBehaviour
       GameObject iconObj = new GameObject($"LifeIcon_{i}");
       iconObj.transform.SetParent(livesContainer);
 
+      Debug.Log($"[LivesDisplay] Created LifeIcon_{i} as child of {livesContainer.name}");
+
       // Add Image component
       Image image = iconObj.AddComponent<Image>();
 
@@ -117,13 +154,13 @@ public class LivesDisplay : MonoBehaviour
 
       image.preserveAspect = true;
 
-      // Set position - positioned below CountText (which is at y: -20)
+      // Set position - positioned horizontally aligned with gear
       RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
       if (rectTransform != null)
       {
-        // Position horizontally with spacing, vertically stacked
-        float xPosition = i * (iconSize + iconSpacing);
-        float yPosition = 0; // Start from top of container
+        // Position horizontally with spacing, aligned with gear Y position
+        float xPosition = i * (iconSize + iconSpacing); // Side by side horizontally
+        float yPosition = 0; // Same Y level as gear
         rectTransform.anchoredPosition = new Vector2(xPosition, yPosition);
         rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
       }
@@ -138,7 +175,9 @@ public class LivesDisplay : MonoBehaviour
   {
     // Create a circle with outline effect
     int size = 64;
-    Texture2D texture = new Texture2D(size, size);
+    Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+    texture.filterMode = FilterMode.Point; // Use point filtering for crisp pixels
+    texture.wrapMode = TextureWrapMode.Clamp;
 
     Vector2 center = new Vector2(size / 2f, size / 2f);
     float radius = (size / 2f) - outlineWidth;
@@ -170,8 +209,8 @@ public class LivesDisplay : MonoBehaviour
 
     texture.Apply();
 
-    // Create sprite from texture
-    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+    // Create sprite from texture with crisp settings
+    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
     return sprite;
   }
 
@@ -225,5 +264,79 @@ public class LivesDisplay : MonoBehaviour
     playerMaterial = newMaterial;
     Debug.Log($"[LivesDisplay] Player material updated: {newMaterial?.name ?? "null"}");
     UpdateLivesDisplay(livesManager.CurrentLives);
+  }
+
+  // Call this to refresh the lives display (useful when lives regenerate)
+  public void RefreshLives()
+  {
+    if (livesManager != null)
+    {
+      FindPlayerMaterial();
+      UpdateLivesDisplay(livesManager.CurrentLives);
+      Debug.Log($"[LivesDisplay] Lives refreshed: {livesManager.CurrentLives} lives");
+    }
+  }
+
+  private void CreateCountdownText()
+  {
+    Canvas canvas = UIManager.Instance?.touchControllerCanvas;
+    if (canvas == null)
+    {
+      Debug.LogError("[LivesDisplay] No canvas found for countdown text!");
+      return;
+    }
+
+    GameObject countdownObj = new GameObject("CountdownText");
+    countdownObj.transform.SetParent(canvas.transform, false);
+
+    TextMeshProUGUI tmp = countdownObj.AddComponent<TextMeshProUGUI>();
+    tmp.text = "Next life: 00:00";
+    tmp.fontSize = 24;
+    tmp.color = Color.white;
+    tmp.alignment = TextAlignmentOptions.TopLeft;
+    tmp.enableWordWrapping = false;
+
+    RectTransform rectTransform = countdownObj.GetComponent<RectTransform>();
+    rectTransform.anchorMin = new Vector2(0, 1);
+    rectTransform.anchorMax = new Vector2(0, 1);
+    rectTransform.pivot = new Vector2(0, 1);
+    rectTransform.anchoredPosition = new Vector2(50, -iconSize - 60);
+    rectTransform.sizeDelta = new Vector2(200, 50);
+    rectTransform.localScale = Vector3.one;
+
+    countdownText = tmp;
+  }
+
+  private void UpdateCountdownTimer()
+  {
+    if (countdownText == null || livesManager == null) return;
+
+    // Only show countdown on main menu
+    bool isMainMenu = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Active Main Menu";
+    countdownText.gameObject.SetActive(isMainMenu);
+
+    if (isMainMenu)
+    {
+      float timeUntilNextLife = livesManager.TimeUntilNextLife;
+
+      if (timeUntilNextLife > 0)
+      {
+        int minutes = Mathf.FloorToInt(timeUntilNextLife / 60f);
+        int seconds = Mathf.FloorToInt(timeUntilNextLife % 60f);
+        countdownText.text = $"Next life: {minutes:00}:{seconds:00}";
+        wasWaitingForLife = true;
+      }
+      else
+      {
+        countdownText.text = "Next life: Ready!";
+
+        // If we were waiting for a life and now it's ready, refresh the display
+        if (wasWaitingForLife)
+        {
+          RefreshLives();
+          wasWaitingForLife = false;
+        }
+      }
+    }
   }
 }

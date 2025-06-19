@@ -54,14 +54,14 @@ public partial class PAUSE : MonoBehaviour
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.2f, middleButtonWidth, buttonHeight), "Resume Play", style))
     {
       Time.timeScale = 1;
-      SceneLoader.isPaused = false;
+      SceneLoader.Instance.isPaused = false;
       UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("PAUSE");
     }
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.4f, middleButtonWidth, buttonHeight), "Restart Level", style))
     {
       Time.timeScale = 1;
-      SceneLoader.isPaused = false;
-      SceneLoader.ReloadScene();
+      SceneLoader.Instance.isPaused = false;
+      SceneLoader.Instance.ReloadScene();
     }
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.6f, middleButtonWidth, buttonHeight), "Change Difficulty: " + Optionz.DisplayDifficulty(), style))
     {
@@ -70,8 +70,8 @@ public partial class PAUSE : MonoBehaviour
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.8f, middleButtonWidth, buttonHeight), "Main Menu", style))
     {
       Time.timeScale = 1;
-      SceneLoader.isPaused = false;
-      SceneLoader.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.isPaused = false;
+      SceneLoader.Instance.ChangeScene("Active Main Menu");
     }
     // Right side - Control Optionz header
     GUI.Label(new Rect(rightPosition, Screen.height * 0.2f, rightButtonWidth, buttonHeight * 0.5f), "Control Optionz", headerStyle);

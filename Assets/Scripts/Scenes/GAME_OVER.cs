@@ -33,10 +33,10 @@ public partial class GAME_OVER : MonoBehaviour
     }
     hasProcessedDeath = true;
 
-    Debug.Log($"[GAME_OVER] Processing death. Current scene: {SceneLoader.currentScene}");
+    Debug.Log($"[GAME_OVER] Processing death. Current scene: {SceneLoader.Instance.currentScene}");
 
     // Only process death if we're not on the main menu
-    if (string.IsNullOrEmpty(SceneLoader.currentScene) || SceneLoader.currentScene == "Active Main Menu")
+    if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || SceneLoader.Instance.currentScene == "Active Main Menu")
     {
       Debug.Log("[GAME_OVER] On main menu, skipping death processing");
       return;
@@ -99,12 +99,12 @@ public partial class GAME_OVER : MonoBehaviour
     // Try Again button - positioned on the right
     if (GUI.Button(new Rect(Screen.width * 0.55f, verticalPosition, buttonWidth, buttonHeight), "Try Again", buttonStyle)) // 60% from left
     {
-      SceneLoader.LoadLastScene();
+      SceneLoader.Instance.LoadLastScene();
     }
     // Main Menu button - positioned on the left
     if (GUI.Button(new Rect(Screen.width * 0.1f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 15% from left
     {
-      SceneLoader.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.ChangeScene("Active Main Menu");
     }
   }
 

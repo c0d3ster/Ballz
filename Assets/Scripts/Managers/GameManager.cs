@@ -23,8 +23,21 @@ public class GameManager : MonoBehaviour
       instance = go.AddComponent<GameManager>();
       DontDestroyOnLoad(go);
 
-      // Initialize SceneLoader
-      go.AddComponent<SceneLoader>();
+      // Initialize SceneLoader first (dependency injection)
+      GameObject sceneLoaderObj = new GameObject("SceneLoader");
+      sceneLoaderObj.transform.SetParent(null);
+      SceneLoader sceneLoader = sceneLoaderObj.AddComponent<SceneLoader>();
+      DontDestroyOnLoad(sceneLoaderObj);
+
+      // Ensure SceneLoader is properly initialized before proceeding
+      if (SceneLoader.Instance == null)
+      {
+        Debug.LogError("[GameManager] SceneLoader.Instance is null after creation!");
+      }
+      else
+      {
+        Debug.Log("[GameManager] SceneLoader.Instance successfully created");
+      }
 
       // Create LevelProgressManager if it doesn't exist
       if (FindFirstObjectByType<LevelProgressManager>() == null)

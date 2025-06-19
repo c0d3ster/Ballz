@@ -10,7 +10,7 @@ public partial class Win : MonoBehaviour
     Time.timeScale = 0;
 
     // Determine which game mode was completed based on the current scene
-    GameMode? gameMode = SceneLoader.DetermineGameMode(SceneLoader.currentScene);
+    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
     if (gameMode.HasValue)
     {
       LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
@@ -32,19 +32,19 @@ public partial class Win : MonoBehaviour
     if (GUI.Button(new Rect(Screen.width * 0.08f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 8% from left
     {
       Time.timeScale = 1;
-      SceneLoader.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.ChangeScene("Active Main Menu");
     }
     // Try For Better Time button - center position
     if (GUI.Button(new Rect(Screen.width * 0.375f, verticalPosition, buttonWidth, buttonHeight), "Try For A Better Time", buttonStyle)) // 37.5% from left
     {
       Time.timeScale = 1;
-      SceneLoader.ReloadScene();
+      SceneLoader.Instance.ReloadScene();
     }
     // Next Level button - right position
     if (GUI.Button(new Rect(Screen.width * 0.67f, verticalPosition, buttonWidth, buttonHeight), "Next Level", buttonStyle)) // 67% from left
     {
       Time.timeScale = 1;
-      SceneLoader.NextLevel();
+      SceneLoader.Instance.NextLevel();
     }
   }
 

@@ -30,13 +30,13 @@ public partial class Dodge : MonoBehaviour
       //add change color, loud sound, and explode then timer to load
       other.gameObject.SetActive(false);
 
-      if (string.IsNullOrEmpty(SceneLoader.currentScene) || SceneLoader.currentScene == "Active Main Menu")
+      if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || SceneLoader.Instance.currentScene == "Active Main Menu")
       {
-        SceneLoader.ReloadScene();
+        SceneLoader.Instance.ReloadScene();
       }
       else
       {
-        SceneLoader.GameOver();
+        SceneLoader.Instance.GameOver();
       }
     }
   }

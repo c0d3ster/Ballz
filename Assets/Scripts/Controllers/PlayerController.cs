@@ -10,8 +10,6 @@ public class PlayerController : MonoBehaviour
   public float speed = 10f;
   public bool canJump;
   public int count;
-  public Text countText;
-  private GameObject[] totalBoxes;
   public Camera cam;
   public static Vector3 camOffset;
   public Vector3 camShift;
@@ -23,6 +21,8 @@ public class PlayerController : MonoBehaviour
 
   private bool isHoldingSpace = false;
   private Coroutine spaceHoldCoroutine;
+  private CountDisplay countDisplay;
+  private GameObject[] totalBoxes;
 
   public virtual void Awake()
   {
@@ -55,6 +55,12 @@ public class PlayerController : MonoBehaviour
     this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up"); // gets total number of collectables on scene
     this.count = 0;
 
+    // Get CountDisplay reference
+    if (UIManager.Instance != null)
+    {
+      countDisplay = UIManager.Instance.GetComponent<CountDisplay>();
+    }
+
     // Debug joystick setup
     GameObject outer = GameObject.Find("TouchControllerOuter");
     GameObject inner = GameObject.Find("TouchControllerInner");
@@ -73,11 +79,12 @@ public class PlayerController : MonoBehaviour
       }
     }
 
-    if (this.countText)
+    // Initialize count display
+    if (countDisplay != null)
     {
-      this.countText.text = "";
-      this.SetCountText();
+      countDisplay.UpdateCount(0, this.totalBoxes.Length);
     }
+
     if (Optionz.diff != 0)
     {
       this.speed = (float)(this.speed / Optionz.diff); // makes player move slower if difficulty is low and vice versa
@@ -152,13 +159,13 @@ public class PlayerController : MonoBehaviour
     // Check if player fell off the map
     if (this.rb.transform.position.y <= -10)
     {
-      if (string.IsNullOrEmpty(SceneLoader.currentScene) || (SceneLoader.currentScene == "Active Main Menu"))
+      if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || (SceneLoader.Instance.currentScene == "Active Main Menu"))
       {
-        SceneLoader.ChangeScene("Active Main Menu");
+        SceneLoader.Instance.ChangeScene("Active Main Menu");
       }
       else
       {
-        SceneLoader.GameOver();
+        SceneLoader.Instance.GameOver();
       }
     }
   }
@@ -176,27 +183,30 @@ public class PlayerController : MonoBehaviour
     {
       other.gameObject.SetActive(false);
       this.count = this.count + 1;
-      if (this.countText != null)
+
+      // Update count display
+      if (countDisplay != null)
       {
-        this.SetCountText();
+        countDisplay.SetCount(this.count);
       }
     }
   }
 
   public virtual void SetCountText()
   {
-    if (this.countText == null) return;
+    if (countDisplay == null) return;
 
     if (this.totalBoxes.Length == 0)
     {
-      this.countText.text = "";
+      countDisplay.ClearCount();
       return;
     }
 
-    this.countText.text = (("Count: " + this.count.ToString()) + "/") + this.totalBoxes.Length.ToString();
+    countDisplay.UpdateCount(this.count, this.totalBoxes.Length);
+
     if (this.totalBoxes.Length > 0 && this.count >= this.totalBoxes.Length)
     {
-      SceneLoader.Win();
+      SceneLoader.Instance.Win();
     }
   }
 

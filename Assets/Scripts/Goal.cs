@@ -7,11 +7,20 @@ public partial class Goal : MonoBehaviour
 {
   public GameObject[] totalBoxes;
   public int count;
-  public Text countText;
+
+  private CountDisplay countDisplay;
+
   public virtual void Start()
   {
     this.totalBoxes = GameObject.FindGameObjectsWithTag("Pick Up");
     this.count = 0;
+
+    // Get CountDisplay reference
+    if (UIManager.Instance != null)
+    {
+      countDisplay = UIManager.Instance.GetComponent<CountDisplay>();
+    }
+
     this.SetCountText();
   }
 
@@ -27,11 +36,14 @@ public partial class Goal : MonoBehaviour
 
   public virtual void SetCountText()
   {
-    this.countText.text = (("Count: " + this.count.ToString()) + " out of ") + this.totalBoxes.Length;
+    if (countDisplay != null)
+    {
+      countDisplay.UpdateCount(this.count, this.totalBoxes.Length);
+    }
+
     if (this.count >= this.totalBoxes.Length)
     {
-      SceneLoader.Win();
+      SceneLoader.Instance.Win();
     }
   }
-
 }

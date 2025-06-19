@@ -14,7 +14,7 @@ public partial class Spinner : MonoBehaviour
   {
     if (other.gameObject.CompareTag("Player") && this.gameObject.CompareTag("Optionz"))
     {
-      SceneLoader.Pause();
+      SceneLoader.Instance.Pause();
     }
   }
 
