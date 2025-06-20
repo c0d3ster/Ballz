@@ -103,4 +103,4 @@ For detailed documentation on specific systems and features, see the [Documentat
 5. Create a Pull Request
 
 ## License
-[Your chosen license] 
+MIT

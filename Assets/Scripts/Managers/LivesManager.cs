@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using UnityEngine.SceneManagement;
 
@@ -9,6 +10,10 @@ public class LivesManager : MonoBehaviour
   [Header("Lives Settings")]
   [SerializeField] private int maxLives = 5;
   [SerializeField] private float regenerationTimeMinutes = 15f;
+
+  [Header("Easter Egg Settings")]
+  [SerializeField] private int tapsRequiredForEasterEgg = 5;
+  [SerializeField] private float maxTimeBetweenTaps = 2f; // Reset counter if more than 2 seconds between taps
 
   public int CurrentLives { get; private set; }
   public int MaxLives => maxLives;
@@ -22,6 +27,11 @@ public class LivesManager : MonoBehaviour
   private LivesDisplay livesDisplay;
   private Transform livesContainer;
   private bool isInitialized = false;
+
+  // Easter egg variables
+  private int consecutiveTapCount = 0;
+  private float lastTapTime = 0f;
+  private Button livesContainerButton;
 
   private void Awake()
   {
@@ -118,12 +128,17 @@ public class LivesManager : MonoBehaviour
     rectTransform.anchoredPosition = new Vector2(35, -35);
 
     livesContainer = containerObj.transform;
+
+    // Setup easter egg tap handler
+    SetupEasterEggTapHandler();
+
     Debug.Log("[LivesManager] Created LivesContainer at position (35, -35)");
   }
 
   private void Update()
   {
     CheckLifeRegeneration();
+    CheckEasterEggTapTimeout();
 
     // Reset lives when R is pressed (only in editor)
 #if UNITY_EDITOR
@@ -348,5 +363,78 @@ public class LivesManager : MonoBehaviour
     SaveLives();
     OnLivesChanged?.Invoke(CurrentLives);
     Debug.Log($"[LivesManager] Force reset complete: {CurrentLives}/{maxLives} lives");
+  }
+
+  private void SetupEasterEggTapHandler()
+  {
+    if (livesContainer == null)
+    {
+      Debug.LogError("[LivesManager] LivesContainer not found for easter egg setup!");
+      return;
+    }
+
+    // Add Button component to LivesContainer for tap detection
+    livesContainerButton = livesContainer.gameObject.GetComponent<Button>();
+    if (livesContainerButton == null)
+    {
+      livesContainerButton = livesContainer.gameObject.AddComponent<Button>();
+    }
+
+    // Set up the button to be transparent and not interfere with visuals
+    ColorBlock colors = livesContainerButton.colors;
+    colors.normalColor = Color.clear;
+    colors.highlightedColor = Color.clear;
+    colors.pressedColor = Color.clear;
+    colors.selectedColor = Color.clear;
+    colors.disabledColor = Color.clear;
+    livesContainerButton.colors = colors;
+
+    // Add click listener
+    livesContainerButton.onClick.AddListener(OnLivesContainerTapped);
+
+    Debug.Log("[LivesManager] Easter egg tap handler setup complete");
+  }
+
+  private void OnLivesContainerTapped()
+  {
+    float currentTime = Time.time;
+
+    // Check if too much time has passed since last tap
+    if (currentTime - lastTapTime > maxTimeBetweenTaps)
+    {
+      consecutiveTapCount = 0;
+    }
+
+    consecutiveTapCount++;
+    lastTapTime = currentTime;
+
+    Debug.Log($"[LivesManager] Lives container tapped! Consecutive taps: {consecutiveTapCount}/{tapsRequiredForEasterEgg}");
+
+    // Check if easter egg should trigger
+    if (consecutiveTapCount >= tapsRequiredForEasterEgg)
+    {
+      TriggerEasterEgg();
+    }
+  }
+
+  private void CheckEasterEggTapTimeout()
+  {
+    // Reset counter if too much time has passed since last tap
+    if (Time.time - lastTapTime > maxTimeBetweenTaps && consecutiveTapCount > 0)
+    {
+      consecutiveTapCount = 0;
+      Debug.Log("[LivesManager] Easter egg tap counter reset due to timeout");
+    }
+  }
+
+  private void TriggerEasterEgg()
+  {
+    Debug.Log("[LivesManager] 🥚 EASTER EGG TRIGGERED! Resetting lives to maximum!");
+
+    // Reset the tap counter
+    consecutiveTapCount = 0;
+
+    // Call the existing ResetLives method
+    ResetLives();
   }
 }
