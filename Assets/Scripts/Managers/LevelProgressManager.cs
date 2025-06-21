@@ -46,7 +46,7 @@ public class LevelProgressManager : MonoBehaviour
   private void OnDestroy()
   {
     UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
-    HotkeyManager.OnResetPressed -= ResetProgress;
+    HotkeyManager.OnResetConfirmed -= ResetProgress;
     HotkeyManager.OnCompleteLevelPressed -= CompleteCurrentLevel;
   }
 
@@ -65,7 +65,7 @@ public class LevelProgressManager : MonoBehaviour
     UpdateGameModeVisibility();
 
     // Subscribe to hotkey events
-    HotkeyManager.OnResetPressed += ResetProgress;
+    HotkeyManager.OnResetConfirmed += ResetProgress;
     HotkeyManager.OnCompleteLevelPressed += CompleteCurrentLevel;
   }
 

@@ -26,7 +26,8 @@ public class LifePickup : BasePickup
   protected override void Start()
   {
     // Subscribe to hotkey events
-    HotkeyManager.OnResetPressed += ResetPickup;
+    HotkeyManager.OnResetConfirmed += ResetPickup;
+    HotkeyManager.OnResetPickupsPressed += ResetPickup;
 
     // Call base Start() which will call OnPickupStart()
     base.Start();
@@ -80,7 +81,8 @@ public class LifePickup : BasePickup
   private void OnDestroy()
   {
     // Unsubscribe from hotkey events
-    HotkeyManager.OnResetPressed -= ResetPickup;
+    HotkeyManager.OnResetConfirmed -= ResetPickup;
+    HotkeyManager.OnResetPickupsPressed -= ResetPickup;
 
     // Clean up the created material
     if (translucentMaterial != null)

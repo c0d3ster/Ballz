@@ -56,7 +56,7 @@ public class LivesManager : MonoBehaviour
       Debug.Log($"[LivesManager] Start - Initialized with {CurrentLives}/{maxLives} lives");
 
       // Subscribe to hotkey events
-      HotkeyManager.OnResetPressed += ClearLivesData;
+      HotkeyManager.OnResetConfirmed += ClearLivesData;
     }
   }
 
@@ -65,7 +65,7 @@ public class LivesManager : MonoBehaviour
     if (Instance == this)
     {
       SceneManager.sceneLoaded -= OnSceneLoaded;
-      HotkeyManager.OnResetPressed -= ClearLivesData;
+      HotkeyManager.OnResetConfirmed -= ClearLivesData;
     }
   }
 
