@@ -58,7 +58,6 @@ public partial class SceneLoader : MonoBehaviour
       // Set initial scene immediately in Awake
       this.currentScene = SceneManager.GetActiveScene().name;
       this.lastScene = this.currentScene;
-      Debug.Log("Initial scene set in Awake to: " + this.currentScene);
 
       // Register scene load callback
       SceneManager.sceneLoaded += this.OnSceneLoaded;
@@ -72,8 +71,6 @@ public partial class SceneLoader : MonoBehaviour
 
   public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
   {
-    Debug.Log($"[Scene] OnSceneLoaded - Old current: '{currentScene}', New scene: '{scene.name}', Mode: {mode}");
-
     // Only update currentScene if this is not an overlay scene
     if (mode != LoadSceneMode.Additive)
     {
@@ -84,9 +81,6 @@ public partial class SceneLoader : MonoBehaviour
     {
       Debug.Log($"[Scene] Overlay scene loaded - keeping current scene as: '{currentScene}'");
     }
-
-    // LivesManager and CountManager handle their own UI initialization
-    Debug.Log("[SceneLoader] Scene loaded - managers handle their own UI initialization");
   }
 
   public void OnDestroy()
@@ -104,13 +98,12 @@ public partial class SceneLoader : MonoBehaviour
     Debug.Log($"[Scene] ChangeScene called - Current: '{currentScene}', Last: '{lastScene}', Changing to: '{sceneName}'");
     this.lastScene = this.currentScene;
     this.currentScene = sceneName;
-    Debug.Log($"[Scene] After update - Current: '{currentScene}', Last: '{lastScene}'");
+
     SceneManager.LoadScene(this.currentScene);
   }
 
   public void ReloadScene()
   {
-    Debug.Log($"[Scene] ReloadScene called - Current: '{currentScene}', Last: '{lastScene}'");
     // Don't update lastScene when reloading
     SceneManager.LoadScene(this.currentScene);
   }
@@ -132,7 +125,6 @@ public partial class SceneLoader : MonoBehaviour
   {
     // Complete the current level and save progress
     GameMode? gameMode = DetermineGameMode(currentScene);
-    Debug.Log($"[SceneLoader] Win - Current scene: {currentScene}, Game mode: {gameMode}");
     if (gameMode.HasValue)
     {
       // Check if next level exists before incrementing
@@ -253,7 +245,6 @@ public partial class SceneLoader : MonoBehaviour
 
   public void GameOver()
   {
-    Debug.Log($"[SceneLoader] GameOver called - Current scene: {currentScene}");
     this.ChangeScene("GAME OVER");
   }
 }

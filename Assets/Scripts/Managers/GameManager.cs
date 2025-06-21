@@ -41,46 +41,29 @@ public class GameManager : MonoBehaviour
       // Create LivesManager if it doesn't exist
       if (FindFirstObjectByType<LivesManager>() == null)
       {
-        Debug.Log("[GameManager] Creating LivesManager");
         GameObject lm = new GameObject("LivesManager");
         lm.transform.SetParent(null);
         LivesManager livesManager = lm.AddComponent<LivesManager>();
         DontDestroyOnLoad(lm);
-        Debug.Log($"[GameManager] LivesManager created. Instance: {LivesManager.Instance != null}");
-      }
-      else
-      {
-        Debug.Log("[GameManager] LivesManager already exists");
       }
 
       // Create CountManager if it doesn't exist
       if (FindFirstObjectByType<CountManager>() == null)
       {
-        Debug.Log("[GameManager] Creating CountManager");
         GameObject cm = new GameObject("CountManager");
         cm.transform.SetParent(null);
         CountManager countManager = cm.AddComponent<CountManager>();
         DontDestroyOnLoad(cm);
-        Debug.Log($"[GameManager] CountManager created. Instance: {CountManager.Instance != null}");
-      }
-      else
-      {
-        Debug.Log("[GameManager] CountManager already exists");
       }
 
       // Create TimerManager if it doesn't exist
       if (FindFirstObjectByType<TimerManager>() == null)
       {
-        Debug.Log("[GameManager] Creating TimerManager");
+
         GameObject tm = new GameObject("TimerManager");
         tm.transform.SetParent(null);
         TimerManager timerManager = tm.AddComponent<TimerManager>();
         DontDestroyOnLoad(tm);
-        Debug.Log($"[GameManager] TimerManager created. Instance: {TimerManager.Instance != null}");
-      }
-      else
-      {
-        Debug.Log("[GameManager] TimerManager already exists");
       }
 
       // Setup UI

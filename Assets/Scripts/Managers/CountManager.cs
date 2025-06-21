@@ -27,11 +27,9 @@ public class CountManager : MonoBehaviour
     {
       Instance = this;
       DontDestroyOnLoad(gameObject);
-      Debug.Log($"[CountManager] Awake - Setting instance. GameObject: {gameObject.name}");
     }
     else
     {
-      Debug.Log($"[CountManager] Awake - Instance already exists, destroying {gameObject.name}");
       Destroy(gameObject);
     }
   }
@@ -40,7 +38,6 @@ public class CountManager : MonoBehaviour
   {
     if (Instance == this)
     {
-      Debug.Log("[CountManager] Start - Initializing count manager");
       InitializeCountManager();
       SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -62,7 +59,6 @@ public class CountManager : MonoBehaviour
     CreateCountDisplay();
 
     isInitialized = true;
-    Debug.Log("[CountManager] Initialized count manager");
   }
 
   private void CreateCountDisplay()
@@ -79,8 +75,6 @@ public class CountManager : MonoBehaviour
 
       // Initialize with current values to trigger visibility logic
       countDisplay.UpdateCount(CurrentCount, TotalCount);
-
-      Debug.Log("[CountManager] Created CountDisplay component");
     }
   }
 
@@ -89,7 +83,6 @@ public class CountManager : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != LoadSceneMode.Additive)
     {
-      Debug.Log($"[CountManager] Scene loaded: {scene.name}");
       ResetCount();
       FindPickupsInScene();
 
@@ -108,8 +101,6 @@ public class CountManager : MonoBehaviour
     TotalCount = pickups.Length;
     CurrentCount = 0;
 
-    Debug.Log($"[CountManager] Found {TotalCount} pickups in scene");
-
     // Update the display
     UpdateCountDisplay();
   }
@@ -124,15 +115,12 @@ public class CountManager : MonoBehaviour
     // Increment count
     CurrentCount++;
 
-    Debug.Log($"[CountManager] Pickup collected! Count: {CurrentCount}/{TotalCount}");
-
     // Update display
     UpdateCountDisplay();
 
     // Check for level completion
     if (IsLevelComplete)
     {
-      Debug.Log("[CountManager] Level complete triggered!");
       OnLevelComplete?.Invoke();
       SceneLoader.Instance.Win();
     }
@@ -182,7 +170,6 @@ public class CountManager : MonoBehaviour
     {
       CurrentCount = TotalCount;
       UpdateCountDisplay();
-      Debug.Log("[CountManager] Force level complete triggered!");
       OnLevelComplete?.Invoke();
       SceneLoader.Instance.Win();
     }

@@ -160,18 +160,6 @@ public class PlayerController : MonoBehaviour
     this.cam.transform.position = this.cam.transform.position + PlayerController.camOffset;
   }
 
-  public virtual void OnTriggerEnter(Collider other)
-  {
-    if (other.gameObject.CompareTag("Pick Up"))
-    {
-      // Use CountManager to handle pickup collection
-      if (CountManager.Instance != null)
-      {
-        CountManager.Instance.CollectPickup(other.gameObject);
-      }
-    }
-  }
-
   public void Jump()
   {
     if (IsGrounded() && canJump)

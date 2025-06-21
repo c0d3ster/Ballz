@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using UnityEngine.SceneManagement;
 
@@ -9,6 +10,10 @@ public class LivesManager : MonoBehaviour
   [Header("Lives Settings")]
   [SerializeField] private int maxLives = 5;
   [SerializeField] private float regenerationTimeMinutes = 15f;
+
+  [Header("Easter Egg Settings")]
+  [SerializeField] private int tapsRequiredForEasterEgg = 5;
+  [SerializeField] private float maxTimeBetweenTaps = 2f; // Reset counter if more than 2 seconds between taps
 
   public int CurrentLives { get; private set; }
   public int MaxLives => maxLives;
@@ -23,17 +28,20 @@ public class LivesManager : MonoBehaviour
   private Transform livesContainer;
   private bool isInitialized = false;
 
+  // Easter egg variables
+  private int consecutiveTapCount = 0;
+  private float lastTapTime = 0f;
+  private int targetLifeCount = 0; // The life count to restore to when easter egg triggers
+
   private void Awake()
   {
     if (Instance == null)
     {
       Instance = this;
       DontDestroyOnLoad(gameObject);
-      Debug.Log($"[LivesManager] Awake - Setting instance. GameObject: {gameObject.name}");
     }
     else
     {
-      Debug.Log($"[LivesManager] Awake - Instance already exists, destroying {gameObject.name}");
       Destroy(gameObject);
     }
   }
@@ -42,7 +50,6 @@ public class LivesManager : MonoBehaviour
   {
     if (Instance == this)
     {
-      Debug.Log("[LivesManager] Start - Loading lives");
       InitializeLivesManager();
       LoadLives();
       SceneManager.sceneLoaded += OnSceneLoaded;
@@ -63,8 +70,6 @@ public class LivesManager : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != LoadSceneMode.Additive)
     {
-      Debug.Log($"[LivesManager] Scene loaded: {scene.name}");
-
       // Notify LivesDisplay that scene has loaded so it can find player material
       if (livesDisplay != null)
       {
@@ -81,7 +86,6 @@ public class LivesManager : MonoBehaviour
     CreateLivesDisplay();
 
     isInitialized = true;
-    Debug.Log("[LivesManager] Initialized lives manager");
   }
 
   private void CreateLivesDisplay()
@@ -91,11 +95,6 @@ public class LivesManager : MonoBehaviour
 
     // Add LivesDisplay component to this GameObject
     livesDisplay = gameObject.AddComponent<LivesDisplay>();
-
-    if (livesDisplay != null)
-    {
-      Debug.Log("[LivesManager] Created LivesDisplay component");
-    }
   }
 
   private void CreateLivesContainer()
@@ -118,12 +117,12 @@ public class LivesManager : MonoBehaviour
     rectTransform.anchoredPosition = new Vector2(35, -35);
 
     livesContainer = containerObj.transform;
-    Debug.Log("[LivesManager] Created LivesContainer at position (35, -35)");
   }
 
   private void Update()
   {
     CheckLifeRegeneration();
+    CheckEasterEggTapTimeout();
 
     // Reset lives when R is pressed (only in editor)
 #if UNITY_EDITOR
@@ -301,9 +300,15 @@ public class LivesManager : MonoBehaviour
     OnLivesChanged?.Invoke(CurrentLives);
   }
 
-  public void ResetLives()
+  public void ResetLives(int newLives)
   {
-    CurrentLives = maxLives;
+    if (newLives < 0 || newLives > maxLives)
+    {
+      Debug.LogError("[LivesManager] Invalid number of lives to reset to!");
+      return;
+    }
+
+    CurrentLives = newLives;
     lastLifeLostTime = DateTime.UtcNow;
     SaveLives();
 
@@ -319,7 +324,7 @@ public class LivesManager : MonoBehaviour
   [ContextMenu("Reset Lives to Max")]
   public void ResetLivesToMax()
   {
-    ResetLives();
+    ResetLives(maxLives);
   }
 
   [ContextMenu("Clear All Lives Data")]
@@ -348,5 +353,49 @@ public class LivesManager : MonoBehaviour
     SaveLives();
     OnLivesChanged?.Invoke(CurrentLives);
     Debug.Log($"[LivesManager] Force reset complete: {CurrentLives}/{maxLives} lives");
+  }
+
+  public void OnLifeIconClicked(int lifeNumber)
+  {
+    float currentTime = Time.time;
+
+    // Check if too much time has passed since last tap
+    if (currentTime - lastTapTime > maxTimeBetweenTaps)
+    {
+      consecutiveTapCount = 0;
+    }
+
+    consecutiveTapCount++;
+    lastTapTime = currentTime;
+    targetLifeCount = lifeNumber; // Store which life count to restore to
+
+    Debug.Log($"[LivesManager] Life icon {lifeNumber} clicked! Consecutive taps: {consecutiveTapCount}/{tapsRequiredForEasterEgg}");
+
+    // Check if easter egg should trigger
+    if (consecutiveTapCount >= tapsRequiredForEasterEgg)
+    {
+      TriggerEasterEgg();
+    }
+  }
+
+  private void CheckEasterEggTapTimeout()
+  {
+    // Reset counter if too much time has passed since last tap
+    if (Time.time - lastTapTime > maxTimeBetweenTaps && consecutiveTapCount > 0)
+    {
+      consecutiveTapCount = 0;
+      Debug.Log("[LivesManager] Easter egg tap counter reset due to timeout");
+    }
+  }
+
+  private void TriggerEasterEgg()
+  {
+    Debug.Log($"[LivesManager] 🥚 EASTER EGG TRIGGERED! Resetting lives to {targetLifeCount}!");
+
+    // Reset the tap counter
+    consecutiveTapCount = 0;
+
+    // Call the ResetLives method with the target life count
+    ResetLives(targetLifeCount);
   }
 }

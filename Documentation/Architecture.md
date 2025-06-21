@@ -6,7 +6,11 @@ This document explains the overall architecture of the BALLZ game, including the
 
 The game follows a manager-based architecture with centralized systems that handle different aspects of gameplay. All managers are singletons that persist across scenes and communicate through events.
 
-## Manager System
+The codebase distinguishes between **Managers** and **Loaders** based on their primary responsibilities:
+
+- **Managers**: Handle ongoing game state, data persistence, and system coordination. They are long-lived, persist across scenes, and manage continuous game systems like lives, scores, progress, and UI elements.
+
+- **Loaders**: Handle resource loading, initialization, and one-time setup operations. They may be long-lived but focus on loading/initialization tasks like scene transitions, asset loading, and external service connections.
 
 ### Core Managers
 
@@ -19,17 +23,6 @@ The game follows a manager-based architecture with centralized systems that hand
   - Sets up the UI system
   - Ensures proper initialization order
   - Manages the bootstrap process
-
-#### SceneLoader
-- **Purpose**: Handles all scene transitions and scene state
-- **Location**: `Assets/Scripts/Loaders/SceneLoader.cs`
-- **Initialization**: Created by GameManager during bootstrap
-- **Responsibilities**:
-  - Scene loading and unloading
-  - Scene state tracking (current, last, paused)
-  - Game mode detection from scene names
-  - Overlay scene management (PAUSE, GAME OVER, WIN)
-  - Level progression logic
 
 #### UIManager
 - **Purpose**: Manages the persistent UI canvas and UI state
@@ -80,6 +73,19 @@ The game follows a manager-based architecture with centralized systems that hand
   - Progress persistence
   - Game mode unlocking logic
   - Level visibility management
+
+### Core Loaders
+
+#### SceneLoader
+- **Purpose**: Handles all scene transitions and scene state
+- **Location**: `Assets/Scripts/Loaders/SceneLoader.cs`
+- **Initialization**: Created by GameManager during bootstrap
+- **Responsibilities**:
+  - Scene loading and unloading
+  - Scene state tracking (current, last, paused)
+  - Game mode detection from scene names
+  - Overlay scene management (PAUSE, GAME OVER, WIN)
+  - Level progression logic
 
 ## Bootstrap Process
 

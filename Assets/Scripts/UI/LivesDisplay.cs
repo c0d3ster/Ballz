@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using TMPro;
 
@@ -58,8 +59,6 @@ public class LivesDisplay : MonoBehaviour
     // Subscribe to scene changes to find player material
     UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
 
-    Debug.Log($"[LivesDisplay] Initialized with {livesManager.CurrentLives} lives");
-
     // Try to find player material immediately and update display
     FindPlayerMaterial();
     UpdateLivesDisplay(livesManager.CurrentLives);
@@ -84,7 +83,6 @@ public class LivesDisplay : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != UnityEngine.SceneManagement.LoadSceneMode.Additive)
     {
-      Debug.Log($"[LivesDisplay] Scene loaded: {scene.name}, starting delayed material search");
       StartCoroutine(FindPlayerMaterialDelayed());
     }
   }
@@ -105,50 +103,32 @@ public class LivesDisplay : MonoBehaviour
 
   private void FindPlayerMaterial()
   {
-    Debug.Log("[LivesDisplay] Searching for player material...");
-
     // Try to find the player in the current scene
     GameObject player = GameObject.FindGameObjectWithTag("Player");
     if (player != null)
     {
-      Debug.Log($"[LivesDisplay] Found player: {player.name}");
       Renderer playerRenderer = player.GetComponent<Renderer>();
       if (playerRenderer != null && playerRenderer.material != null)
       {
         playerMaterial = playerRenderer.material;
-        Debug.Log($"[LivesDisplay] Found player material: {playerMaterial.name}, color: {playerMaterial.color}");
-      }
-      else
-      {
-        Debug.LogWarning("[LivesDisplay] Player found but no Renderer or material!");
       }
     }
     else
     {
-      Debug.LogWarning("[LivesDisplay] No player found with 'Player' tag!");
-
       // Try to find any object with "Player" in the name as fallback
       GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
       foreach (GameObject obj in allObjects)
       {
         if (obj.name.ToLower().Contains("player"))
         {
-          Debug.Log($"[LivesDisplay] Found potential player object: {obj.name}");
           Renderer renderer = obj.GetComponent<Renderer>();
           if (renderer != null && renderer.material != null)
           {
             playerMaterial = renderer.material;
-            Debug.Log($"[LivesDisplay] Using material from {obj.name}: {playerMaterial.name}, color: {playerMaterial.color}");
             break;
           }
         }
       }
-    }
-
-    // If no player found, we'll use a simple colored circle
-    if (playerMaterial == null)
-    {
-      Debug.Log("[LivesDisplay] No player material found, using fallback circle for lives display");
     }
   }
 
@@ -159,8 +139,6 @@ public class LivesDisplay : MonoBehaviour
       Debug.LogError("Lives container not found!");
       return;
     }
-
-    Debug.Log($"[LivesDisplay] Creating {livesManager.MaxLives} life icons in container: {livesContainer.name}");
 
     // Clear existing icons
     foreach (Transform child in livesContainer)
@@ -176,8 +154,6 @@ public class LivesDisplay : MonoBehaviour
       GameObject iconObj = new GameObject($"LifeIcon_{i}");
       iconObj.transform.SetParent(livesContainer);
 
-      Debug.Log($"[LivesDisplay] Created LifeIcon_{i} as child of {livesContainer.name}");
-
       // Add Image component
       Image image = iconObj.AddComponent<Image>();
 
@@ -188,6 +164,9 @@ public class LivesDisplay : MonoBehaviour
       image.color = Color.clear; // Start clear, will be tinted by UpdateLivesDisplay
 
       image.preserveAspect = true;
+
+      // Add GraphicRaycaster to ensure pointer events work
+      iconObj.AddComponent<GraphicRaycaster>();
 
       // Set position - positioned horizontally aligned with gear
       RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
@@ -201,10 +180,22 @@ public class LivesDisplay : MonoBehaviour
         rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
       }
 
+      // Add EventTrigger component for click detection (less intrusive than Button)
+      EventTrigger eventTrigger = iconObj.AddComponent<EventTrigger>();
+
+      // Create click event
+      EventTrigger.Entry clickEntry = new EventTrigger.Entry();
+      clickEntry.eventID = EventTriggerType.PointerClick;
+
+      // Store the life index for the click handler
+      int lifeIndex = i + 1; // 1-based index for lives
+
+      // Add click listener using lambda to capture the lifeIndex
+      clickEntry.callback.AddListener((data) => OnLifeIconClicked(lifeIndex));
+      eventTrigger.triggers.Add(clickEntry);
+
       lifeIcons[i] = image;
     }
-
-    Debug.Log($"[LivesDisplay] Created {livesManager.MaxLives} life icons");
   }
 
   private Sprite CreateCircleWithOutlineSprite()
@@ -256,8 +247,6 @@ public class LivesDisplay : MonoBehaviour
   {
     if (lifeIcons == null) return;
 
-    Debug.Log($"[LivesDisplay] Updating display: {currentLives} lives remaining, playerMaterial: {(playerMaterial != null ? playerMaterial.name : "null")}");
-
     for (int i = 0; i < lifeIcons.Length; i++)
     {
       if (lifeIcons[i] != null)
@@ -283,14 +272,12 @@ public class LivesDisplay : MonoBehaviour
           else
           {
             targetColor = availableLifeColor;
-            Debug.Log($"[LivesDisplay] Life {i}: No player material, using fallback color {targetColor}");
           }
         }
         else
         {
           // Depleted life - very translucent
           targetColor = depletedLifeColor;
-          Debug.Log($"[LivesDisplay] Life {i}: Depleted life, using color {targetColor}");
         }
 
         lifeIcons[i].color = targetColor;
@@ -302,7 +289,6 @@ public class LivesDisplay : MonoBehaviour
   public void UpdatePlayerMaterial(Material newMaterial)
   {
     playerMaterial = newMaterial;
-    Debug.Log($"[LivesDisplay] Player material updated: {newMaterial?.name ?? "null"}");
     UpdateLivesDisplay(livesManager.CurrentLives);
   }
 
@@ -313,7 +299,6 @@ public class LivesDisplay : MonoBehaviour
     {
       FindPlayerMaterial();
       UpdateLivesDisplay(livesManager.CurrentLives);
-      Debug.Log($"[LivesDisplay] Lives refreshed: {livesManager.CurrentLives} lives");
     }
   }
 
@@ -381,6 +366,14 @@ public class LivesDisplay : MonoBehaviour
           wasWaitingForLife = false;
         }
       }
+    }
+  }
+
+  private void OnLifeIconClicked(int lifeNumber)
+  {
+    if (livesManager != null)
+    {
+      livesManager.OnLifeIconClicked(lifeNumber);
     }
   }
 }

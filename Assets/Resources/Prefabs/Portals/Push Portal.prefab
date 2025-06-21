@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1965228837204836862}
   m_Layer: 0
   m_Name: Push Portal
-  m_TagString: Untagged
+  m_TagString: Goal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -123,10 +123,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pulseSpeed: 2
-  pulseAmount: 0.2
   minAlpha: 0.5
   maxAlpha: 0.75
-  emissionIntensity: 1
 --- !u!114 &1965228837204836862
 MonoBehaviour:
   m_ObjectHideFlags: 0

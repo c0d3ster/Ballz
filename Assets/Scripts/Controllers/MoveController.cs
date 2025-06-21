@@ -124,11 +124,13 @@ public class MoveController : MonoBehaviour
     {
       if (Input.GetMouseButtonDown(0))
       {
-        // Check if initial click was on a button
+        // Check if initial click was on a button or event trigger
         var pointerData = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
-        isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+        isClickingButton = results.Any(result =>
+          result.gameObject.GetComponent<Button>() != null ||
+          result.gameObject.GetComponent<EventTrigger>() != null);
       }
       else if (Input.GetMouseButtonUp(0))
       {
@@ -141,11 +143,13 @@ public class MoveController : MonoBehaviour
       var touch = Input.GetTouch(0);
       if (touch.phase == TouchPhase.Began)
       {
-        // Check if initial touch was on a button
+        // Check if initial touch was on a button or event trigger
         var pointerData = new PointerEventData(EventSystem.current) { position = touch.position };
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
-        isClickingButton = results.Any(result => result.gameObject.GetComponent<Button>() != null);
+        isClickingButton = results.Any(result =>
+          result.gameObject.GetComponent<Button>() != null ||
+          result.gameObject.GetComponent<EventTrigger>() != null);
       }
       else if (touch.phase == TouchPhase.Ended)
       {

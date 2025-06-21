@@ -57,6 +57,7 @@ Assets/
 │   ├── LevelStarts/   # Level initialization logic
 │   ├── Loaders/       # Scene and asset loading
 │   ├── Managers/      # Game management systems
+│   ├── Pickups/       # Pickup system scripts
 │   └── Scenes/        # Scene-specific scripts
 │
 ├── _Scenes/           # Main scenes directory
@@ -71,6 +72,7 @@ Assets/
 │   └── Test Scenes/              # Development and testing scenes
 │
 ├── Resources/         # Runtime loaded assets
+│   └── Prefabs/       # Prefabs including Life Pickup
 ├── Materials/         # Material assets
 ├── Textures/          # Texture assets
 ├── Sprites/           # 2D sprite assets
@@ -87,6 +89,7 @@ Assets/
 For detailed documentation on specific systems and features, see the [Documentation](./Documentation/) folder:
 
 - **[Architecture](./Documentation/Architecture.md)** - Game architecture, manager system, and component communication
+- **[Pickup System](./Documentation/PickupSystem.md)** - Unified pickup system supporting Collect mode, Push mode, and Life pickups with respawn
 - **[Timer System](./Documentation/TimerSystem.md)** - Centralized timer system documentation
 - *More documentation will be added here as the project grows*
 
@@ -103,4 +106,4 @@ For detailed documentation on specific systems and features, see the [Documentat
 5. Create a Pull Request
 
 ## License
-[Your chosen license] 
+MIT
