@@ -26,6 +26,7 @@ public class AdManager : MonoBehaviour
 
   // LevelPlay mediation objects
   private string gameId;
+  private LevelPlayRewardedAd rewardedAd;
 
   private void Awake()
   {
@@ -108,8 +109,11 @@ public class AdManager : MonoBehaviour
       LevelPlay.LaunchTestSuite();
     }
 
+    // Create Rewarded Ad object after successful initialization
+    CreateRewardedAd();
+
     // Load the first ad
-    _ = LoadRewardedAd();
+    LoadRewardedAd();
   }
 
   private void OnLevelPlayInitFailed(LevelPlayInitError error)
@@ -118,41 +122,72 @@ public class AdManager : MonoBehaviour
     IsInitialized = false;
   }
 
-  private string GetProjectIdFromServices()
+  private void CreateRewardedAd()
   {
-    // Try to get the Project ID from Unity Services
-    // This is a simplified approach - in a real implementation you might use Unity's API
     try
     {
-      // For now, we'll rely on manual configuration
-      // In the future, you could use Unity's Services API to get this automatically
+      // Create Rewarded Ad instance
+      rewardedAd = new LevelPlayRewardedAd(rewardedAdUnitId);
+
+      // Subscribe to Rewarded Ad events
+      rewardedAd.OnAdLoaded += OnRewardedAdLoaded;
+      rewardedAd.OnAdLoadFailed += OnRewardedAdLoadFailed;
+      rewardedAd.OnAdDisplayed += OnRewardedAdDisplayed;
+      rewardedAd.OnAdDisplayFailed += OnRewardedAdDisplayFailed;
+      rewardedAd.OnAdClicked += OnRewardedAdClicked;
+      rewardedAd.OnAdClosed += OnRewardedAdClosed;
+      rewardedAd.OnAdRewarded += OnRewardedAdRewarded;
+      rewardedAd.OnAdInfoChanged += OnRewardedAdInfoChanged;
+
+      Debug.Log($"[AdManager] Rewarded Ad created with unit ID: {rewardedAdUnitId}");
+    }
+    catch (Exception e)
+    {
+      Debug.LogError($"[AdManager] Error creating rewarded ad: {e.Message}");
+    }
+  }
+
+  private string GetProjectIdFromServices()
+  {
+    try
+    {
+      // Use the appropriate game ID based on platform
+      // Unity Services doesn't expose initialization state directly, so we'll use the game IDs
+      string gameId = (Application.platform == RuntimePlatform.IPhonePlayer)
+          ? iosGameId
+          : androidGameId;
+
+      if (!string.IsNullOrEmpty(gameId) && gameId != "unused")
+      {
+        Debug.Log($"[AdManager] Using Game ID from configuration: {gameId}");
+        return gameId;
+      }
+
+      Debug.LogWarning("[AdManager] Game ID not configured - using manual configuration");
       return null;
     }
-    catch
+    catch (Exception e)
     {
+      Debug.LogError($"[AdManager] Error retrieving Game ID: {e.Message}");
       return null;
     }
   }
 
-  public async Task LoadRewardedAd()
+  public void LoadRewardedAd()
   {
-    if (!IsInitialized)
+    if (!IsInitialized || rewardedAd == null)
     {
-      Debug.LogWarning("[AdManager] Ads not initialized yet!");
+      Debug.LogWarning("[AdManager] Ads not initialized yet or rewarded ad not created!");
       return;
     }
 
     try
     {
       Debug.Log("[AdManager] Loading rewarded ad...");
+      IsAdReady = false;
 
-      // LevelPlay is a mediation platform - we need to use the proper mediation API
-      // For now, we'll simulate the loading process since the exact API needs to be confirmed
-      // TODO: Replace with actual LevelPlay mediation API calls
-      await Task.Delay(100); // Simulate async loading
-
-      Debug.Log("[AdManager] Ad loading simulated - LevelPlay mediation API needs to be implemented");
-      IsAdReady = true;
+      // Load rewarded ad using LevelPlay API
+      rewardedAd.LoadAd();
     }
     catch (Exception e)
     {
@@ -161,12 +196,12 @@ public class AdManager : MonoBehaviour
     }
   }
 
-  public async Task ShowRewardedAd()
+  public void ShowRewardedAd()
   {
-    if (!IsAdReady)
+    if (!IsAdReady || rewardedAd == null)
     {
       Debug.LogWarning("[AdManager] Ad not ready! Loading ad first...");
-      await LoadRewardedAd();
+      LoadRewardedAd();
       return;
     }
 
@@ -174,13 +209,16 @@ public class AdManager : MonoBehaviour
     {
       Debug.Log("[AdManager] Showing rewarded ad...");
 
-      // LevelPlay is a mediation platform - we need to use the proper mediation API
-      // For now, we'll simulate the showing process since the exact API needs to be confirmed
-      // TODO: Replace with actual LevelPlay mediation API calls
-      await Task.Delay(100); // Simulate async showing
-
-      Debug.Log("[AdManager] Ad showing simulated - LevelPlay mediation API needs to be implemented");
-      OnAdCompleted?.Invoke();
+      // Check if ad is ready before showing
+      if (rewardedAd.IsAdReady())
+      {
+        rewardedAd.ShowAd();
+      }
+      else
+      {
+        Debug.LogWarning("[AdManager] Ad is not ready to show");
+        OnAdFailed?.Invoke();
+      }
     }
     catch (Exception e)
     {
@@ -189,56 +227,67 @@ public class AdManager : MonoBehaviour
     }
   }
 
-  // LevelPlay Event Handlers - These will be called by the mediation platform
-  private void OnRewardedAdLoaded()
+  // LevelPlay Rewarded Ad Event Handlers
+  private void OnRewardedAdLoaded(LevelPlayAdInfo adInfo)
   {
-    Debug.Log("[AdManager] Rewarded ad loaded successfully");
+    Debug.Log($"[AdManager] Rewarded ad loaded successfully - Placement: {adInfo.PlacementName}");
     IsAdReady = true;
   }
 
-  private void OnRewardedAdFailedLoad(string errorMessage)
+  private void OnRewardedAdLoadFailed(LevelPlayAdError error)
   {
-    Debug.LogError($"[AdManager] Rewarded ad failed to load: {errorMessage}");
+    Debug.LogError($"[AdManager] Rewarded ad failed to load: {error}");
     IsAdReady = false;
   }
 
-  private void OnRewardedAdUserRewarded(string type, double amount)
+  private void OnRewardedAdDisplayed(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] User rewarded: {type} {amount}");
-    OnAdCompleted?.Invoke();
+    Debug.Log($"[AdManager] Rewarded ad displayed - Placement: {adInfo.PlacementName}");
   }
 
-  private void OnRewardedAdClosed()
+  private void OnRewardedAdDisplayFailed(LevelPlayAdDisplayInfoError error)
   {
-    Debug.Log("[AdManager] Rewarded ad closed");
+    Debug.LogError($"[AdManager] Rewarded ad display failed: {error}");
+    OnAdFailed?.Invoke();
+  }
+
+  private void OnRewardedAdClicked(LevelPlayAdInfo adInfo)
+  {
+    Debug.Log($"[AdManager] Rewarded ad clicked - Placement: {adInfo.PlacementName}");
+  }
+
+  private void OnRewardedAdClosed(LevelPlayAdInfo adInfo)
+  {
+    Debug.Log($"[AdManager] Rewarded ad closed - Placement: {adInfo.PlacementName}");
     IsAdReady = false;
 
     // Load the next ad
-    _ = LoadRewardedAd();
+    LoadRewardedAd();
   }
 
-  private void OnRewardedAdClicked()
+  private void OnRewardedAdRewarded(LevelPlayAdInfo adInfo, LevelPlayReward reward)
   {
-    Debug.Log("[AdManager] Rewarded ad clicked");
+    Debug.Log($"[AdManager] User rewarded: {reward.Name} - {reward.Amount} - Placement: {adInfo.PlacementName}");
+    OnAdCompleted?.Invoke();
   }
 
-  private void OnRewardedAdImpressionRecorded(string impressionData)
+  private void OnRewardedAdInfoChanged(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] Rewarded ad impression recorded: {impressionData}");
+    Debug.Log($"[AdManager] Rewarded ad info changed - Placement: {adInfo.PlacementName}");
   }
 
   // Helper method to check if ads are available
   public bool CanShowAd()
   {
-    return IsInitialized && IsAdReady;
+    return IsInitialized && IsAdReady && rewardedAd != null && rewardedAd.IsAdReady();
   }
 
   // Method to add lives via ad reward
-  public async void RequestLivesViaAd()
+  public void RequestLivesViaAd()
   {
     if (CanShowAd())
     {
-      await ShowRewardedAd();
+      ShowRewardedAd();
     }
     else
     {
@@ -252,6 +301,22 @@ public class AdManager : MonoBehaviour
     // Clean up event handlers
     LevelPlay.OnInitSuccess -= OnLevelPlayInitSuccess;
     LevelPlay.OnInitFailed -= OnLevelPlayInitFailed;
+
+    // Clean up rewarded ad event handlers and dispose
+    if (rewardedAd != null)
+    {
+      rewardedAd.OnAdLoaded -= OnRewardedAdLoaded;
+      rewardedAd.OnAdLoadFailed -= OnRewardedAdLoadFailed;
+      rewardedAd.OnAdDisplayed -= OnRewardedAdDisplayed;
+      rewardedAd.OnAdDisplayFailed -= OnRewardedAdDisplayFailed;
+      rewardedAd.OnAdClicked -= OnRewardedAdClicked;
+      rewardedAd.OnAdClosed -= OnRewardedAdClosed;
+      rewardedAd.OnAdRewarded -= OnRewardedAdRewarded;
+      rewardedAd.OnAdInfoChanged -= OnRewardedAdInfoChanged;
+
+      rewardedAd.Dispose();
+      rewardedAd = null;
+    }
   }
 
 #if UNITY_EDITOR
@@ -275,8 +340,40 @@ public class AdManager : MonoBehaviour
   [ContextMenu("Get Advertising ID")]
   public void GetAdvertisingId()
   {
-    string deviceId = SystemInfo.deviceUniqueIdentifier;
-    Debug.Log($"[AdManager] Device ID: {deviceId}");
+    Debug.Log($"[AdManager] Application Identifier: {Application.identifier}");
+    Debug.Log($"[AdManager] Product Name: {Application.productName}");
+    Debug.Log($"[AdManager] Version: {Application.version}");
+    
+    // For Android, you can get the advertising ID using Google Play Services
+#if UNITY_ANDROID && !UNITY_EDITOR
+    try
+    {
+      using (AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+      {
+        AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+        AndroidJavaObject context = currentActivity.Call<AndroidJavaObject>("getApplicationContext");
+        
+        // Try to get advertising ID from Google Play Services
+        AndroidJavaClass advertisingIdClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+        AndroidJavaObject adInfo = advertisingIdClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", context);
+        string advertisingId = adInfo.Call<string>("getId");
+        
+        Debug.Log($"[AdManager] Android Advertising ID: {advertisingId}");
+        Debug.Log($"[AdManager] Is Limit Ad Tracking Enabled: {adInfo.Call<bool>("isLimitAdTrackingEnabled")}");
+      }
+    }
+    catch (Exception e)
+    {
+      Debug.LogWarning($"[AdManager] Could not get Android Advertising ID: {e.Message}");
+    }
+#endif
+    
+    // For iOS, advertising ID is not accessible directly from Unity
+#if UNITY_IOS && !UNITY_EDITOR
+    Debug.Log($"[AdManager] iOS: Advertising ID cannot be retrieved directly from Unity");
+    Debug.Log($"[AdManager] iOS: Check Settings > Privacy & Security > Tracking");
+#endif
+    
     Debug.Log($"[AdManager] To get your Advertising ID:");
     Debug.Log($"[AdManager] Android: Use 'adb shell settings get secure advertising_id'");
     Debug.Log($"[AdManager] iOS: Check Settings > Privacy & Security > Tracking");
