@@ -88,6 +88,12 @@ public class JumpButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
       isHolding = true;
       holdCoroutine = StartCoroutine(HoldJump());
+
+      // Trigger jump through HotkeyManager for consistency
+      if (HotkeyManager.Instance != null)
+      {
+        HotkeyManager.Instance.TriggerJump();
+      }
     }
   }
 
@@ -98,6 +104,12 @@ public class JumpButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
       StopCoroutine(holdCoroutine);
       holdCoroutine = null;
+    }
+
+    // Trigger jump release through HotkeyManager for consistency
+    if (HotkeyManager.Instance != null)
+    {
+      HotkeyManager.Instance.TriggerJumpRelease();
     }
   }
 

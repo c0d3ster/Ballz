@@ -6,7 +6,6 @@ using UnityEngine.EventSystems;
 public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
   private Button button;
-  private UIManager uiManager;
   private Image buttonImage;
 
   void Start()
@@ -14,13 +13,6 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     button = GetComponent<Button>();
     buttonImage = GetComponent<Image>();
     button.onClick.AddListener(OnPauseClick);
-
-    // Find UIManager instance
-    uiManager = UIManager.Instance;
-    if (uiManager == null)
-    {
-      Debug.LogWarning("UIManager instance not found!");
-    }
 
     // Disable UI navigation
     Navigation nav = new Navigation();
@@ -40,9 +32,15 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
   void OnPauseClick()
   {
-    if (uiManager != null)
+    // Use HotkeyManager to trigger pause - this ensures consistent behavior
+    // whether pause is triggered by keyboard (Escape) or UI button
+    if (HotkeyManager.Instance != null)
     {
-      uiManager.TogglePause();
+      HotkeyManager.Instance.TriggerPause();
+    }
+    else
+    {
+      Debug.LogWarning("HotkeyManager instance not found!");
     }
   }
 

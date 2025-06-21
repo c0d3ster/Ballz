@@ -36,6 +36,12 @@ public class UIManager : MonoBehaviour
     }
   }
 
+  void Start()
+  {
+    // Subscribe to hotkey events
+    HotkeyManager.OnPausePressed += TogglePause;
+  }
+
   void OnSceneLoaded(Scene scene, LoadSceneMode mode)
   {
     if (gameUICanvas == null) return;
@@ -55,14 +61,7 @@ public class UIManager : MonoBehaviour
     if (Instance == this)
     {
       SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-  }
-
-  void Update()
-  {
-    if (Input.GetKeyDown(KeyCode.Escape))
-    {
-      TogglePause();
+      HotkeyManager.OnPausePressed -= TogglePause;
     }
   }
 

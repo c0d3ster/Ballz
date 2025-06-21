@@ -46,6 +46,8 @@ public class LevelProgressManager : MonoBehaviour
   private void OnDestroy()
   {
     UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    HotkeyManager.OnResetPressed -= ResetProgress;
+    HotkeyManager.OnCompleteLevelPressed -= CompleteCurrentLevel;
   }
 
   private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -61,30 +63,15 @@ public class LevelProgressManager : MonoBehaviour
   {
     LoadProgress();
     UpdateGameModeVisibility();
+
+    // Subscribe to hotkey events
+    HotkeyManager.OnResetPressed += ResetProgress;
+    HotkeyManager.OnCompleteLevelPressed += CompleteCurrentLevel;
   }
 
   private void Update()
   {
-    // Press R to reset progress (only in editor)
-#if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            ResetProgress();
-        }
-        
-        // Press C to complete current level (only in editor)
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
-            if (gameMode.HasValue)
-            {
-                Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.Instance.currentScene}");
-                Debug.Log($"[LevelProgress] Determined game mode: {gameMode}");
-                Debug.Log($"[LevelProgress] Completing level for game mode: {gameMode.Value}");
-                SceneLoader.Instance.Win();
-            }
-        }
-#endif
+    // Hotkey handling moved to HotkeyManager
   }
 
   public void UpdateGameModeVisibility()
@@ -227,6 +214,18 @@ public class LevelProgressManager : MonoBehaviour
         return pushLevel;
       default:
         return 1;
+    }
+  }
+
+  private void CompleteCurrentLevel()
+  {
+    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
+    if (gameMode.HasValue)
+    {
+      Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.Instance.currentScene}");
+      Debug.Log($"[LevelProgress] Determined game mode: {gameMode}");
+      Debug.Log($"[LevelProgress] Completing level for game mode: {gameMode.Value}");
+      SceneLoader.Instance.Win();
     }
   }
 }

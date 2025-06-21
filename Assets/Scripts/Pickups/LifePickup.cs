@@ -1,11 +1,12 @@
 using UnityEngine;
 using TMPro;
 using System;
+using System.Collections;
 
 public class LifePickup : BasePickup
 {
   [Header("Respawn Settings")]
-  [SerializeField] private float respawnTimeMinutes = 5f;
+  [SerializeField] private int respawnTimeMinutes = 5;
 
   [Header("Text Settings")]
   [SerializeField] private Color textColor = Color.white;
@@ -22,7 +23,22 @@ public class LifePickup : BasePickup
   private bool isRespawning = false;
   private const string PICKUP_TIME_KEY = "LifePickup_LastPickupTime_";
 
+  protected override void Start()
+  {
+    // Subscribe to hotkey events
+    HotkeyManager.OnResetPressed += ResetPickup;
+
+    // Call base Start() which will call OnPickupStart()
+    base.Start();
+  }
+
   protected override void OnPickupStart()
+  {
+    // Initialize the pickup
+    InitializePickup();
+  }
+
+  private void InitializePickup()
   {
     // Find child objects by name
     pickupSphere = transform.Find("Pickup Sphere")?.gameObject;
@@ -31,7 +47,7 @@ public class LifePickup : BasePickup
     // Validate prefab structure
     if (pickupSphere == null || respawnTimer == null)
     {
-      Debug.LogError("LifePickup: Missing child objects! Make sure you have 'Pickup Sphere' and 'Respawn Timer' children.");
+      Debug.LogError($"LifePickup: Missing child objects on {gameObject.name}! Make sure you have 'Pickup Sphere' and 'Respawn Timer' children.");
       return;
     }
 
@@ -39,7 +55,7 @@ public class LifePickup : BasePickup
     sphereRenderer = pickupSphere.GetComponent<Renderer>();
     if (sphereRenderer == null)
     {
-      Debug.LogError("LifePickup: No Renderer found on the Pickup Sphere!");
+      Debug.LogError($"LifePickup: No Renderer found on the Pickup Sphere for {gameObject.name}!");
       return;
     }
 
@@ -47,20 +63,30 @@ public class LifePickup : BasePickup
     countdownText = respawnTimer.GetComponent<TextMeshPro>();
     if (countdownText == null)
     {
-      Debug.LogError("LifePickup: No TextMeshPro found on the Respawn Timer!");
+      Debug.LogError($"LifePickup: No TextMeshPro found on the Respawn Timer for {gameObject.name}!");
       return;
     }
 
     // Find player material and create translucent copy
     FindPlayerMaterialAndCreateTranslucent();
 
-    // Load last pickup time AFTER finding all components
+    // Load last pickup time
     LoadLastPickupTime();
 
-    // Check if we should be respawning AFTER everything is set up
+    // Check if we should be respawning
     CheckRespawnStatus();
+  }
 
-    Debug.Log("LifePickup initialized successfully");
+  private void OnDestroy()
+  {
+    // Unsubscribe from hotkey events
+    HotkeyManager.OnResetPressed -= ResetPickup;
+
+    // Clean up the created material
+    if (translucentMaterial != null)
+    {
+      DestroyImmediate(translucentMaterial);
+    }
   }
 
   private void LoadLastPickupTime()
@@ -71,12 +97,10 @@ public class LifePickup : BasePickup
     if (long.TryParse(lastPickupTicksString, out long ticks))
     {
       lastPickupTime = new DateTime(ticks, DateTimeKind.Utc);
-      Debug.Log($"[LifePickup] Loaded last pickup time for {gameObject.name}: {lastPickupTime}");
     }
     else
     {
       lastPickupTime = DateTime.UtcNow.AddMinutes(-respawnTimeMinutes - 1); // Allow immediate pickup
-      Debug.Log($"[LifePickup] No previous pickup time found for {gameObject.name}, allowing immediate pickup");
     }
   }
 
@@ -85,7 +109,6 @@ public class LifePickup : BasePickup
     string key = PICKUP_TIME_KEY + gameObject.name;
     PlayerPrefs.SetString(key, lastPickupTime.Ticks.ToString());
     PlayerPrefs.Save();
-    Debug.Log($"[LifePickup] Saved pickup time for {gameObject.name}: {lastPickupTime}");
   }
 
   private void CheckRespawnStatus()
@@ -98,24 +121,28 @@ public class LifePickup : BasePickup
       // Still respawning
       isRespawning = true;
       SetPickupActive(false);
-      Debug.Log($"[LifePickup] {gameObject.name} is still respawning. Time remaining: {respawnTimeSeconds - timeSincePickup.TotalSeconds:F1}s");
     }
     else
     {
       // Ready to be picked up
       isRespawning = false;
       SetPickupActive(true);
-      Debug.Log($"[LifePickup] {gameObject.name} is ready to be picked up");
     }
   }
 
   private void SetPickupActive(bool active)
   {
     // Enable/disable the Pickup Sphere (includes +1 text)
-    pickupSphere.SetActive(active);
+    if (pickupSphere != null)
+    {
+      pickupSphere.SetActive(active);
+    }
 
     // Show/hide Respawn Timer
-    respawnTimer.SetActive(!active);
+    if (respawnTimer != null)
+    {
+      respawnTimer.SetActive(!active);
+    }
   }
 
   private void Update()
@@ -123,12 +150,6 @@ public class LifePickup : BasePickup
     if (isRespawning)
     {
       UpdateCountdown();
-    }
-
-    // Reset this pickup when R key is pressed (for testing)
-    if (Input.GetKeyDown(KeyCode.R))
-    {
-      ResetPickup();
     }
   }
 
@@ -145,7 +166,6 @@ public class LifePickup : BasePickup
       // Respawn complete
       isRespawning = false;
       SetPickupActive(true);
-      Debug.Log($"[LifePickup] {gameObject.name} has respawned!");
     }
     else
     {
@@ -173,14 +193,28 @@ public class LifePickup : BasePickup
   {
     // Find the player in the current scene
     GameObject player = GameObject.FindGameObjectWithTag("Player");
-    Renderer playerRenderer = player.GetComponent<Renderer>();
+    if (player == null)
+    {
+      Debug.LogWarning($"[LifePickup] No player found with tag 'Player' for {gameObject.name}");
+      return;
+    }
 
-    if (playerRenderer?.material != null)
+    Renderer playerRenderer = player.GetComponent<Renderer>();
+    if (playerRenderer == null)
+    {
+      Debug.LogWarning($"[LifePickup] No Renderer found on player {player.name} for {gameObject.name}");
+      return;
+    }
+
+    if (playerRenderer.material != null)
     {
       Color playerColor = playerRenderer.material.color;
       CreateTranslucentMaterial(playerColor);
     }
-    // If no player material found, keep the prefab's default green material
+    else
+    {
+      Debug.LogWarning($"[LifePickup] Player material is null for {gameObject.name}");
+    }
   }
 
   private void CreateTranslucentMaterial(Color playerColor)
@@ -201,47 +235,41 @@ public class LifePickup : BasePickup
 
     // Apply the translucent material
     sphereRenderer.material = translucentMaterial;
-    Debug.Log($"[LifePickup] Created translucent material with player color: {playerColor}");
   }
 
-  private void OnDestroy()
+  public override void HandlePickup(Collider other)
   {
-    // Clean up the created material
-    if (translucentMaterial != null)
+    // Don't process pickup if we're respawning
+    if (isRespawning)
     {
-      DestroyImmediate(translucentMaterial);
+      return;
     }
+
+    // Don't process pickup if player is at max lives
+    if (LivesManager.Instance != null && LivesManager.Instance.CurrentLives >= LivesManager.Instance.MaxLives)
+    {
+      return;
+    }
+
+    // Only log if it's actually a Player collision
+    if (other.CompareTag("Player"))
+    {
+    }
+
+    // Call base implementation if all checks pass
+    base.HandlePickup(other);
   }
 
   protected override void OnPickupCollected(Collider other)
   {
-    Debug.Log($"[LifePickup] HandlePickup called with {other?.name ?? "null"} (tag: {other?.tag ?? "null"})");
+    // Add a life to the player
+    LivesManager.Instance.AddLife();
 
-    if (!isRespawning)
-    {
-      // Check if player is already at max lives
-      if (LivesManager.Instance.CurrentLives >= LivesManager.Instance.MaxLives)
-      {
-        Debug.Log($"[LifePickup] Pickup ignored - player already at max lives ({LivesManager.Instance.CurrentLives}/{LivesManager.Instance.MaxLives})");
-        return;
-      }
-
-      // Add a life to the player
-      LivesManager.Instance.AddLife();
-      Debug.Log($"LifePickup: Added life! Current lives: {LivesManager.Instance.CurrentLives}");
-
-      // Set pickup time and start respawn
-      lastPickupTime = DateTime.UtcNow;
-      SaveLastPickupTime();
-      isRespawning = true;
-      SetPickupActive(false);
-
-      Debug.Log($"[LifePickup] {gameObject.name} picked up, starting {respawnTimeMinutes} minute respawn");
-    }
-    else
-    {
-      Debug.Log($"[LifePickup] Pickup ignored - currently respawning");
-    }
+    // Set pickup time and start respawn
+    lastPickupTime = DateTime.UtcNow;
+    SaveLastPickupTime();
+    isRespawning = true;
+    SetPickupActive(false);
   }
 
   [ContextMenu("Reset Pickup")]
@@ -256,7 +284,5 @@ public class LifePickup : BasePickup
     lastPickupTime = DateTime.UtcNow.AddMinutes(-respawnTimeMinutes - 1); // Allow immediate pickup
     isRespawning = false;
     SetPickupActive(true);
-
-    Debug.Log($"[LifePickup] {gameObject.name} reset - ready for pickup");
   }
 }
