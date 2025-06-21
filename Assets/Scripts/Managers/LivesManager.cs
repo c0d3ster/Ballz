@@ -39,11 +39,9 @@ public class LivesManager : MonoBehaviour
     {
       Instance = this;
       DontDestroyOnLoad(gameObject);
-      Debug.Log($"[LivesManager] Awake - Setting instance. GameObject: {gameObject.name}");
     }
     else
     {
-      Debug.Log($"[LivesManager] Awake - Instance already exists, destroying {gameObject.name}");
       Destroy(gameObject);
     }
   }
@@ -52,7 +50,6 @@ public class LivesManager : MonoBehaviour
   {
     if (Instance == this)
     {
-      Debug.Log("[LivesManager] Start - Loading lives");
       InitializeLivesManager();
       LoadLives();
       SceneManager.sceneLoaded += OnSceneLoaded;
@@ -73,8 +70,6 @@ public class LivesManager : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != LoadSceneMode.Additive)
     {
-      Debug.Log($"[LivesManager] Scene loaded: {scene.name}");
-
       // Notify LivesDisplay that scene has loaded so it can find player material
       if (livesDisplay != null)
       {
@@ -91,7 +86,6 @@ public class LivesManager : MonoBehaviour
     CreateLivesDisplay();
 
     isInitialized = true;
-    Debug.Log("[LivesManager] Initialized lives manager");
   }
 
   private void CreateLivesDisplay()
@@ -101,11 +95,6 @@ public class LivesManager : MonoBehaviour
 
     // Add LivesDisplay component to this GameObject
     livesDisplay = gameObject.AddComponent<LivesDisplay>();
-
-    if (livesDisplay != null)
-    {
-      Debug.Log("[LivesManager] Created LivesDisplay component");
-    }
   }
 
   private void CreateLivesContainer()
@@ -128,8 +117,6 @@ public class LivesManager : MonoBehaviour
     rectTransform.anchoredPosition = new Vector2(35, -35);
 
     livesContainer = containerObj.transform;
-
-    Debug.Log("[LivesManager] Created LivesContainer at position (35, -35)");
   }
 
   private void Update()

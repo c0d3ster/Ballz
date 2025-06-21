@@ -19,9 +19,6 @@ public class TimerManager : MonoBehaviour
   public bool IsTimerActive { get; private set; }
   public bool IsTimeUp => CurrentTime <= 0;
 
-  public event Action<float> OnTimeChanged;
-  public event Action OnTimeUp;
-
   private TextMeshProUGUI timerText;
   private bool isInitialized = false;
 
@@ -31,11 +28,9 @@ public class TimerManager : MonoBehaviour
     {
       Instance = this;
       DontDestroyOnLoad(gameObject);
-      Debug.Log($"[TimerManager] Awake - Setting instance. GameObject: {gameObject.name}");
     }
     else
     {
-      Debug.Log($"[TimerManager] Awake - Instance already exists, destroying {gameObject.name}");
       Destroy(gameObject);
     }
   }
@@ -44,7 +39,6 @@ public class TimerManager : MonoBehaviour
   {
     if (Instance == this)
     {
-      Debug.Log("[TimerManager] Start - Initializing timer manager");
       InitializeTimerManager();
       SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -66,7 +60,6 @@ public class TimerManager : MonoBehaviour
     CreateTimerDisplay();
 
     isInitialized = true;
-    Debug.Log("[TimerManager] Initialized timer manager");
   }
 
   private void CreateTimerDisplay()
@@ -102,8 +95,6 @@ public class TimerManager : MonoBehaviour
 
     // Start with timer display hidden - only show when timer is active
     timerObj.SetActive(false);
-
-    Debug.Log("[TimerManager] Created timer display (initially hidden)");
   }
 
   private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -111,7 +102,6 @@ public class TimerManager : MonoBehaviour
     // Only process non-additive scene loads
     if (mode != LoadSceneMode.Additive)
     {
-      Debug.Log($"[TimerManager] Scene loaded: {scene.name}");
       InitializeTimerForScene(scene.name);
     }
   }
@@ -133,7 +123,6 @@ public class TimerManager : MonoBehaviour
         MaxTime = CurrentTime;
       }
 
-      Debug.Log($"[TimerManager] Timer initialized for {sceneName}: {CurrentTime}s");
       UpdateTimerDisplay();
     }
     else
@@ -142,7 +131,6 @@ public class TimerManager : MonoBehaviour
       IsTimerActive = false;
       CurrentTime = 0;
       MaxTime = 0;
-      Debug.Log($"[TimerManager] No timer configured for scene: {sceneName}");
     }
 
     // Show/hide timer display based on whether timer is active
@@ -157,15 +145,12 @@ public class TimerManager : MonoBehaviour
     if (IsTimerActive && CurrentTime > 0)
     {
       CurrentTime -= Time.deltaTime;
-      OnTimeChanged?.Invoke(CurrentTime);
       UpdateTimerDisplay();
 
       if (CurrentTime <= 0)
       {
         CurrentTime = 0;
         IsTimerActive = false;
-        OnTimeUp?.Invoke();
-        Debug.Log("[TimerManager] Time is up!");
         SceneLoader.Instance.GameOver();
       }
     }
@@ -183,7 +168,6 @@ public class TimerManager : MonoBehaviour
   public void PauseTimer()
   {
     IsTimerActive = false;
-    Debug.Log("[TimerManager] Timer paused");
   }
 
   public void ResumeTimer()
@@ -191,7 +175,6 @@ public class TimerManager : MonoBehaviour
     if (MaxTime > 0)
     {
       IsTimerActive = true;
-      Debug.Log("[TimerManager] Timer resumed");
     }
   }
 
@@ -202,24 +185,13 @@ public class TimerManager : MonoBehaviour
       CurrentTime = MaxTime;
       IsTimerActive = true;
       UpdateTimerDisplay();
-      Debug.Log($"[TimerManager] Timer reset to {CurrentTime}s");
     }
   }
 
-  public void AddTime(float additionalTime)
-  {
-    if (IsTimerActive)
-    {
-      CurrentTime += additionalTime;
-      UpdateTimerDisplay();
-      Debug.Log($"[TimerManager] Added {additionalTime}s to timer. New time: {CurrentTime}s");
-    }
-  }
 
   public void SetTimeLimit(string sceneName, float timeLimit)
   {
     SceneTimerConfig.AddSceneTimeLimit(sceneName, timeLimit);
-    Debug.Log($"[TimerManager] Set time limit for {sceneName}: {timeLimit}s");
   }
 
   public float GetTimeLimit(string sceneName)

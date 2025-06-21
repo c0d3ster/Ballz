@@ -10,12 +10,10 @@ public partial class GAME_OVER : MonoBehaviour
 
   public virtual void Start()
   {
-    Debug.Log("[GAME_OVER] Scene started");
     livesManager = LivesManager.Instance;
     if (livesManager != null)
     {
       timeUntilNextLife = livesManager.TimeUntilNextLife;
-      Debug.Log($"[GAME_OVER] Found LivesManager. Current lives: {livesManager.CurrentLives}/{livesManager.MaxLives}");
       ProcessPlayerDeath();
     }
     else
@@ -28,34 +26,24 @@ public partial class GAME_OVER : MonoBehaviour
   {
     if (hasProcessedDeath)
     {
-      Debug.Log("[GAME_OVER] Death already processed, skipping");
       return;
     }
     hasProcessedDeath = true;
 
-    Debug.Log($"[GAME_OVER] Processing death. Current scene: {SceneLoader.Instance.currentScene}");
-
     // Only process death if we're not on the main menu
     if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || SceneLoader.Instance.currentScene == "Active Main Menu")
     {
-      Debug.Log("[GAME_OVER] On main menu, skipping death processing");
       return;
     }
 
     // Always lose a life when we reach game over (unless we're on main menu)
     if (livesManager.HasLives())
     {
-      Debug.Log($"[GAME_OVER] Player has lives ({livesManager.CurrentLives}), losing one life");
       livesManager.LoseLife();
       // Don't automatically reload - let player choose what to do
     }
-    else
-    {
-      Debug.Log("[GAME_OVER] Player has no lives");
-    }
 
     // Stay on game over screen regardless of lives remaining
-    Debug.Log("[GAME_OVER] Staying on game over screen");
   }
 
   //creates two buttons for main menu and try again

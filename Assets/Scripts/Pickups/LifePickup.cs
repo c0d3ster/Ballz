@@ -1,64 +1,188 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 public class LifePickup : MonoBehaviour
 {
+  [Header("Respawn Settings")]
+  [SerializeField] private float respawnTimeMinutes = 5f;
+
   [Header("Text Settings")]
   [SerializeField] private Color textColor = Color.white;
   [SerializeField] private Color outlineColor = Color.black;
 
   private Renderer sphereRenderer;
-  private Material originalMaterial;
   private Material translucentMaterial;
+  private TextMeshPro countdownText;
+  private GameObject pickupSphere;
+  private GameObject respawnTimer;
+
+  // Respawn tracking
+  private DateTime lastPickupTime;
+  private bool isRespawning = false;
+  private const string PICKUP_TIME_KEY = "LifePickup_LastPickupTime_";
 
   private void Start()
   {
+    // Find child objects by name
+    pickupSphere = transform.Find("Pickup Sphere")?.gameObject;
+    respawnTimer = transform.Find("Respawn Timer")?.gameObject;
+
+    // Validate prefab structure
+    if (pickupSphere == null || respawnTimer == null)
+    {
+      Debug.LogError("LifePickup: Missing child objects! Make sure you have 'Pickup Sphere' and 'Respawn Timer' children.");
+      return;
+    }
+
     // Get the sphere renderer
-    sphereRenderer = GetComponent<Renderer>();
+    sphereRenderer = pickupSphere.GetComponent<Renderer>();
     if (sphereRenderer == null)
     {
-      Debug.LogError("LifePickup: No Renderer found on the sphere!");
+      Debug.LogError("LifePickup: No Renderer found on the Pickup Sphere!");
+      return;
+    }
+
+    // Get countdown text component
+    countdownText = respawnTimer.GetComponent<TextMeshPro>();
+    if (countdownText == null)
+    {
+      Debug.LogError("LifePickup: No TextMeshPro found on the Respawn Timer!");
       return;
     }
 
     // Find player material and create translucent copy
     FindPlayerMaterialAndCreateTranslucent();
 
+    // Load last pickup time AFTER finding all components
+    LoadLastPickupTime();
+
+    // Check if we should be respawning AFTER everything is set up
+    CheckRespawnStatus();
+
+    // Assign trigger handler to the pickup sphere child
+    AssignTriggerHandlerToChild();
+
     Debug.Log("LifePickup initialized successfully");
+  }
+
+  private void LoadLastPickupTime()
+  {
+    string key = PICKUP_TIME_KEY + gameObject.name;
+    string lastPickupTicksString = PlayerPrefs.GetString(key, "0");
+
+    if (long.TryParse(lastPickupTicksString, out long ticks))
+    {
+      lastPickupTime = new DateTime(ticks, DateTimeKind.Utc);
+      Debug.Log($"[LifePickup] Loaded last pickup time for {gameObject.name}: {lastPickupTime}");
+    }
+    else
+    {
+      lastPickupTime = DateTime.UtcNow.AddMinutes(-respawnTimeMinutes - 1); // Allow immediate pickup
+      Debug.Log($"[LifePickup] No previous pickup time found for {gameObject.name}, allowing immediate pickup");
+    }
+  }
+
+  private void SaveLastPickupTime()
+  {
+    string key = PICKUP_TIME_KEY + gameObject.name;
+    PlayerPrefs.SetString(key, lastPickupTime.Ticks.ToString());
+    PlayerPrefs.Save();
+    Debug.Log($"[LifePickup] Saved pickup time for {gameObject.name}: {lastPickupTime}");
+  }
+
+  private void CheckRespawnStatus()
+  {
+    TimeSpan timeSincePickup = DateTime.UtcNow - lastPickupTime;
+    double respawnTimeSeconds = respawnTimeMinutes * 60.0;
+
+    if (timeSincePickup.TotalSeconds < respawnTimeSeconds)
+    {
+      // Still respawning
+      isRespawning = true;
+      SetPickupActive(false);
+      Debug.Log($"[LifePickup] {gameObject.name} is still respawning. Time remaining: {respawnTimeSeconds - timeSincePickup.TotalSeconds:F1}s");
+    }
+    else
+    {
+      // Ready to be picked up
+      isRespawning = false;
+      SetPickupActive(true);
+      Debug.Log($"[LifePickup] {gameObject.name} is ready to be picked up");
+    }
+  }
+
+  private void SetPickupActive(bool active)
+  {
+    // Enable/disable the Pickup Sphere (includes +1 text)
+    pickupSphere.SetActive(active);
+
+    // Show/hide Respawn Timer
+    respawnTimer.SetActive(!active);
+  }
+
+  private void Update()
+  {
+    if (isRespawning)
+    {
+      UpdateCountdown();
+    }
+  }
+
+  private void UpdateCountdown()
+  {
+    if (countdownText == null) return;
+
+    TimeSpan timeSincePickup = DateTime.UtcNow - lastPickupTime;
+    double respawnTimeSeconds = respawnTimeMinutes * 60.0;
+    double timeRemaining = respawnTimeSeconds - timeSincePickup.TotalSeconds;
+
+    if (timeRemaining <= 0)
+    {
+      // Respawn complete
+      isRespawning = false;
+      SetPickupActive(true);
+      Debug.Log($"[LifePickup] {gameObject.name} has respawned!");
+    }
+    else
+    {
+      // Update countdown text
+      double remainingMinutes = timeRemaining / 60.0;
+      if (remainingMinutes >= 60)
+      {
+        // Show hours:minutes:seconds format
+        int hours = Mathf.FloorToInt((float)timeRemaining / 3600f);
+        int minutes = Mathf.FloorToInt((float)timeRemaining % 3600f / 60f);
+        int seconds = Mathf.FloorToInt((float)timeRemaining % 60f);
+        countdownText.text = $"{hours}:{minutes:00}:{seconds:00}";
+      }
+      else
+      {
+        // Show minutes:seconds format
+        int minutes = Mathf.FloorToInt((float)timeRemaining / 60f);
+        int seconds = Mathf.FloorToInt((float)timeRemaining % 60f);
+        countdownText.text = $"{minutes:00}:{seconds:00}";
+      }
+    }
   }
 
   private void FindPlayerMaterialAndCreateTranslucent()
   {
-    Debug.Log("[LifePickup] Searching for player material...");
-
-    // Try to find the player in the current scene
+    // Find the player in the current scene
     GameObject player = GameObject.FindGameObjectWithTag("Player");
-    if (player != null)
+    Renderer playerRenderer = player.GetComponent<Renderer>();
+
+    if (playerRenderer?.material != null)
     {
-      Debug.Log($"[LifePickup] Found player: {player.name}");
-      Renderer playerRenderer = player.GetComponent<Renderer>();
-      if (playerRenderer != null && playerRenderer.material != null)
-      {
-        originalMaterial = playerRenderer.material;
-        Debug.Log($"[LifePickup] Found player material: {originalMaterial.name}, color: {originalMaterial.color}");
-        CreateTranslucentMaterial();
-      }
-      else
-      {
-        Debug.LogWarning("[LifePickup] Player found but no Renderer or material!");
-        CreateDefaultTranslucentMaterial();
-      }
+      Color playerColor = playerRenderer.material.color;
+      CreateTranslucentMaterial(playerColor);
     }
-    else
-    {
-      Debug.LogWarning("[LifePickup] No player found with 'Player' tag!");
-      CreateDefaultTranslucentMaterial();
-    }
+    // If no player material found, keep the prefab's default green material
   }
 
-  private void CreateDefaultTranslucentMaterial()
+  private void CreateTranslucentMaterial(Color playerColor)
   {
-    // Create a default translucent material if no player material found
+    // Create a new translucent material
     translucentMaterial = new Material(Shader.Find("Standard"));
     translucentMaterial.SetFloat("_Mode", 3); // Transparent mode
     translucentMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -69,68 +193,12 @@ public class LifePickup : MonoBehaviour
     translucentMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
     translucentMaterial.renderQueue = 3000;
 
-    // Set default translucent green color
-    Color defaultColor = new Color(0.2f, 1f, 0.2f, 0.3f);
-    translucentMaterial.color = defaultColor;
-
-    // Apply the translucent material
-    sphereRenderer.material = translucentMaterial;
-    Debug.Log("[LifePickup] Applied default translucent material");
-  }
-
-  private void CreateTranslucentMaterial()
-  {
-    // Create a copy of the original material
-    translucentMaterial = new Material(originalMaterial);
-
-    // Set the shader to a transparent one
-    translucentMaterial.shader = Shader.Find("Standard");
-    translucentMaterial.SetFloat("_Mode", 3); // Transparent mode
-    translucentMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-    translucentMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-    translucentMaterial.SetInt("_ZWrite", 0);
-    translucentMaterial.DisableKeyword("_ALPHATEST_ON");
-    translucentMaterial.EnableKeyword("_ALPHABLEND_ON");
-    translucentMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-    translucentMaterial.renderQueue = 3000;
-
-    // Set the alpha to 3/4 of the player's opacity
-    Color playerColor = originalMaterial.color;
+    // Set the color to match the player but with 75% opacity
     translucentMaterial.color = new Color(playerColor.r, playerColor.g, playerColor.b, playerColor.a * 0.75f);
 
     // Apply the translucent material
     sphereRenderer.material = translucentMaterial;
-  }
-
-  private void Update()
-  {
-    // Make the ball face the camera (only update every few frames to prevent flickering)
-    if (Camera.main != null && Time.frameCount % 8 == 0)
-    {
-      transform.LookAt(Camera.main.transform);
-      transform.Rotate(0, 180, 0); // Flip to face camera properly
-    }
-  }
-
-  private void OnTriggerEnter(Collider other)
-  {
-    if (other.CompareTag("Player"))
-    {
-      // Add a life to the player
-      LivesManager livesManager = LivesManager.Instance;
-      if (livesManager != null)
-      {
-        livesManager.AddLife();
-        Debug.Log($"LifePickup: Added life! Current lives: {livesManager.CurrentLives}");
-      }
-      else
-      {
-        Debug.LogError("LifePickup: LivesManager not found!");
-      }
-
-      // Destroy the pickup
-      Destroy(gameObject);
-    }
+    Debug.Log($"[LifePickup] Created translucent material with player color: {playerColor}");
   }
 
   private void OnDestroy()
@@ -139,6 +207,56 @@ public class LifePickup : MonoBehaviour
     if (translucentMaterial != null)
     {
       DestroyImmediate(translucentMaterial);
+    }
+  }
+
+  private void AssignTriggerHandlerToChild()
+  {
+    if (pickupSphere == null) return;
+
+    // Add a simple script to the child that calls our pickup method
+    pickupSphere.AddComponent<PickupTrigger>();
+  }
+
+  // Handle pickup logic
+  public void HandlePickup(Collider other)
+  {
+    Debug.Log($"[LifePickup] HandlePickup called with {other?.name ?? "null"} (tag: {other?.tag ?? "null"})");
+
+    if (!isRespawning)
+    {
+      // Add a life to the player
+      LivesManager.Instance.AddLife();
+      Debug.Log($"LifePickup: Added life! Current lives: {LivesManager.Instance.CurrentLives}");
+
+      // Set pickup time and start respawn
+      lastPickupTime = DateTime.UtcNow;
+      SaveLastPickupTime();
+      isRespawning = true;
+      SetPickupActive(false);
+
+      Debug.Log($"[LifePickup] {gameObject.name} picked up, starting {respawnTimeMinutes} minute respawn");
+    }
+    else
+    {
+      Debug.Log($"[LifePickup] Pickup ignored - currently respawning");
+    }
+  }
+}
+
+// Minimal script to handle pickup triggers
+public class PickupTrigger : MonoBehaviour
+{
+  private void OnTriggerEnter(Collider other)
+  {
+    if (other.CompareTag("Player"))
+    {
+      // Get the parent LifePickup and call its pickup method
+      var lifePickup = GetComponentInParent<LifePickup>();
+      if (lifePickup != null)
+      {
+        lifePickup.HandlePickup(other);
+      }
     }
   }
 }
