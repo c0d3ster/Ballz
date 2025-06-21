@@ -89,8 +89,8 @@ Assets/
 For detailed documentation on specific systems and features, see the [Documentation](./Documentation/) folder:
 
 - **[Architecture](./Documentation/Architecture.md)** - Game architecture, manager system, and component communication
+- **[Pickup System](./Documentation/PickupSystem.md)** - Unified pickup system supporting Collect mode, Push mode, and Life pickups with respawn
 - **[Timer System](./Documentation/TimerSystem.md)** - Centralized timer system documentation
-- **[Life Pickup System](./Documentation/LifePickupSystem.md)** - +1 life pickup system for manual placement in levels
 - *More documentation will be added here as the project grows*
 
 ## Development

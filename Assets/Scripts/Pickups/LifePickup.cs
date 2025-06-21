@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using System;
 
-public class LifePickup : MonoBehaviour
+public class LifePickup : BasePickup
 {
   [Header("Respawn Settings")]
   [SerializeField] private float respawnTimeMinutes = 5f;
@@ -22,7 +22,7 @@ public class LifePickup : MonoBehaviour
   private bool isRespawning = false;
   private const string PICKUP_TIME_KEY = "LifePickup_LastPickupTime_";
 
-  private void Start()
+  protected override void OnPickupStart()
   {
     // Find child objects by name
     pickupSphere = transform.Find("Pickup Sphere")?.gameObject;
@@ -59,9 +59,6 @@ public class LifePickup : MonoBehaviour
 
     // Check if we should be respawning AFTER everything is set up
     CheckRespawnStatus();
-
-    // Assign trigger handler to the pickup sphere child
-    AssignTriggerHandlerToChild();
 
     Debug.Log("LifePickup initialized successfully");
   }
@@ -126,6 +123,12 @@ public class LifePickup : MonoBehaviour
     if (isRespawning)
     {
       UpdateCountdown();
+    }
+
+    // Reset this pickup when R key is pressed (for testing)
+    if (Input.GetKeyDown(KeyCode.R))
+    {
+      ResetPickup();
     }
   }
 
@@ -210,21 +213,19 @@ public class LifePickup : MonoBehaviour
     }
   }
 
-  private void AssignTriggerHandlerToChild()
-  {
-    if (pickupSphere == null) return;
-
-    // Add a simple script to the child that calls our pickup method
-    pickupSphere.AddComponent<PickupTrigger>();
-  }
-
-  // Handle pickup logic
-  public void HandlePickup(Collider other)
+  protected override void OnPickupCollected(Collider other)
   {
     Debug.Log($"[LifePickup] HandlePickup called with {other?.name ?? "null"} (tag: {other?.tag ?? "null"})");
 
     if (!isRespawning)
     {
+      // Check if player is already at max lives
+      if (LivesManager.Instance.CurrentLives >= LivesManager.Instance.MaxLives)
+      {
+        Debug.Log($"[LifePickup] Pickup ignored - player already at max lives ({LivesManager.Instance.CurrentLives}/{LivesManager.Instance.MaxLives})");
+        return;
+      }
+
       // Add a life to the player
       LivesManager.Instance.AddLife();
       Debug.Log($"LifePickup: Added life! Current lives: {LivesManager.Instance.CurrentLives}");
@@ -242,21 +243,20 @@ public class LifePickup : MonoBehaviour
       Debug.Log($"[LifePickup] Pickup ignored - currently respawning");
     }
   }
-}
 
-// Minimal script to handle pickup triggers
-public class PickupTrigger : MonoBehaviour
-{
-  private void OnTriggerEnter(Collider other)
+  [ContextMenu("Reset Pickup")]
+  private void ResetPickup()
   {
-    if (other.CompareTag("Player"))
-    {
-      // Get the parent LifePickup and call its pickup method
-      var lifePickup = GetComponentInParent<LifePickup>();
-      if (lifePickup != null)
-      {
-        lifePickup.HandlePickup(other);
-      }
-    }
+    // Clear the saved pickup time
+    string key = PICKUP_TIME_KEY + gameObject.name;
+    PlayerPrefs.DeleteKey(key);
+    PlayerPrefs.Save();
+
+    // Reset the pickup state
+    lastPickupTime = DateTime.UtcNow.AddMinutes(-respawnTimeMinutes - 1); // Allow immediate pickup
+    isRespawning = false;
+    SetPickupActive(true);
+
+    Debug.Log($"[LifePickup] {gameObject.name} reset - ready for pickup");
   }
 }
