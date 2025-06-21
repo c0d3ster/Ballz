@@ -1,15 +1,17 @@
 using UnityEngine;
-using UnityEngine.Advertisements;
+using Unity.Services.Core;
+using Unity.Services.Core.Environments;
+using Unity.Services.Mediation;
 using System;
+using System.Threading.Tasks;
 
-public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
+public class AdManager : MonoBehaviour
 {
   public static AdManager Instance { get; private set; }
 
   [Header("Ad Settings")]
-  [SerializeField] public string androidGameId = "378f8017-1f54-49c2-b1a4-1e121871862b"; // Will be replaced with your Project ID
-  [SerializeField] public string iosGameId = "378f8017-1f54-49c2-b1a4-1e121871862b"; // Will be replaced with your Project ID
-  [SerializeField] public bool testMode = true;
+  [SerializeField] public string androidGameId = "5882068";
+  [SerializeField] public string iosGameId = "5882069";
   [SerializeField] public string rewardedAdUnitId = "Rewarded_Android";
 
   public bool IsInitialized { get; private set; }
@@ -18,6 +20,10 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
   public event Action OnAdCompleted;
   public event Action OnAdFailed;
   public event Action OnAdSkipped;
+
+  // LevelPlay mediation objects
+  private IRewardedAd rewardedAd;
+  private string gameId;
 
   private void Awake()
   {
@@ -32,37 +38,57 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
     }
   }
 
-  private void Start()
+  private async void Start()
   {
     if (Instance == this)
     {
-      InitializeAds();
+      await InitializeAds();
     }
   }
 
-  private void InitializeAds()
+  private async Task InitializeAds()
   {
-    // Try to get the Project ID from Unity Services first
-    string projectId = GetProjectIdFromServices();
-
-    string gameId = (Application.platform == RuntimePlatform.IPhonePlayer)
-        ? iosGameId
-        : androidGameId;
-
-    // If we have a Project ID from Services, use it
-    if (!string.IsNullOrEmpty(projectId) && (gameId == "unused" || string.IsNullOrEmpty(gameId)))
+    try
     {
-      gameId = projectId;
-      Debug.Log($"[AdManager] Using Project ID from Unity Services: {gameId}");
-    }
+      // Initialize Unity Services
+      var options = new InitializationOptions()
+        .SetEnvironmentName(testMode ? "development" : "production");
 
-    if (string.IsNullOrEmpty(gameId) || gameId == "unused")
+      await UnityServices.InitializeAsync(options);
+
+      // Get the Project ID from Unity Services
+      gameId = GetProjectIdFromServices();
+
+      // Fallback to manual configuration if needed
+      if (string.IsNullOrEmpty(gameId) || gameId == "unused")
+      {
+        gameId = (Application.platform == RuntimePlatform.IPhonePlayer)
+            ? iosGameId
+            : androidGameId;
+      }
+
+      if (string.IsNullOrEmpty(gameId) || gameId == "unused")
+      {
+        Debug.LogWarning("[AdManager] Game ID is not set! Ads will not work. Please configure in Unity Services or set manually.");
+        return;
+      }
+
+      Debug.Log($"[AdManager] Initializing LevelPlay with Game ID: {gameId}");
+
+      // Initialize LevelPlay mediation
+      await MediationService.Initialize(gameId);
+
+      IsInitialized = true;
+      Debug.Log("[AdManager] LevelPlay initialization complete.");
+
+      // Load the first ad
+      await LoadRewardedAd();
+    }
+    catch (Exception e)
     {
-      Debug.LogWarning("[AdManager] Game ID is not set! Ads will not work. Please configure in Unity Services or set manually.");
-      return;
+      Debug.LogError($"[AdManager] Initialization failed: {e.Message}");
+      IsInitialized = false;
     }
-
-    Advertisement.Initialize(gameId, testMode, this);
   }
 
   private string GetProjectIdFromServices()
@@ -81,7 +107,7 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
     }
   }
 
-  public void LoadRewardedAd()
+  public async Task LoadRewardedAd()
   {
     if (!IsInitialized)
     {
@@ -89,88 +115,88 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
       return;
     }
 
-    Debug.Log("[AdManager] Loading rewarded ad...");
-    Advertisement.Load(rewardedAdUnitId, this);
+    try
+    {
+      Debug.Log("[AdManager] Loading rewarded ad...");
+
+      // Create the rewarded ad
+      rewardedAd = MediationService.CreateRewardedAd(rewardedAdUnitId);
+
+      // Set up event handlers
+      rewardedAd.OnLoaded += OnRewardedAdLoaded;
+      rewardedAd.OnFailedLoad += OnRewardedAdFailedLoad;
+      rewardedAd.OnUserRewarded += OnRewardedAdUserRewarded;
+      rewardedAd.OnClosed += OnRewardedAdClosed;
+      rewardedAd.OnClicked += OnRewardedAdClicked;
+      rewardedAd.OnImpressionRecorded += OnRewardedAdImpressionRecorded;
+
+      // Load the ad
+      await rewardedAd.LoadAsync();
+    }
+    catch (Exception e)
+    {
+      Debug.LogError($"[AdManager] Error loading rewarded ad: {e.Message}");
+      IsAdReady = false;
+    }
   }
 
-  public void ShowRewardedAd()
+  public async Task ShowRewardedAd()
   {
-    if (!IsAdReady)
+    if (!IsAdReady || rewardedAd == null)
     {
       Debug.LogWarning("[AdManager] Ad not ready! Loading ad first...");
-      LoadRewardedAd();
+      await LoadRewardedAd();
       return;
     }
 
-    Debug.Log("[AdManager] Showing rewarded ad...");
-    Advertisement.Show(rewardedAdUnitId, this);
+    try
+    {
+      Debug.Log("[AdManager] Showing rewarded ad...");
+      await rewardedAd.ShowAsync();
+    }
+    catch (Exception e)
+    {
+      Debug.LogError($"[AdManager] Error showing rewarded ad: {e.Message}");
+      OnAdFailed?.Invoke();
+    }
   }
 
-  // IUnityAdsInitializationListener
-  public void OnInitializationComplete()
+  // LevelPlay Event Handlers
+  private void OnRewardedAdLoaded(object sender, LoadAdEventArgs args)
   {
-    Debug.Log("[AdManager] Unity Ads initialization complete.");
-    IsInitialized = true;
-    LoadRewardedAd();
-  }
-
-  public void OnInitializationFailed(UnityAdsInitializationError error, string message)
-  {
-    Debug.LogError($"[AdManager] Unity Ads Initialization Failed: {error} - {message}");
-    IsInitialized = false;
-  }
-
-  // IUnityAdsLoadListener
-  public void OnUnityAdsAdLoaded(string placementId)
-  {
-    Debug.Log($"[AdManager] Ad loaded: {placementId}");
+    Debug.Log("[AdManager] Rewarded ad loaded successfully");
     IsAdReady = true;
   }
 
-  public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message)
+  private void OnRewardedAdFailedLoad(object sender, LoadErrorEventArgs args)
   {
-    Debug.LogError($"[AdManager] Error loading Ad Unit {placementId}: {error} - {message}");
+    Debug.LogError($"[AdManager] Rewarded ad failed to load: {args.Message}");
     IsAdReady = false;
   }
 
-  // IUnityAdsShowListener
-  public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
+  private void OnRewardedAdUserRewarded(object sender, RewardEventArgs args)
   {
-    if (placementId.Equals(rewardedAdUnitId) && showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
-    {
-      Debug.Log("[AdManager] Ad completed successfully!");
-      OnAdCompleted?.Invoke();
-    }
-    else if (showCompletionState.Equals(UnityAdsShowCompletionState.SKIPPED))
-    {
-      Debug.Log("[AdManager] Ad was skipped!");
-      OnAdSkipped?.Invoke();
-    }
-    else
-    {
-      // Handle any other completion states (including ERROR in newer versions)
-      Debug.LogError($"[AdManager] Ad completed with state: {showCompletionState}");
-      OnAdFailed?.Invoke();
-    }
+    Debug.Log($"[AdManager] User rewarded: {args.Type} {args.Amount}");
+    OnAdCompleted?.Invoke();
+  }
+
+  private void OnRewardedAdClosed(object sender, EventArgs args)
+  {
+    Debug.Log("[AdManager] Rewarded ad closed");
+    IsAdReady = false;
 
     // Load the next ad
-    LoadRewardedAd();
+    _ = LoadRewardedAd();
   }
 
-  public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
+  private void OnRewardedAdClicked(object sender, EventArgs args)
   {
-    Debug.LogError($"[AdManager] Error showing Ad Unit {placementId}: {error} - {message}");
-    OnAdFailed?.Invoke();
+    Debug.Log("[AdManager] Rewarded ad clicked");
   }
 
-  public void OnUnityAdsShowStart(string placementId)
+  private void OnRewardedAdImpressionRecorded(object sender, ImpressionEventArgs args)
   {
-    Debug.Log($"[AdManager] Ad show start: {placementId}");
-  }
-
-  public void OnUnityAdsShowClick(string placementId)
-  {
-    Debug.Log($"[AdManager] Ad show click: {placementId}");
+    Debug.Log($"[AdManager] Rewarded ad impression recorded: {args.ImpressionData}");
   }
 
   // Helper method to check if ads are available
@@ -180,16 +206,30 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
   }
 
   // Method to add lives via ad reward
-  public void RequestLivesViaAd()
+  public async void RequestLivesViaAd()
   {
     if (CanShowAd())
     {
-      ShowRewardedAd();
+      await ShowRewardedAd();
     }
     else
     {
       Debug.LogWarning("[AdManager] Cannot show ad - not ready or not initialized");
       OnAdFailed?.Invoke();
+    }
+  }
+
+  private void OnDestroy()
+  {
+    // Clean up event handlers
+    if (rewardedAd != null)
+    {
+      rewardedAd.OnLoaded -= OnRewardedAdLoaded;
+      rewardedAd.OnFailedLoad -= OnRewardedAdFailedLoad;
+      rewardedAd.OnUserRewarded -= OnRewardedAdUserRewarded;
+      rewardedAd.OnClosed -= OnRewardedAdClosed;
+      rewardedAd.OnClicked -= OnRewardedAdClicked;
+      rewardedAd.OnImpressionRecorded -= OnRewardedAdImpressionRecorded;
     }
   }
 
