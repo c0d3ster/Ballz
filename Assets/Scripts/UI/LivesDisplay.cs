@@ -190,6 +190,9 @@ public class LivesDisplay : MonoBehaviour
 
       image.preserveAspect = true;
 
+      // Add GraphicRaycaster to ensure pointer events work
+      iconObj.AddComponent<GraphicRaycaster>();
+
       // Set position - positioned horizontally aligned with gear
       RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
       if (rectTransform != null)
@@ -202,10 +205,24 @@ public class LivesDisplay : MonoBehaviour
         rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
       }
 
+      // Add EventTrigger component for click detection (less intrusive than Button)
+      EventTrigger eventTrigger = iconObj.AddComponent<EventTrigger>();
+
+      // Create click event
+      EventTrigger.Entry clickEntry = new EventTrigger.Entry();
+      clickEntry.eventID = EventTriggerType.PointerClick;
+
+      // Store the life index for the click handler
+      int lifeIndex = i + 1; // 1-based index for lives
+
+      // Add click listener using lambda to capture the lifeIndex
+      clickEntry.callback.AddListener((data) => OnLifeIconClicked(lifeIndex));
+      eventTrigger.triggers.Add(clickEntry);
+
       lifeIcons[i] = image;
     }
 
-    Debug.Log($"[LivesDisplay] Created {livesManager.MaxLives} life icons");
+    Debug.Log($"[LivesDisplay] Created {livesManager.MaxLives} life icons with click handlers");
   }
 
   private Sprite CreateCircleWithOutlineSprite()
@@ -382,6 +399,16 @@ public class LivesDisplay : MonoBehaviour
           wasWaitingForLife = false;
         }
       }
+    }
+  }
+
+  private void OnLifeIconClicked(int lifeNumber)
+  {
+    Debug.Log($"[LivesDisplay] Life icon {lifeNumber} clicked! Passing to LivesManager for easter egg tracking");
+
+    if (livesManager != null)
+    {
+      livesManager.OnLifeIconClicked(lifeNumber);
     }
   }
 }
