@@ -75,6 +75,15 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(hm);
       }
 
+      // Create AdManager if it doesn't exist
+      if (FindFirstObjectByType<AdManager>() == null)
+      {
+        GameObject am = new GameObject("AdManager");
+        am.transform.SetParent(null);
+        AdManager adManager = am.AddComponent<AdManager>();
+        DontDestroyOnLoad(am);
+      }
+
       // Setup UI
       instance.InitializeUI();
     }

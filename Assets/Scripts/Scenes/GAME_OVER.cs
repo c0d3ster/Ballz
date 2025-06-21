@@ -5,12 +5,16 @@ using System.Collections;
 public partial class GAME_OVER : MonoBehaviour
 {
   private LivesManager livesManager;
+  private AdManager adManager;
   private float timeUntilNextLife;
   private bool hasProcessedDeath = false;
+  private bool adRequested = false;
 
   public virtual void Start()
   {
     livesManager = LivesManager.Instance;
+    adManager = AdManager.Instance;
+
     if (livesManager != null)
     {
       timeUntilNextLife = livesManager.TimeUntilNextLife;
@@ -20,6 +24,39 @@ public partial class GAME_OVER : MonoBehaviour
     {
       Debug.LogError("[GAME_OVER] LivesManager not found!");
     }
+
+    // Subscribe to ad events if out of lives
+    if (livesManager != null && !livesManager.HasLives() && adManager != null)
+    {
+      adManager.OnAdCompleted += OnAdCompleted;
+      adManager.OnAdFailed += OnAdFailed;
+    }
+  }
+
+  private void OnDestroy()
+  {
+    // Unsubscribe from ad events
+    if (adManager != null)
+    {
+      adManager.OnAdCompleted -= OnAdCompleted;
+      adManager.OnAdFailed -= OnAdFailed;
+    }
+  }
+
+  private void OnAdCompleted()
+  {
+    Debug.Log("[GAME_OVER] Ad completed - adding lives!");
+    if (livesManager != null)
+    {
+      livesManager.AddLivesViaAd(2);
+    }
+    adRequested = false;
+  }
+
+  private void OnAdFailed()
+  {
+    Debug.Log("[GAME_OVER] Ad failed or skipped");
+    adRequested = false;
   }
 
   private void ProcessPlayerDeath()
@@ -74,6 +111,13 @@ public partial class GAME_OVER : MonoBehaviour
     livesStyle.hover = livesStyle.normal;
     livesStyle.active = livesStyle.normal;
 
+    // Create ad button style
+    GUIStyle adButtonStyle = new GUIStyle(GUI.skin.button);
+    adButtonStyle.fontSize = (int)(buttonWidth * 0.05f);
+    adButtonStyle.normal.textColor = Color.green;
+    adButtonStyle.hover.textColor = Color.green;
+    adButtonStyle.active.textColor = Color.green;
+
     // Draw GAME OVER text
     GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, Screen.height * 0.2f), "GAME OVER", gameOverStyle);
 
@@ -89,10 +133,33 @@ public partial class GAME_OVER : MonoBehaviour
     {
       SceneLoader.Instance.LoadLastScene();
     }
+
     // Main Menu button - positioned on the left
     if (GUI.Button(new Rect(Screen.width * 0.1f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 15% from left
     {
       SceneLoader.Instance.ChangeScene("Active Main Menu");
+    }
+
+    // Ad button - positioned in the middle (only show if out of lives)
+    if (livesManager != null && !livesManager.HasLives())
+    {
+      string adButtonText = adRequested ? "Loading Ad..." : "Watch Ad for 2 Lives";
+      bool canShowAd = adManager != null && adManager.CanShowAd() && !adRequested;
+
+      if (canShowAd)
+      {
+        if (GUI.Button(new Rect(Screen.width * 0.325f, verticalPosition, buttonWidth, buttonHeight), adButtonText, adButtonStyle))
+        {
+          adRequested = true;
+          adManager.RequestLivesViaAd();
+        }
+      }
+      else
+      {
+        GUI.enabled = false;
+        GUI.Button(new Rect(Screen.width * 0.325f, verticalPosition, buttonWidth, buttonHeight), "Ad Not Available", adButtonStyle);
+        GUI.enabled = true;
+      }
     }
   }
 

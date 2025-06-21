@@ -20,6 +20,15 @@ public class PORTAL_LEVEL_START : MonoBehaviour
       other.gameObject.SetActive(false);
       if (SceneLoader.Instance != null && SceneLoader.Instance.currentScene == "Active Main Menu")
       {
+        // Check if player has lives before allowing level start
+        if (LivesManager.Instance != null && !LivesManager.Instance.HasLives())
+        {
+          Debug.Log("[PORTAL_LEVEL_START] Player is out of lives - cannot start level");
+          // Load game over scene instead
+          SceneLoader.Instance.GameOver();
+          return;
+        }
+
         int level = LevelProgressManager.Instance.GetHighestLevelNumber(gameMode);
         string baseName = $"Ball {gameMode}{SceneLoader.Instance.GetGameModeSuffix(gameMode)}";
         string scene = $"{baseName} {level}";
