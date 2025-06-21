@@ -122,7 +122,7 @@ public class CountManager : MonoBehaviour
     if (IsLevelComplete)
     {
       OnLevelComplete?.Invoke();
-      SceneLoader.Instance.Win();
+      LevelProgressManager.Instance.CompleteCurrentLevel();
     }
   }
 
@@ -171,7 +171,7 @@ public class CountManager : MonoBehaviour
       CurrentCount = TotalCount;
       UpdateCountDisplay();
       OnLevelComplete?.Invoke();
-      SceneLoader.Instance.Win();
+      LevelProgressManager.Instance.CompleteCurrentLevel();
     }
   }
 }

@@ -116,16 +116,31 @@ public class LevelProgressManager : MonoBehaviour
     }
   }
 
-  // Level progression methods
-  public void CompleteLevel(GameMode gameMode)
+  public void CompleteCurrentLevel()
   {
-    string currentScene = SceneLoader.Instance.currentScene;
-    string baseName = $"Ball {gameMode}{SceneLoader.Instance.GetGameModeSuffix(gameMode)}";
-    string currentLevelName = $"{baseName} {GetHighestLevelNumber(gameMode)}";
+    // Handle progress management (our responsibility)
+    CompleteLevel(SceneLoader.Instance.currentScene);
 
-    if (currentScene == currentLevelName)
+    // Handle scene loading (SceneLoader's responsibility)
+    SceneLoader.Instance.LoadWinScene();
+  }
+
+  // Level progression methods
+  public void CompleteLevel(string sceneName)
+  {
+    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(sceneName);
+    if (!gameMode.HasValue)
     {
-      switch (gameMode)
+      Debug.LogWarning($"[LevelProgress] Could not determine game mode for scene: {sceneName}");
+      return;
+    }
+
+    string baseName = $"Ball {gameMode}{SceneLoader.Instance.GetGameModeSuffix(gameMode.Value)}";
+    string currentMaxLevelName = $"{baseName} {GetHighestLevelNumber(gameMode.Value)}";
+
+    if (sceneName == currentMaxLevelName)
+    {
+      switch (gameMode.Value)
       {
         case GameMode.Collect:
           collectLevel++;
@@ -214,18 +229,6 @@ public class LevelProgressManager : MonoBehaviour
         return pushLevel;
       default:
         return 1;
-    }
-  }
-
-  private void CompleteCurrentLevel()
-  {
-    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
-    if (gameMode.HasValue)
-    {
-      Debug.Log($"[LevelProgress] C key pressed - Current scene: {SceneLoader.Instance.currentScene}");
-      Debug.Log($"[LevelProgress] Determined game mode: {gameMode}");
-      Debug.Log($"[LevelProgress] Completing level for game mode: {gameMode.Value}");
-      SceneLoader.Instance.Win();
     }
   }
 }

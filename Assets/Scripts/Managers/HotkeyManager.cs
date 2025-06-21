@@ -45,6 +45,7 @@ public class HotkeyManager : MonoBehaviour
   private void Update()
   {
     HandleHotkeys();
+    HandleDebugHotkeys();
   }
 
   private void HandleHotkeys()
@@ -52,19 +53,22 @@ public class HotkeyManager : MonoBehaviour
     // Handle Reset key (R) - show confirmation dialog
     HandleResetKey();
 
-    // Handle Complete Level key (C) - Editor only
-#if UNITY_EDITOR
-    HandleKeyPress(completeLevelKey, OnCompleteLevelPressed, "Complete Level");
-#endif
-
     // Handle Pause key (Escape)
     HandleKeyPress(pauseKey, OnPausePressed, "Pause");
 
     // Handle Jump key (Space) - both press and release
     HandleJumpKey();
+  }
 
-    // Handle Reset Pickups key (P)
+  private void HandleDebugHotkeys()
+  {
+#if UNITY_EDITOR
+    // Handle Complete Level key (C) - Editor only
+    HandleKeyPress(completeLevelKey, OnCompleteLevelPressed, "Complete Level");
+
+    // Handle Reset Pickups key (P) - Editor only
     HandleKeyPress(resetPickupsKey, OnResetPickupsPressed, "Reset Pickups");
+#endif
   }
 
   private void HandleResetKey()

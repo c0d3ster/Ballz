@@ -32,7 +32,7 @@ public class PORTAL_LEVEL_START : MonoBehaviour
       }
       else
       {
-        SceneLoader.Instance.Win();
+        LevelProgressManager.Instance.CompleteCurrentLevel();
       }
     }
   }
