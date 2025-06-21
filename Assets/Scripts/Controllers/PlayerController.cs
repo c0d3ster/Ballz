@@ -80,15 +80,21 @@ public class PlayerController : MonoBehaviour
     this.cam.transform.position = this.cam.transform.position + this.transform.position;
     this.camShift = this.cam.transform.position - this.transform.position;
     PlayerController.camOffset = new Vector3(0, -1.75f, 5.25f);
+
+    // Subscribe to hotkey events
+    HotkeyManager.OnJumpPressed += OnJumpPressed;
+    HotkeyManager.OnJumpReleased += OnJumpReleased;
   }
 
-  public virtual void Update()
+  private void OnDestroy()
   {
-    // Debug input state
-    Vector2 moveDir = MoveController.moveDirection;
+    HotkeyManager.OnJumpPressed -= OnJumpPressed;
+    HotkeyManager.OnJumpReleased -= OnJumpReleased;
+  }
 
-    // Handle jumping
-    if (Input.GetKeyDown("space") && IsGrounded() && this.canJump)
+  private void OnJumpPressed()
+  {
+    if (IsGrounded() && this.canJump)
     {
       isHoldingSpace = true;
       if (spaceHoldCoroutine != null)
@@ -97,15 +103,24 @@ public class PlayerController : MonoBehaviour
       }
       spaceHoldCoroutine = StartCoroutine(HoldSpaceJump());
     }
-    else if (Input.GetKeyUp("space"))
+  }
+
+  private void OnJumpReleased()
+  {
+    isHoldingSpace = false;
+    if (spaceHoldCoroutine != null)
     {
-      isHoldingSpace = false;
-      if (spaceHoldCoroutine != null)
-      {
-        StopCoroutine(spaceHoldCoroutine);
-        spaceHoldCoroutine = null;
-      }
+      StopCoroutine(spaceHoldCoroutine);
+      spaceHoldCoroutine = null;
     }
+  }
+
+  public virtual void Update()
+  {
+    // Debug input state
+    Vector2 moveDir = MoveController.moveDirection;
+
+    // Jump handling moved to HotkeyManager
 
     // Apply extra gravity when falling
     if (!IsGrounded())

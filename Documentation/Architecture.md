@@ -134,7 +134,7 @@ LivesManager.Instance.OnLivesChanged += (lives) => {
 
 // Subscribe to level completion
 CountManager.Instance.OnLevelComplete += () => {
-    SceneLoader.Instance.Win();
+    LevelProgressManager.Instance.CompleteCurrentLevel();
 };
 ```
 

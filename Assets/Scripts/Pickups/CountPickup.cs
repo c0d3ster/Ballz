@@ -6,6 +6,23 @@ public class CountPickup : BasePickup
   [SerializeField] private bool destroyOnPickup = true;
   [SerializeField] private bool useCountManager = true;
 
+  protected override void Start()
+  {
+    // Subscribe to hotkey events for reset
+    HotkeyManager.OnResetConfirmed += ResetPickup;
+    HotkeyManager.OnResetPickupsPressed += ResetPickup;
+
+    // Call base Start() which will call OnPickupStart()
+    base.Start();
+  }
+
+  private void OnDestroy()
+  {
+    // Unsubscribe from hotkey events
+    HotkeyManager.OnResetConfirmed -= ResetPickup;
+    HotkeyManager.OnResetPickupsPressed -= ResetPickup;
+  }
+
   protected override void OnPickupStart()
   {
     // Ensure this pickup is tagged correctly for CountManager
@@ -52,5 +69,12 @@ public class CountPickup : BasePickup
   {
     // Override in derived classes for custom pickup behavior
     Debug.Log($"[CountPickup] Direct pickup of {gameObject.name}");
+  }
+
+  private void ResetPickup()
+  {
+    // Reactivate the pickup
+    SetActive(true);
+    Debug.Log($"[CountPickup] {gameObject.name} reset");
   }
 }

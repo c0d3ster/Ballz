@@ -121,21 +121,9 @@ public partial class SceneLoader : MonoBehaviour
     }
   }
 
-  public void Win()
+  public void LoadWinScene()
   {
-    // Complete the current level and save progress
-    GameMode? gameMode = DetermineGameMode(currentScene);
-    if (gameMode.HasValue)
-    {
-      // Check if next level exists before incrementing
-      string nextScene = $"Ball {gameMode}{GetGameModeSuffix(gameMode.Value)} {GetLevelNumberFromCurrentScene() + 1}";
-      if (SceneExists(nextScene))
-      {
-        LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
-      }
-    }
-
-    // Load the win scene
+    // Only responsible for loading the WIN scene
     SceneManager.LoadScene("WIN", LoadSceneMode.Additive);
   }
 

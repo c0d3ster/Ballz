@@ -6,6 +6,9 @@ public abstract class BasePickup : MonoBehaviour
   [SerializeField] protected bool isActive = true;
   [SerializeField] protected string pickupTag = "Player";
 
+  // Public property to access pickupTag
+  public string PickupTag => pickupTag;
+
   protected virtual void Start()
   {
     // Find collider on this object or its children
@@ -19,21 +22,28 @@ public abstract class BasePickup : MonoBehaviour
         Debug.LogError($"[BasePickup] {gameObject.name} has no Collider component on itself or children!");
         return;
       }
-      else
-      {
-        Debug.Log($"[BasePickup] Found collider on child object: {collider.gameObject.name}");
-      }
     }
 
     // Enable the collider if it's disabled
     if (!collider.enabled)
     {
-      Debug.Log($"[BasePickup] Enabling collider on {collider.gameObject.name}");
       collider.enabled = true;
     }
 
-    // Add trigger handler to all colliders on this object
-    var allColliders = GetComponents<Collider>();
+    // Make sure the collider is a trigger
+    if (!collider.isTrigger)
+    {
+      collider.isTrigger = true;
+    }
+
+    // Add trigger handler to the collider we found
+    if (collider.GetComponent<PickupTrigger>() == null)
+    {
+      collider.gameObject.AddComponent<PickupTrigger>();
+    }
+
+    // Also add trigger handlers to all other colliders on this object and children
+    var allColliders = GetComponentsInChildren<Collider>();
     foreach (var col in allColliders)
     {
       if (col.GetComponent<PickupTrigger>() == null)
@@ -52,7 +62,10 @@ public abstract class BasePickup : MonoBehaviour
 
   public virtual void HandlePickup(Collider other)
   {
-    if (!isActive) return;
+    if (!isActive)
+    {
+      return;
+    }
 
     if (other.CompareTag(pickupTag))
     {
@@ -85,7 +98,15 @@ public class PickupTrigger : MonoBehaviour
 
     if (pickup != null)
     {
-      pickup.HandlePickup(other);
+      // Only process if it's the configured pickup tag
+      if (other.CompareTag(pickup.PickupTag))
+      {
+        pickup.HandlePickup(other);
+      }
+    }
+    else
+    {
+      Debug.LogWarning($"[PickupTrigger] No BasePickup found on {gameObject.name} or its parents");
     }
   }
 }

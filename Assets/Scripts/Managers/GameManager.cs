@@ -66,6 +66,15 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(tm);
       }
 
+      // Create HotkeyManager if it doesn't exist
+      if (FindFirstObjectByType<HotkeyManager>() == null)
+      {
+        GameObject hm = new GameObject("HotkeyManager");
+        hm.transform.SetParent(null);
+        HotkeyManager hotkeyManager = hm.AddComponent<HotkeyManager>();
+        DontDestroyOnLoad(hm);
+      }
+
       // Setup UI
       instance.InitializeUI();
     }

@@ -54,6 +54,9 @@ public class LivesManager : MonoBehaviour
       LoadLives();
       SceneManager.sceneLoaded += OnSceneLoaded;
       Debug.Log($"[LivesManager] Start - Initialized with {CurrentLives}/{maxLives} lives");
+
+      // Subscribe to hotkey events
+      HotkeyManager.OnResetConfirmed += ClearLivesData;
     }
   }
 
@@ -62,6 +65,7 @@ public class LivesManager : MonoBehaviour
     if (Instance == this)
     {
       SceneManager.sceneLoaded -= OnSceneLoaded;
+      HotkeyManager.OnResetConfirmed -= ClearLivesData;
     }
   }
 
@@ -123,15 +127,7 @@ public class LivesManager : MonoBehaviour
   {
     CheckLifeRegeneration();
     CheckEasterEggTapTimeout();
-
-    // Reset lives when R is pressed (only in editor)
-#if UNITY_EDITOR
-    if (Input.GetKeyDown(KeyCode.R))
-    {
-      Debug.Log("[LivesManager] R key pressed - Resetting lives");
-      ClearLivesData();
-    }
-#endif
+    // Reset lives handling moved to HotkeyManager
   }
 
   private void LoadLives()
