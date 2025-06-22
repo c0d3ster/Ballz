@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-[System.Serializable]
 public class MoveController : MonoBehaviour
 {
   // UI Elements
@@ -168,8 +167,8 @@ public class MoveController : MonoBehaviour
       if (!isInitialized) return;
     }
 
-    // If paused, ignore all input
-    if (SceneLoader.Instance.isPaused)
+    // If any non-interactive scene is loaded, ignore all input
+    if (SceneLoader.Instance != null && SceneLoader.Instance.IsCurrentSceneNonInteractive)
     {
       ResetMovement();
       return;
@@ -242,9 +241,6 @@ public class MoveController : MonoBehaviour
 
   public virtual void HandlePointerInput(Vector2 pointerPos)
   {
-    // Ignore input if paused
-    if (SceneLoader.Instance.isPaused) return;
-
     if (!isInitialized || !outerCircle || !innerCircle) return;
 
     // Always check if we're over the joystick, regardless of isPressed state
@@ -311,7 +307,7 @@ public class MoveController : MonoBehaviour
   public virtual void HandleKeyboardInput()
   {
     // Ignore input if paused
-    if (SceneLoader.Instance.isPaused) return;
+    if (SceneLoader.Instance != null && SceneLoader.Instance.isPaused) return;
 
     if (!isInitialized) return;
 

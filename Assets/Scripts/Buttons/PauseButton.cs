@@ -23,7 +23,7 @@ public class PauseButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
   void Update()
   {
     // Hide button when game is paused
-    if (buttonImage != null)
+    if (buttonImage != null && SceneLoader.Instance != null)
     {
       buttonImage.enabled = !SceneLoader.Instance.isPaused;
       button.enabled = !SceneLoader.Instance.isPaused;

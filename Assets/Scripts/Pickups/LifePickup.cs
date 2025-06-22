@@ -247,15 +247,18 @@ public class LifePickup : BasePickup
       return;
     }
 
+    // Only log if it's actually a relevant collision
+    if (other.CompareTag(base.PickupTag))
+    {
+      int currentLives = LivesManager.Instance != null ? LivesManager.Instance.CurrentLives : 0;
+      int maxLives = LivesManager.Instance != null ? LivesManager.Instance.MaxLives : 0;
+      Debug.Log($"{base.PickupTag} collided with life pickup. Lives: {currentLives}/{maxLives}");
+    }
+
     // Don't process pickup if player is at max lives
     if (LivesManager.Instance != null && LivesManager.Instance.CurrentLives >= LivesManager.Instance.MaxLives)
     {
       return;
-    }
-
-    // Only log if it's actually a Player collision
-    if (other.CompareTag("Player"))
-    {
     }
 
     // Call base implementation if all checks pass
@@ -265,7 +268,26 @@ public class LifePickup : BasePickup
   protected override void OnPickupCollected(Collider other)
   {
     // Add a life to the player
-    LivesManager.Instance.AddLife();
+    LivesManager livesManager = LivesManager.Instance;
+
+    // Fallback: find LivesManager in scene if static reference is null (happens during script recompilation)
+    if (livesManager == null)
+    {
+      livesManager = FindFirstObjectByType<LivesManager>();
+      if (livesManager != null)
+      {
+        Debug.Log($"[LifePickup] Found LivesManager instance in {gameObject.name}");
+      }
+    }
+
+    if (livesManager != null)
+    {
+      livesManager.AddLife();
+    }
+    else
+    {
+      Debug.LogWarning($"[LifePickup] LivesManager.Instance is null and no LivesManager found in scene for {gameObject.name}. Life pickup ignored.");
+    }
 
     // Set pickup time and start respawn
     lastPickupTime = DateTime.UtcNow;

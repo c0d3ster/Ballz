@@ -29,6 +29,7 @@ public class UIManager : MonoBehaviour
 
       // Subscribe to scene changes
       SceneManager.sceneLoaded += OnSceneLoaded;
+      SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
     else
     {
@@ -56,11 +57,26 @@ public class UIManager : MonoBehaviour
     }
   }
 
+  void OnSceneUnloaded(Scene scene)
+  {
+    if (gameUICanvas == null) return;
+
+    if (SceneLoader.Instance.IsCurrentSceneNonInteractive)
+    {
+      gameUICanvas.enabled = false;
+    }
+    else
+    {
+      gameUICanvas.enabled = true;
+    }
+  }
+
   void OnDestroy()
   {
     if (Instance == this)
     {
       SceneManager.sceneLoaded -= OnSceneLoaded;
+      SceneManager.sceneUnloaded -= OnSceneUnloaded;
       HotkeyManager.OnPausePressed -= TogglePause;
     }
   }

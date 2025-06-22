@@ -34,6 +34,11 @@ public class PlayerController : MonoBehaviour
         return;
       }
     }
+
+    //================= Starting Camera Position ==========//
+    this.cam.transform.position = this.cam.transform.position + this.transform.position;
+    this.camShift = this.cam.transform.position - this.transform.position;
+    PlayerController.camOffset = new Vector3(0, -1.75f, 5.25f);
   }
 
   public virtual void Start()
@@ -75,11 +80,6 @@ public class PlayerController : MonoBehaviour
 
     // Check if jump is unlocked (Push level > 1)
     this.canJump = LevelProgressManager.Instance.GetHighestLevelNumber(GameMode.Push) > 1;
-
-    //================= Starting Camera Position ==========//
-    this.cam.transform.position = this.cam.transform.position + this.transform.position;
-    this.camShift = this.cam.transform.position - this.transform.position;
-    PlayerController.camOffset = new Vector3(0, -1.75f, 5.25f);
 
     // Subscribe to hotkey events
     HotkeyManager.OnJumpPressed += OnJumpPressed;
@@ -170,9 +170,12 @@ public class PlayerController : MonoBehaviour
 
   public virtual void LateUpdate()
   {
-    this.cam.transform.position = this.transform.position + this.camShift;
-    this.cam.transform.LookAt(this.transform);
-    this.cam.transform.position = this.cam.transform.position + PlayerController.camOffset;
+    if (this.cam != null && this.camShift != Vector3.zero)
+    {
+      this.cam.transform.position = this.transform.position + this.camShift;
+      this.cam.transform.LookAt(this.transform);
+      this.cam.transform.position = this.cam.transform.position + PlayerController.camOffset;
+    }
   }
 
   public void Jump()

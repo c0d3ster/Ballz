@@ -84,7 +84,7 @@ The codebase distinguishes between **Managers** and **Loaders** based on their p
   - Scene loading and unloading
   - Scene state tracking (current, last, paused)
   - Game mode detection from scene names
-  - Overlay scene management (PAUSE, GAME OVER, WIN)
+  - Overlay scene management (PAUSE, GAME_OVER, WIN)
   - Level progression logic
 
 ## Bootstrap Process
