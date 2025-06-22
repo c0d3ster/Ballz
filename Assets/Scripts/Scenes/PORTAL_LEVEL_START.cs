@@ -18,7 +18,7 @@ public class PORTAL_LEVEL_START : MonoBehaviour
     if (isValidCollision)
     {
       other.gameObject.SetActive(false);
-      if (SceneLoader.Instance.currentScene == "Active Main Menu")
+      if (SceneLoader.Instance != null && SceneLoader.Instance.currentScene == "Active Main Menu")
       {
         int level = LevelProgressManager.Instance.GetHighestLevelNumber(gameMode);
         string baseName = $"Ball {gameMode}{SceneLoader.Instance.GetGameModeSuffix(gameMode)}";

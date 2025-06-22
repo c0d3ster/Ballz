@@ -121,6 +121,9 @@ public class LivesManager : MonoBehaviour
     rectTransform.anchoredPosition = new Vector2(35, -35);
 
     livesContainer = containerObj.transform;
+
+    // Scale the lives container if on mobile
+    UIManager.Instance?.ScaleNewUIElement(containerObj.transform);
   }
 
   private void Update()

@@ -9,12 +9,8 @@ public partial class Win : MonoBehaviour
   {
     Time.timeScale = 0;
 
-    // Determine which game mode was completed based on the current scene
-    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
-    if (gameMode.HasValue)
-    {
-      LevelProgressManager.Instance.CompleteLevel(gameMode.Value);
-    }
+    // Complete the current level
+    LevelProgressManager.Instance.CompleteLevel(SceneLoader.Instance.currentScene);
   }
 
   public virtual void OnGUI()

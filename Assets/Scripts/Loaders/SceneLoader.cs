@@ -19,8 +19,9 @@ public partial class SceneLoader : MonoBehaviour
   private readonly string[] nonInteractiveScenes = new string[]
   {
         "Splash Screen",
-        "GAME OVER",
-        "WIN"
+        "GAME_OVER",
+        "WIN",
+        "RESET_CONFIRMATION"
   };
 
   public bool IsCurrentSceneNonInteractive
@@ -233,6 +234,6 @@ public partial class SceneLoader : MonoBehaviour
 
   public void GameOver()
   {
-    this.ChangeScene("GAME OVER");
+    this.ChangeScene("GAME_OVER");
   }
 }

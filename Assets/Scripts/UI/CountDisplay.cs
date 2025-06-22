@@ -65,11 +65,14 @@ public class CountDisplay : MonoBehaviour
     rectTransform.anchorMin = new Vector2(0, 1);
     rectTransform.anchorMax = new Vector2(0, 1);
     rectTransform.pivot = new Vector2(0, 1);
-    rectTransform.anchoredPosition = new Vector2(38, -120);
+    rectTransform.anchoredPosition = new Vector2(42, -120);
     rectTransform.sizeDelta = new Vector2(200, 75);
     rectTransform.localScale = Vector3.one;
 
     countText = tmp;
+
+    // Scale the new element if on mobile
+    UIManager.Instance?.ScaleNewUIElement(countTextObj.transform);
   }
 
   public void UpdateCount(int count, int total)

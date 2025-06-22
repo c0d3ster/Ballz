@@ -566,7 +566,7 @@ PlayerSettings:
   openGLRequireES32: 0
   m_TemplateCustomTags: {}
   mobileMTRendering:
-    Android: 1
+    Android: 0
     VisionOS: 1
     iPhone: 1
     tvOS: 1
@@ -975,8 +975,8 @@ PlayerSettings:
   XboxOneOverrideIdentityPublisher: 
   vrEditorSettings: {}
   cloudServicesEnabled:
-    Purchasing: 0
-    Unity Ads: 0
+    Purchasing: 1
+    Unity Ads: 1
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -1001,7 +1001,7 @@ PlayerSettings:
   cloudProjectId: 378f8017-1f54-49c2-b1a4-1e121871862b
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: BALLZ (3)
+  projectName: BALLZ
   organizationId: c0d3ster
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 1

@@ -19,10 +19,14 @@ public partial class PAUSE : MonoBehaviour
     float middleButtonWidth = Screen.width * 0.25f;
     float rightButtonWidth = Screen.width * 0.3f; // Increased from 0.2f to 0.3f (30% of screen width)
     float buttonHeight = Screen.height * 0.15f; // 20% for control options
-    float checkboxSize = buttonHeight * 0.4f;
+    float checkboxSize = buttonHeight * 0.4f; // Back to original size since we're not using radio buttons
     float rightPosition = Screen.width * 0.65f; // Adjusted from 0.75f to 0.65f to accommodate wider rect
     float middlePosition = Screen.width * 0.375f; // Right side position
     int boxPadding = 3; // Left side position
+
+    // Define colors for control options
+    Color darkGreen = new Color(0, 0.65f, 0, 1);
+    Color darkRed = new Color(0.65f, 0, 0, 1);
 
     // Create styles // Reduced padding around boxes
     GUIStyle style = GUI.skin.button;
@@ -38,17 +42,28 @@ public partial class PAUSE : MonoBehaviour
     headerStyle.normal.textColor = Color.white;
     headerStyle.hover = headerStyle.normal; // Prevent hover effect
 
-    GUIStyle toggleStyle = new GUIStyle(GUI.skin.toggle);
-    toggleStyle.fontSize = (int)(rightButtonWidth * 0.1f);
-    toggleStyle.normal.textColor = Color.white;
-    toggleStyle.onNormal.textColor = Color.white;
-    toggleStyle.hover.textColor = Color.white;
-    toggleStyle.onHover.textColor = Color.white;
-    toggleStyle.active.textColor = Color.white;
-    toggleStyle.onActive.textColor = Color.white;
+    // Create button styles for control options with gradient and hover effects
+    GUIStyle enabledButtonStyle = new GUIStyle(GUI.skin.button);
+    enabledButtonStyle.fontSize = (int)(checkboxSize * 0.3f);
+    enabledButtonStyle.normal.textColor = Color.white;
+    enabledButtonStyle.hover.textColor = Color.white;
+    enabledButtonStyle.active.textColor = Color.white;
 
-    GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
-    boxStyle.normal.textColor = Color.white;
+    // Set darker green colors for enabled state with gradient effect
+    enabledButtonStyle.normal.background = GUI.skin.button.normal.background;
+    enabledButtonStyle.hover.background = GUI.skin.button.hover.background;
+    enabledButtonStyle.active.background = GUI.skin.button.active.background;
+
+    GUIStyle disabledButtonStyle = new GUIStyle(GUI.skin.button);
+    disabledButtonStyle.fontSize = (int)(checkboxSize * 0.3f);
+    disabledButtonStyle.normal.textColor = Color.white;
+    disabledButtonStyle.hover.textColor = Color.white;
+    disabledButtonStyle.active.textColor = Color.white;
+
+    // Set darker red colors for disabled state with gradient effect
+    disabledButtonStyle.normal.background = GUI.skin.button.normal.background;
+    disabledButtonStyle.hover.background = GUI.skin.button.hover.background;
+    disabledButtonStyle.active.background = GUI.skin.button.active.background;
 
     // middle - existing menu buttons
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.2f, middleButtonWidth, buttonHeight), "Resume Play", style))
@@ -76,36 +91,54 @@ public partial class PAUSE : MonoBehaviour
     // Right side - Control Optionz header
     GUI.Label(new Rect(rightPosition, Screen.height * 0.2f, rightButtonWidth, buttonHeight * 0.5f), "Control Optionz", headerStyle);
 
-    float checkboxVerticalOffset = checkboxSize * 0.1f; // Add a small offset to vertically center checkboxes
     float boxHeight = checkboxSize * 0.85f; // Reduce box height to minimize bottom padding
 
-    // Draw background boxes for better visibility with less padding
-    GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.3f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
-    GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.4f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
-    GUI.Box(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", boxStyle);
+    // Create clickable buttons for each option (no visual checkbox, just clickable areas)
+    bool targetEnabled = Optionz.useTarget;
+    bool joystickEnabled = Optionz.useJoystick;
+    bool accelEnabled = Optionz.useAccelerometer;
+    bool keyboardEnabled = Optionz.useKeyboard;
 
+    // Target option - use proper button styling with gradient and hover effects
     Color originalColor = GUI.color;
-    GUI.color = new Color(0, 0.6f, 0, 1); // Darker green (60% green)
+    GUI.color = targetEnabled ? darkGreen : darkRed;
+    if (GUI.Button(new Rect(rightPosition - boxPadding, (Screen.height * 0.3f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", targetEnabled ? enabledButtonStyle : disabledButtonStyle))
+    {
+      targetEnabled = !targetEnabled;
+      Debug.Log($"[PAUSE] Target toggled to: {targetEnabled}");
+    }
 
-    // Checkboxes for control options - now with vertical offset
-    bool targetEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.3f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useTarget, "", toggleStyle);
-    bool joystickEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.4f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useJoystick, "", toggleStyle);
+    // Joystick option
+    GUI.color = joystickEnabled ? darkGreen : darkRed;
+    if (GUI.Button(new Rect(rightPosition - boxPadding, (Screen.height * 0.4f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", joystickEnabled ? enabledButtonStyle : disabledButtonStyle))
+    {
+      joystickEnabled = !joystickEnabled;
+      Debug.Log($"[PAUSE] Joystick toggled to: {joystickEnabled}");
+    }
 
     // Third option depends on platform
-    bool accelEnabled = false;
-    bool keyboardEnabled = false;
     if (SystemInfo.deviceType == DeviceType.Handheld)
     {
-      accelEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useAccelerometer, "", toggleStyle);
+      GUI.color = accelEnabled ? darkGreen : darkRed;
+      if (GUI.Button(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", accelEnabled ? enabledButtonStyle : disabledButtonStyle))
+      {
+        accelEnabled = !accelEnabled;
+        Debug.Log($"[PAUSE] Accelerometer toggled to: {accelEnabled}");
+      }
     }
     else
     {
-      keyboardEnabled = GUI.Toggle(new Rect(rightPosition, Screen.height * 0.5f + checkboxVerticalOffset, rightButtonWidth, checkboxSize), Optionz.useKeyboard, "", toggleStyle);
+      GUI.color = keyboardEnabled ? darkGreen : darkRed;
+      if (GUI.Button(new Rect(rightPosition - boxPadding, (Screen.height * 0.5f) - boxPadding, rightButtonWidth + (boxPadding * 2), boxHeight + (boxPadding * 2)), "", keyboardEnabled ? enabledButtonStyle : disabledButtonStyle))
+      {
+        keyboardEnabled = !keyboardEnabled;
+        Debug.Log($"[PAUSE] Keyboard toggled to: {keyboardEnabled}");
+      }
     }
 
-    GUI.color = originalColor;
+    GUI.color = originalColor; // Reset color
 
-    // Draw the labels - keep them at original vertical position for proper alignment
+    // Draw the labels
     GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.3f, rightButtonWidth - 20, checkboxSize), "Target", labelStyle);
     GUI.Label(new Rect(rightPosition + 20, Screen.height * 0.4f, rightButtonWidth - 20, checkboxSize), "Joystick", labelStyle);
 
@@ -154,20 +187,45 @@ public partial class PAUSE : MonoBehaviour
       }
     }
 
-    // Update options after all toggles are drawn
-    Optionz.useTarget = targetEnabled;
-    Optionz.useJoystick = joystickEnabled;
+    // Update options after all buttons are processed
+    bool settingsChanged = false;
+    if (targetEnabled != Optionz.useTarget)
+    {
+      Optionz.useTarget = targetEnabled;
+      settingsChanged = true;
+    }
+    if (joystickEnabled != Optionz.useJoystick)
+    {
+      Optionz.useJoystick = joystickEnabled;
+      settingsChanged = true;
+    }
+
     // Update platform-specific options
     if (SystemInfo.deviceType == DeviceType.Handheld)
     {
-      Optionz.useAccelerometer = accelEnabled;
+      if (accelEnabled != Optionz.useAccelerometer)
+      {
+        Optionz.useAccelerometer = accelEnabled;
+        settingsChanged = true;
+      }
       Optionz.useKeyboard = false; // Force off on mobile
     }
     else
     {
-      Optionz.useKeyboard = keyboardEnabled;
+      if (keyboardEnabled != Optionz.useKeyboard)
+      {
+        Optionz.useKeyboard = keyboardEnabled;
+        settingsChanged = true;
+      }
       Optionz.useAccelerometer = false; // Force off on desktop
     }
+
+    // Save settings if any changed
+    if (settingsChanged)
+    {
+      Optionz.SaveControlSettings();
+    }
+
     // Ensure at least one control method is enabled
     if (((!Optionz.useTarget && !Optionz.useAccelerometer) && !Optionz.useJoystick) && !Optionz.useKeyboard)
     {
@@ -179,6 +237,7 @@ public partial class PAUSE : MonoBehaviour
       {
         Optionz.useKeyboard = true; // Default to keyboard on desktop
       }
+      Optionz.SaveControlSettings(); // Save the enforced default
     }
   }
 }

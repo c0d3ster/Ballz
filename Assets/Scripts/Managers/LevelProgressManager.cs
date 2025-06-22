@@ -3,7 +3,6 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using Enums;
 
-[System.Serializable]
 public class LevelProgressManager : MonoBehaviour
 {
   // Level progression counters
