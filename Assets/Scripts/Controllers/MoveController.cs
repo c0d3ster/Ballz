@@ -70,22 +70,6 @@ public class MoveController : MonoBehaviour
     {
       CalibrateAccelerometer();
     }
-
-    // Recalculate movement radius after UIManager scaling is applied
-    StartCoroutine(RecalculateMovementRadiusDelayed());
-  }
-
-  private System.Collections.IEnumerator RecalculateMovementRadiusDelayed()
-  {
-    // Wait for UIManager scaling to be applied
-    yield return new WaitForSeconds(0.1f);
-
-    if (outerCircle != null && innerCircle != null)
-    {
-      // Recalculate movement radius with scaled sizes
-      movementRadius = (outerCircle.sizeDelta.x + innerCircle.sizeDelta.x) / 2;
-      Debug.Log($"[MoveController] Recalculated movement radius: {movementRadius} (outer: {outerCircle.sizeDelta.x}, inner: {innerCircle.sizeDelta.x})");
-    }
   }
 
   private void InitializeController()
@@ -188,7 +172,7 @@ public class MoveController : MonoBehaviour
     }
 
     // If any non-interactive scene is loaded, ignore all input
-    if (SceneLoader.Instance != null && SceneLoader.Instance.IsCurrentSceneNonInteractive)
+    if (SceneLoader.Instance != null && (SceneLoader.Instance.IsCurrentSceneNonInteractive || SceneLoader.Instance.isPaused))
     {
       ResetMovement();
       return;

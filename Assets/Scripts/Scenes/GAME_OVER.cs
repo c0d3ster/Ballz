@@ -70,7 +70,7 @@ public partial class GAME_OVER : MonoBehaviour
     GUIStyle livesStyle = new GUIStyle(GUI.skin.label);
     livesStyle.fontSize = (int)(Screen.height * 0.05f);
     livesStyle.alignment = TextAnchor.MiddleCenter;
-    livesStyle.normal.textColor = new Color(0.4f, 0.4f, 0.4f, 1f); // Darker gray
+    livesStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f, 1f); // Lighter gray for better visibility
     livesStyle.hover = livesStyle.normal;
     livesStyle.active = livesStyle.normal;
 
@@ -80,8 +80,8 @@ public partial class GAME_OVER : MonoBehaviour
     // Draw lives info if out of lives
     if (livesManager != null && !livesManager.HasLives())
     {
-      string livesText = $"Out of lives! Next life in: {Mathf.CeilToInt(timeUntilNextLife / 60f)}m {Mathf.CeilToInt(timeUntilNextLife % 60f)}s";
-      GUI.Label(new Rect(0, Screen.height * 0.45f, Screen.width, Screen.height * 0.1f), livesText, livesStyle);
+      string livesText = $"Out of lives! Next life in: {Mathf.FloorToInt(timeUntilNextLife / 60f)}m {Mathf.FloorToInt(timeUntilNextLife % 60f)}s";
+      GUI.Label(new Rect(0, Screen.height * 0.55f, Screen.width, Screen.height * 0.1f), livesText, livesStyle);
     }
 
     // Try Again button - positioned on the right

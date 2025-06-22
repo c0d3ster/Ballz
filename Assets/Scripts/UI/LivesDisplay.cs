@@ -168,7 +168,8 @@ public class LivesDisplay : MonoBehaviour
         // Only apply special multiplier on mobile
         float platformMultiplier = SystemInfo.deviceType == DeviceType.Handheld ? lifeIconScaleMultiplier : 1f;
         float scaledIconSize = iconSize * platformMultiplier;
-        float xPosition = i * (scaledIconSize + iconSpacing);
+        float scaledIconSpacing = SystemInfo.deviceType == DeviceType.Handheld ? iconSpacing - 7 : iconSpacing;
+        float xPosition = i * (scaledIconSize + scaledIconSpacing);
         rectTransform.anchorMin = new Vector2(0, 1);
         rectTransform.anchorMax = new Vector2(0, 1);
         rectTransform.pivot = new Vector2(0, 1);
@@ -326,7 +327,7 @@ public class LivesDisplay : MonoBehaviour
     rectTransform.anchorMin = new Vector2(0, 1);
     rectTransform.anchorMax = new Vector2(0, 1);
     rectTransform.pivot = new Vector2(0, 1);
-    rectTransform.anchoredPosition = new Vector2(40, -100);
+    rectTransform.anchoredPosition = new Vector2(42, -120);
     rectTransform.sizeDelta = new Vector2(250, 60);
     rectTransform.localScale = Vector3.one;
 

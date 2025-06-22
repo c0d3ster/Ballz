@@ -10,7 +10,7 @@ public class UIManager : MonoBehaviour
   public Canvas gameUICanvas;
 
   [Header("Mobile UI Scaling")]
-  [SerializeField] private float mobileScaleMultiplier = 1.2f;
+  [SerializeField] private float mobileScaleMultiplier = 1.1f;
   [SerializeField] private bool enableMobileScaling = true;
 
   private CanvasScaler canvasScaler;
@@ -76,23 +76,7 @@ public class UIManager : MonoBehaviour
 
     Debug.Log($"[UIManager] Applying mobile scaling ({mobileScaleMultiplier}x) for {SystemInfo.deviceModel}");
 
-    // Don't scale the canvas scaler - we'll scale individual elements instead
-    // canvasScaler.scaleFactor *= mobileScaleMultiplier;
-
     // Scale up existing UI elements immediately
-    ScaleUIElementsRecursively(gameUICanvas.transform);
-  }
-
-  private System.Collections.IEnumerator ScaleAllUIElementsDelayed()
-  {
-    // Wait a frame to ensure all dynamic elements (lives container, countdown text) are created
-    yield return null;
-
-    if (gameUICanvas == null) yield break;
-
-    Debug.Log($"[UIManager] Scaling all UI elements in UICanvas by {mobileScaleMultiplier}x");
-
-    // Scale all UI elements that are direct children of the UICanvas
     ScaleUIElementsRecursively(gameUICanvas.transform);
   }
 
