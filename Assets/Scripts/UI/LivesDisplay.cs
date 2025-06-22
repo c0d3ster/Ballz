@@ -10,8 +10,9 @@ public class LivesDisplay : MonoBehaviour
   [SerializeField] private Transform livesContainer;
 
   [Header("Display Settings")]
-  [SerializeField] private float iconSpacing = 30f;
+  [SerializeField] private float iconSpacing = 40f;
   [SerializeField] private float iconSize = 25f;
+  [SerializeField] private float lifeIconScaleMultiplier = 2f; // Special multiplier for life icons
   [SerializeField] private Color availableLifeColor = Color.white;
   [SerializeField] private Color depletedLifeColor = new Color(1f, 1f, 1f, 0.2f); // Very translucent
   [SerializeField] private float outlineWidth = 5f;
@@ -22,7 +23,6 @@ public class LivesDisplay : MonoBehaviour
 
   private Image[] lifeIcons;
   private LivesManager livesManager;
-  private UIManager uiManager;
   private Material playerMaterial;
   private float lastCountdownUpdate;
   private bool wasWaitingForLife = false;
@@ -37,18 +37,11 @@ public class LivesDisplay : MonoBehaviour
       return;
     }
 
-    uiManager = UIManager.Instance;
-    if (uiManager == null)
-    {
-      Debug.LogError("UIManager not found!");
-      return;
-    }
-
     // Get references from UIManager if not set
     if (livesContainer == null)
     {
       // Find the lives container in the UIManager's canvas
-      Transform canvasTransform = uiManager.gameUICanvas.transform;
+      Transform canvasTransform = UIManager.Instance.gameUICanvas.transform;
       livesContainer = canvasTransform.Find("LivesContainer");
     }
 
@@ -172,12 +165,17 @@ public class LivesDisplay : MonoBehaviour
       RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
       if (rectTransform != null)
       {
-        float xPosition = i * (iconSize + iconSpacing);
+        // Only apply special multiplier on mobile
+        float platformMultiplier = SystemInfo.deviceType == DeviceType.Handheld ? lifeIconScaleMultiplier : 1f;
+        float scaledIconSize = iconSize * platformMultiplier;
+        float xPosition = i * (scaledIconSize + iconSpacing);
         rectTransform.anchorMin = new Vector2(0, 1);
         rectTransform.anchorMax = new Vector2(0, 1);
         rectTransform.pivot = new Vector2(0, 1);
         rectTransform.anchoredPosition = new Vector2(xPosition, 0);
-        rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
+        rectTransform.sizeDelta = new Vector2(scaledIconSize, scaledIconSize);
+
+        Debug.Log($"[LivesDisplay] Created life icon {i} with size: {rectTransform.sizeDelta}, position: {rectTransform.anchoredPosition}");
       }
 
       // Add EventTrigger component for click detection (less intrusive than Button)
@@ -195,6 +193,9 @@ public class LivesDisplay : MonoBehaviour
       eventTrigger.triggers.Add(clickEntry);
 
       lifeIcons[i] = image;
+
+      // Scale the new element if on mobile
+      UIManager.Instance?.ScaleNewUIElement(iconObj.transform);
     }
   }
 
@@ -330,6 +331,9 @@ public class LivesDisplay : MonoBehaviour
     rectTransform.localScale = Vector3.one;
 
     countdownText = tmp;
+
+    // Scale the new element if on mobile
+    UIManager.Instance?.ScaleNewUIElement(countdownObj.transform);
   }
 
   private void UpdateCountdownTimer()

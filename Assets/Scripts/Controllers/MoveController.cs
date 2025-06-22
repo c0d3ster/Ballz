@@ -70,6 +70,22 @@ public class MoveController : MonoBehaviour
     {
       CalibrateAccelerometer();
     }
+
+    // Recalculate movement radius after UIManager scaling is applied
+    StartCoroutine(RecalculateMovementRadiusDelayed());
+  }
+
+  private System.Collections.IEnumerator RecalculateMovementRadiusDelayed()
+  {
+    // Wait for UIManager scaling to be applied
+    yield return new WaitForSeconds(0.1f);
+
+    if (outerCircle != null && innerCircle != null)
+    {
+      // Recalculate movement radius with scaled sizes
+      movementRadius = (outerCircle.sizeDelta.x + innerCircle.sizeDelta.x) / 2;
+      Debug.Log($"[MoveController] Recalculated movement radius: {movementRadius} (outer: {outerCircle.sizeDelta.x}, inner: {innerCircle.sizeDelta.x})");
+    }
   }
 
   private void InitializeController()
@@ -108,9 +124,13 @@ public class MoveController : MonoBehaviour
 
     // Store the starting position of the inner circle
     startPos = innerCircle.anchoredPosition;
+
     // Calculate the maximum distance the joystick can move
     // Add half the inner circle's size to allow it to extend halfway out
+    // Account for mobile scaling in the calculation
     movementRadius = (outerCircle.sizeDelta.x + innerCircle.sizeDelta.x) / 2;
+
+    Debug.Log($"[MoveController] Movement radius calculated: {movementRadius} (outer: {outerCircle.sizeDelta.x}, inner: {innerCircle.sizeDelta.x})");
 
     isInitialized = true;
   }

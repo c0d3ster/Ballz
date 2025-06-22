@@ -13,7 +13,6 @@ public class LifePickup : BasePickup
   [SerializeField] private Color outlineColor = Color.black;
 
   private Renderer sphereRenderer;
-  private Material translucentMaterial;
   private TextMeshPro countdownText;
   private GameObject pickupSphere;
   private GameObject respawnTimer;
@@ -68,8 +67,7 @@ public class LifePickup : BasePickup
       return;
     }
 
-    // Find player material and create translucent copy
-    FindPlayerMaterialAndCreateTranslucent();
+    CopyPlayerMaterial();
 
     // Load last pickup time
     LoadLastPickupTime();
@@ -83,12 +81,6 @@ public class LifePickup : BasePickup
     // Unsubscribe from hotkey events
     HotkeyManager.OnResetConfirmed -= ResetPickup;
     HotkeyManager.OnResetPickupsPressed -= ResetPickup;
-
-    // Clean up the created material
-    if (translucentMaterial != null)
-    {
-      DestroyImmediate(translucentMaterial);
-    }
   }
 
   private void LoadLastPickupTime()
@@ -191,7 +183,7 @@ public class LifePickup : BasePickup
     }
   }
 
-  private void FindPlayerMaterialAndCreateTranslucent()
+  private void CopyPlayerMaterial()
   {
     // Find the player in the current scene
     GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -208,35 +200,26 @@ public class LifePickup : BasePickup
       return;
     }
 
-    if (playerRenderer.material != null)
+    // Instead of creating a new material, modify the existing material's color
+    if (playerRenderer.material != null && sphereRenderer.material != null)
     {
+      // Get the current material color
+      Color currentColor = sphereRenderer.material.color;
+
+      // Update only the RGB values to match the player, preserve the alpha
       Color playerColor = playerRenderer.material.color;
-      CreateTranslucentMaterial(playerColor);
+      currentColor.r = playerColor.r;
+      currentColor.g = playerColor.g;
+      currentColor.b = playerColor.b;
+      // Don't change currentColor.a - let AlphaPulse script control it
+
+      // Apply the modified color to the existing material
+      sphereRenderer.material.color = currentColor;
     }
     else
     {
-      Debug.LogWarning($"[LifePickup] Player material is null for {gameObject.name}");
+      Debug.LogWarning($"[LifePickup] Player material or sphere material is null for {gameObject.name}");
     }
-  }
-
-  private void CreateTranslucentMaterial(Color playerColor)
-  {
-    // Create a new translucent material
-    translucentMaterial = new Material(Shader.Find("Standard"));
-    translucentMaterial.SetFloat("_Mode", 3); // Transparent mode
-    translucentMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-    translucentMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-    translucentMaterial.SetInt("_ZWrite", 0);
-    translucentMaterial.DisableKeyword("_ALPHATEST_ON");
-    translucentMaterial.EnableKeyword("_ALPHABLEND_ON");
-    translucentMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-    translucentMaterial.renderQueue = 3000;
-
-    // Set the color to match the player but with 75% opacity
-    translucentMaterial.color = new Color(playerColor.r, playerColor.g, playerColor.b, playerColor.a * 0.75f);
-
-    // Apply the translucent material
-    sphereRenderer.material = translucentMaterial;
   }
 
   public override void HandlePickup(Collider other)
