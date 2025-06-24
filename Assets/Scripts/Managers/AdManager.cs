@@ -14,11 +14,8 @@ public class AdManager : MonoBehaviour
   [SerializeField] public string iosGameId = "5882068";
 
   [SerializeField] public string levelplayAppKey = "22829285d";
-  [SerializeField] public string rewardedAdUnitId = "12rvuhv0b6oi552n";
-#pragma warning disable CS0414 // The field 'AdManager.monetizationApiKey' is assigned but its value is never used
-  [SerializeField] private string monetizationApiKey = "ee6876694eddc0893e1c5fc2a67576f921073c9d161185c8ceddaf88dcb1fec1";
-#pragma warning restore CS0414
-  [SerializeField] private bool testMode = true;
+  [SerializeField] public string rewardedAdUnitId = "5uofehvzjnm63tkp";
+  [SerializeField] private bool testMode = false;
   [SerializeField] private bool shouldShowOnLoad = false;
 
   public bool IsInitialized { get; private set; }
@@ -109,8 +106,6 @@ public class AdManager : MonoBehaviour
 
     // Load the first ad immediately so it's ready for the user
     LoadRewardedAd();
-
-    Debug.Log("[AdManager] Ad system ready - first ad loaded and ready");
   }
 
   private void OnLevelPlayInitFailed(LevelPlayInitError error)
