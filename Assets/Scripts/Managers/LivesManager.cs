@@ -283,6 +283,24 @@ public class LivesManager : MonoBehaviour
     OnLivesChanged?.Invoke(CurrentLives);
   }
 
+  public void AddLivesViaAd(int livesToAdd = 2)
+  {
+    if (CurrentLives >= maxLives)
+    {
+      Debug.LogWarning("[LivesManager] Attempted to add lives when already at max!");
+      return;
+    }
+
+    int oldLives = CurrentLives;
+    CurrentLives = Mathf.Min(maxLives, CurrentLives + livesToAdd);
+    int actualLivesAdded = CurrentLives - oldLives;
+
+    SaveLives();
+
+    Debug.Log($"[LivesManager] Added {actualLivesAdded} lives via ad! Current: {CurrentLives}/{maxLives}");
+    OnLivesChanged?.Invoke(CurrentLives);
+  }
+
   public void SetMaxLives(int newMaxLives)
   {
     if (newMaxLives <= 0)

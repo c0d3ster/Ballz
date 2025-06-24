@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: c0d3d
+  companyName: c0d3ster
   productName: BALLZ
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -163,11 +163,11 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.c0d3d.BALLZ
-    Standalone: unity.c0d3d.BALLZ
-    Tizen: com.c0d3d.BALLZ
-    iPhone: com.c0d3d.BALLZ
-    tvOS: com.c0d3d.BALLZ
+    Android: com.c0d3ster.BALLZ
+    Standalone: unity.c0d3ster.BALLZ
+    Tizen: com.c0d3ster.BALLZ
+    iPhone: com.c0d3ster.BALLZ
+    tvOS: com.c0d3ster.BALLZ
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -259,7 +259,7 @@ PlayerSettings:
   templateDefaultScene: 
   useCustomMainManifest: 1
   useCustomLauncherManifest: 0
-  useCustomMainGradleTemplate: 0
+  useCustomMainGradleTemplate: 1
   useCustomLauncherGradleManifest: 0
   useCustomBaseGradleTemplate: 0
   useCustomGradlePropertiesTemplate: 0
@@ -875,7 +875,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: CROSS_PLATFORM_INPUT;MOBILE_INPUT
+    Android: CROSS_PLATFORM_INPUT;MOBILE_INPUT;LEVELPLAY_DEPENDENCIES_INSTALLED
     Standalone: CROSS_PLATFORM_INPUT
     Windows Store Apps: MOBILE_INPUT
     iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT

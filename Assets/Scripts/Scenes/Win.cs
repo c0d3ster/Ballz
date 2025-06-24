@@ -9,8 +9,12 @@ public partial class Win : MonoBehaviour
   {
     Time.timeScale = 0;
 
-    // Complete the current level
-    LevelProgressManager.Instance.CompleteLevel(SceneLoader.Instance.currentScene);
+    // Determine which game mode was completed based on the current scene
+    GameMode? gameMode = SceneLoader.Instance.DetermineGameMode(SceneLoader.Instance.currentScene);
+    if (gameMode.HasValue)
+    {
+      LevelProgressManager.Instance.CompleteLevel(SceneLoader.Instance.currentScene);
+    }
   }
 
   public virtual void OnGUI()
@@ -30,21 +34,19 @@ public partial class Win : MonoBehaviour
       Time.timeScale = 1;
       SceneLoader.Instance.ChangeScene("Active Main Menu");
     }
+
     // Try For Better Time button - center position
     if (GUI.Button(new Rect(Screen.width * 0.375f, verticalPosition, buttonWidth, buttonHeight), "Try For A Better Time", buttonStyle)) // 37.5% from left
     {
       Time.timeScale = 1;
       SceneLoader.Instance.ReloadScene();
     }
+
     // Next Level button - right position
     if (GUI.Button(new Rect(Screen.width * 0.67f, verticalPosition, buttonWidth, buttonHeight), "Next Level", buttonStyle)) // 67% from left
     {
       Time.timeScale = 1;
       SceneLoader.Instance.NextLevel();
     }
-  }
-
-  public virtual void Update()
-  {
   }
 }

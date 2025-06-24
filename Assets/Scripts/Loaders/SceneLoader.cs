@@ -208,6 +208,15 @@ public partial class SceneLoader : MonoBehaviour
 
   public void NextLevel()
   {
+    // Check if player has lives before allowing progression
+    if (LivesManager.Instance != null && !LivesManager.Instance.HasLives())
+    {
+      Debug.Log("[SceneLoader] Player is out of lives - cannot proceed to next level");
+      // Load game over scene instead
+      GameOver();
+      return;
+    }
+
     string currentScene = this.currentScene;
     GameMode? gameMode = DetermineGameMode(currentScene);
 

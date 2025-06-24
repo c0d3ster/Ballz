@@ -5,12 +5,16 @@ using System.Collections;
 public partial class GAME_OVER : MonoBehaviour
 {
   private LivesManager livesManager;
+  private AdManager adManager;
   private float timeUntilNextLife;
   private bool hasProcessedDeath = false;
+  private bool adRequested = false;
 
   public virtual void Start()
   {
     livesManager = LivesManager.Instance;
+    adManager = AdManager.Instance;
+
     if (livesManager != null)
     {
       timeUntilNextLife = livesManager.TimeUntilNextLife;
@@ -20,6 +24,39 @@ public partial class GAME_OVER : MonoBehaviour
     {
       Debug.LogError("[GAME_OVER] LivesManager not found!");
     }
+
+    // Subscribe to ad events if out of lives
+    if (livesManager != null && !livesManager.HasLives() && adManager != null)
+    {
+      adManager.OnAdCompleted += OnAdCompleted;
+      adManager.OnAdFailed += OnAdFailed;
+    }
+  }
+
+  private void OnDestroy()
+  {
+    // Unsubscribe from ad events
+    if (adManager != null)
+    {
+      adManager.OnAdCompleted -= OnAdCompleted;
+      adManager.OnAdFailed -= OnAdFailed;
+    }
+  }
+
+  private void OnAdCompleted()
+  {
+    Debug.Log("[GAME_OVER] Ad completed - adding lives!");
+    if (livesManager != null)
+    {
+      livesManager.AddLivesViaAd(1);
+    }
+    adRequested = false;
+  }
+
+  private void OnAdFailed()
+  {
+    Debug.Log("[GAME_OVER] Ad failed or skipped");
+    adRequested = false;
   }
 
   private void ProcessPlayerDeath()
@@ -84,11 +121,33 @@ public partial class GAME_OVER : MonoBehaviour
       GUI.Label(new Rect(0, Screen.height * 0.55f, Screen.width, Screen.height * 0.1f), livesText, livesStyle);
     }
 
-    // Try Again button - positioned on the right
-    if (GUI.Button(new Rect(Screen.width * 0.55f, verticalPosition, buttonWidth, buttonHeight), "Try Again", buttonStyle)) // 60% from left
+    // Try Again button - positioned on the right (modified for ad integration)
+    string tryAgainText = (livesManager != null && !livesManager.HasLives()) ? "Watch Ad to Try Again" : "Try Again";
+    bool canTryAgain = livesManager == null || livesManager.HasLives();
+
+    if (GUI.Button(new Rect(Screen.width * 0.55f, verticalPosition, buttonWidth, buttonHeight), tryAgainText, buttonStyle)) // 60% from left
     {
-      SceneLoader.Instance.LoadLastScene();
+      if (livesManager != null && !livesManager.HasLives() && !adRequested)
+      {
+        // Request ad for lives
+        adRequested = true;
+        if (adManager != null)
+        {
+          adManager.RequestLivesViaAd();
+        }
+        else
+        {
+          Debug.LogWarning("[GAME_OVER] AdManager not found!");
+          adRequested = false;
+        }
+      }
+      else if (canTryAgain)
+      {
+        // Proceed to try again
+        SceneLoader.Instance.LoadLastScene();
+      }
     }
+
     // Main Menu button - positioned on the left
     if (GUI.Button(new Rect(Screen.width * 0.1f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 15% from left
     {
