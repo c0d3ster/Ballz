@@ -48,7 +48,7 @@ public partial class GAME_OVER : MonoBehaviour
     Debug.Log("[GAME_OVER] Ad completed - adding lives!");
     if (livesManager != null)
     {
-      livesManager.AddLivesViaAd(2);
+      livesManager.AddLivesViaAd(1);
     }
     adRequested = false;
   }
@@ -111,13 +111,6 @@ public partial class GAME_OVER : MonoBehaviour
     livesStyle.hover = livesStyle.normal;
     livesStyle.active = livesStyle.normal;
 
-    // Create ad button style
-    GUIStyle adButtonStyle = new GUIStyle(GUI.skin.button);
-    adButtonStyle.fontSize = (int)(buttonWidth * 0.05f);
-    adButtonStyle.normal.textColor = Color.green;
-    adButtonStyle.hover.textColor = Color.green;
-    adButtonStyle.active.textColor = Color.green;
-
     // Draw GAME OVER text
     GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, Screen.height * 0.2f), "GAME OVER", gameOverStyle);
 
@@ -128,38 +121,37 @@ public partial class GAME_OVER : MonoBehaviour
       GUI.Label(new Rect(0, Screen.height * 0.55f, Screen.width, Screen.height * 0.1f), livesText, livesStyle);
     }
 
-    // Try Again button - positioned on the right
-    if (GUI.Button(new Rect(Screen.width * 0.55f, verticalPosition, buttonWidth, buttonHeight), "Try Again", buttonStyle)) // 60% from left
+    // Try Again button - positioned on the right (modified for ad integration)
+    string tryAgainText = (livesManager != null && !livesManager.HasLives()) ? "Watch Ad to Try Again" : "Try Again";
+    bool canTryAgain = livesManager == null || livesManager.HasLives();
+
+    if (GUI.Button(new Rect(Screen.width * 0.55f, verticalPosition, buttonWidth, buttonHeight), tryAgainText, buttonStyle)) // 60% from left
     {
-      SceneLoader.Instance.LoadLastScene();
+      if (livesManager != null && !livesManager.HasLives() && !adRequested)
+      {
+        // Request ad for lives
+        adRequested = true;
+        if (adManager != null)
+        {
+          adManager.RequestLivesViaAd();
+        }
+        else
+        {
+          Debug.LogWarning("[GAME_OVER] AdManager not found!");
+          adRequested = false;
+        }
+      }
+      else if (canTryAgain)
+      {
+        // Proceed to try again
+        SceneLoader.Instance.LoadLastScene();
+      }
     }
 
     // Main Menu button - positioned on the left
     if (GUI.Button(new Rect(Screen.width * 0.1f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 15% from left
     {
       SceneLoader.Instance.ChangeScene("Active Main Menu");
-    }
-
-    // Ad button - positioned in the middle (only show if out of lives)
-    if (livesManager != null && !livesManager.HasLives())
-    {
-      string adButtonText = adRequested ? "Loading Ad..." : "Watch Ad for 2 Lives";
-      bool canShowAd = adManager != null && adManager.CanShowAd() && !adRequested;
-
-      if (canShowAd)
-      {
-        if (GUI.Button(new Rect(Screen.width * 0.325f, verticalPosition, buttonWidth, buttonHeight), adButtonText, adButtonStyle))
-        {
-          adRequested = true;
-          adManager.RequestLivesViaAd();
-        }
-      }
-      else
-      {
-        GUI.enabled = false;
-        GUI.Button(new Rect(Screen.width * 0.325f, verticalPosition, buttonWidth, buttonHeight), "Ad Not Available", adButtonStyle);
-        GUI.enabled = true;
-      }
     }
   }
 

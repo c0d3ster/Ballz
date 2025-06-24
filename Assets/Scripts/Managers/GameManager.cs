@@ -86,6 +86,9 @@ public class GameManager : MonoBehaviour
 
       // Setup UI
       instance.InitializeUI();
+
+      // Debug: Log instance counts
+      instance.LogManagerInstanceCounts();
     }
   }
 
@@ -115,5 +118,19 @@ public class GameManager : MonoBehaviour
         Debug.LogError("UIManager component not found on instantiated prefab!");
       }
     }
+  }
+
+  void LogManagerInstanceCounts()
+  {
+    int gameManagerCount = FindObjectsOfType<GameManager>().Length;
+    int sceneLoaderCount = FindObjectsOfType<SceneLoader>().Length;
+    int levelProgressManagerCount = FindObjectsOfType<LevelProgressManager>().Length;
+    int livesManagerCount = FindObjectsOfType<LivesManager>().Length;
+    int countManagerCount = FindObjectsOfType<CountManager>().Length;
+    int timerManagerCount = FindObjectsOfType<TimerManager>().Length;
+    int hotkeyManagerCount = FindObjectsOfType<HotkeyManager>().Length;
+    int adManagerCount = FindObjectsOfType<AdManager>().Length;
+
+    Debug.Log($"[GameManager] Instance counts - GameManager: {gameManagerCount}, SceneLoader: {sceneLoaderCount}, LevelProgressManager: {levelProgressManagerCount}, LivesManager: {livesManagerCount}, CountManager: {countManagerCount}, TimerManager: {timerManagerCount}, HotkeyManager: {hotkeyManagerCount}, AdManager: {adManagerCount}");
   }
 }

@@ -163,11 +163,11 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.c0d3d.BALLZ
-    Standalone: unity.c0d3d.BALLZ
-    Tizen: com.c0d3d.BALLZ
-    iPhone: com.c0d3d.BALLZ
-    tvOS: com.c0d3d.BALLZ
+    Android: com.c0d3ster.BALLZ
+    Standalone: unity.c0d3ster.BALLZ
+    Tizen: com.c0d3ster.BALLZ
+    iPhone: com.c0d3ster.BALLZ
+    tvOS: com.c0d3ster.BALLZ
   buildNumber:
     Standalone: 0
     VisionOS: 0
