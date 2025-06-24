@@ -115,11 +115,22 @@ public class UIManager : MonoBehaviour
 
     if (SceneLoader.Instance.IsCurrentSceneNonInteractive)
     {
-      gameUICanvas.enabled = false;
+      // Check if this is specifically the GAME_OVER scene
+      if (scene.name == "GAME_OVER")
+      {
+        // Show only LivesContainer on GAME_OVER scene
+        ShowOnlyLivesContainer();
+      }
+      else
+      {
+        // Hide everything on other non-interactive scenes
+        gameUICanvas.enabled = false;
+      }
     }
     else
     {
-      gameUICanvas.enabled = true;
+      // Show all UI elements on interactive scenes
+      ShowAllUIElements();
     }
   }
 
@@ -127,14 +138,43 @@ public class UIManager : MonoBehaviour
   {
     if (gameUICanvas == null) return;
 
-    if (SceneLoader.Instance.IsCurrentSceneNonInteractive)
+    // When any scene is unloaded, show all UI elements
+    // The OnSceneLoaded event will handle hiding/showing specific elements
+    ShowAllUIElements();
+  }
+
+  private void ShowOnlyLivesContainer()
+  {
+    if (gameUICanvas == null) return;
+
+    // Hide all UI elements except LivesContainer
+    foreach (Transform child in gameUICanvas.transform)
     {
-      gameUICanvas.enabled = false;
+      if (child.name == "LivesContainer")
+      {
+        child.gameObject.SetActive(true);
+      }
+      else
+      {
+        child.gameObject.SetActive(false);
+      }
     }
-    else
+
+    // Keep the canvas enabled so LivesContainer remains visible
+    gameUICanvas.enabled = true;
+  }
+
+  private void ShowAllUIElements()
+  {
+    if (gameUICanvas == null) return;
+
+    // Show all UI elements
+    foreach (Transform child in gameUICanvas.transform)
     {
-      gameUICanvas.enabled = true;
+      child.gameObject.SetActive(true);
     }
+
+    gameUICanvas.enabled = true;
   }
 
   void OnDestroy()

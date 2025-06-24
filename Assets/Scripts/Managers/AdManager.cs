@@ -15,7 +15,7 @@ public class AdManager : MonoBehaviour
 
   [SerializeField] public string levelplayAppKey = "22829285d";
   [SerializeField] public string rewardedAdUnitId = "5uofehvzjnm63tkp";
-  [SerializeField] private bool testMode = false;
+  [SerializeField] private bool testMode = true;
   [SerializeField] private bool shouldShowOnLoad = false;
 
   public bool IsInitialized { get; private set; }
@@ -100,6 +100,12 @@ public class AdManager : MonoBehaviour
   {
     Debug.Log($"[AdManager] LevelPlay initialization successful! Instance: {GetInstanceID()}");
     IsInitialized = true;
+
+    // // Launch test suite after successful initialization
+    // if (testMode)
+    // {
+    //   LevelPlay.LaunchTestSuite();
+    // }
 
     // Create Rewarded Ad object after successful initialization
     CreateRewardedAd();
