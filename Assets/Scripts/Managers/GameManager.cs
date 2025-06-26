@@ -56,10 +56,45 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(cm);
       }
 
+      // Create CloudSaveManager if it doesn't exist
+      if (FindFirstObjectByType<CloudSaveManager>() == null)
+      {
+        GameObject csm = new GameObject("CloudSaveManager");
+        csm.transform.SetParent(null);
+        CloudSaveManager cloudSaveManager = csm.AddComponent<CloudSaveManager>();
+        DontDestroyOnLoad(csm);
+      }
+
+      // Create SimpleUserManager if it doesn't exist
+      if (FindFirstObjectByType<SimpleUserManager>() == null)
+      {
+        GameObject sum = new GameObject("SimpleUserManager");
+        sum.transform.SetParent(null);
+        SimpleUserManager simpleUserManager = sum.AddComponent<SimpleUserManager>();
+        DontDestroyOnLoad(sum);
+      }
+
+      // Create CrossPlatformUserManager if it doesn't exist
+      if (FindFirstObjectByType<CrossPlatformUserManager>() == null)
+      {
+        GameObject cpum = new GameObject("CrossPlatformUserManager");
+        cpum.transform.SetParent(null);
+        CrossPlatformUserManager crossPlatformUserManager = cpum.AddComponent<CrossPlatformUserManager>();
+        DontDestroyOnLoad(cpum);
+      }
+
+      // Create SimpleLeaderboardManager if it doesn't exist
+      if (FindFirstObjectByType<SimpleLeaderboardManager>() == null)
+      {
+        GameObject slm = new GameObject("SimpleLeaderboardManager");
+        slm.transform.SetParent(null);
+        SimpleLeaderboardManager simpleLeaderboardManager = slm.AddComponent<SimpleLeaderboardManager>();
+        DontDestroyOnLoad(slm);
+      }
+
       // Create TimerManager if it doesn't exist
       if (FindFirstObjectByType<TimerManager>() == null)
       {
-
         GameObject tm = new GameObject("TimerManager");
         tm.transform.SetParent(null);
         TimerManager timerManager = tm.AddComponent<TimerManager>();
@@ -89,6 +124,8 @@ public class GameManager : MonoBehaviour
 
       // Debug: Log instance counts
       instance.LogManagerInstanceCounts();
+
+      Debug.Log("[GameManager] All managers initialized");
     }
   }
 
