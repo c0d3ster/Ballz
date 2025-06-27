@@ -118,8 +118,13 @@ public partial class SceneLoader : MonoBehaviour
     }
     else
     {
-      this.ChangeScene("Active Main Menu");
+      this.LoadMainMenu();
     }
+  }
+
+  public void LoadMainMenu()
+  {
+    this.LoadMainMenu();
   }
 
   public void LoadWinScene()
@@ -231,13 +236,13 @@ public partial class SceneLoader : MonoBehaviour
       else
       {
         // If next level doesn't exist, go to main menu
-        this.ChangeScene("Active Main Menu");
+        this.LoadMainMenu();
       }
     }
     else
     {
       // If we're not on a valid level, go to main menu
-      this.ChangeScene("Active Main Menu");
+      this.LoadMainMenu();
     }
   }
 

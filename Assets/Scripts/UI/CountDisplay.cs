@@ -24,21 +24,31 @@ public class CountDisplay : MonoBehaviour
   {
     if (isInitialized) return;
 
-    if (countText == null)
+    Canvas canvas = UIManager.Instance?.gameUICanvas;
+    if (canvas == null)
     {
-      CreateCountText();
+      Debug.LogError("[CountDisplay] No canvas found for count display!");
+      return;
     }
 
-    if (countText != null)
-    {
-      countText.fontSize = fontSize;
-      countText.color = textColor;
-      countText.alignment = TextAlignmentOptions.TopLeft;
-      countText.textWrappingMode = TextWrappingModes.NoWrap;
-    }
+    // Create count text GameObject
+    GameObject countObj = new GameObject("CountText");
+    countObj.transform.SetParent(canvas.transform, false);
+    countObj.layer = canvas.gameObject.layer;
+
+    // Add TextMeshProUGUI component
+    countText = countObj.AddComponent<TextMeshProUGUI>();
+    countText.text = countFormat.Replace("{0}", "0").Replace("{1}", "0");
+    countText.fontSize = fontSize;
+    countText.color = textColor;
+    countText.alignment = TextAlignmentOptions.Center;
+
+    // Position the text
+    RectTransform rectTransform = countObj.GetComponent<RectTransform>();
+    rectTransform.anchoredPosition = new Vector2(0, 35);
+    rectTransform.sizeDelta = new Vector2(300, 50);
 
     isInitialized = true;
-    Debug.Log("[CountDisplay] Initialized count display");
   }
 
   private void CreateCountText()

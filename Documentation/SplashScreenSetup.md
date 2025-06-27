@@ -1,172 +1,202 @@
 # Splash Screen Setup Guide
 
-This guide explains how to integrate the AccountLoader into your existing Splash Screen scene to replace the simple 1-second delay with account authentication and loading.
+This guide explains how to integrate the AccountLoader and updated Splash.cs into your existing Splash Screen scene to replace the simple 1-second delay with account authentication and loading.
 
 ## Overview
 
-The AccountLoader will:
-- Replace the simple 1-second delay in your existing Splash.cs
-- Add a loading bar and status text
-- Handle platform authentication
-- Show username input for new users
-- Load existing accounts automatically
+The updated system provides:
+- **AccountLoader**: Handles loading existing accounts and shows loading progress
+- **Splash.cs**: Handles new user creation flow (New Game button, username input)
+- **AccountManager**: Handles data persistence and platform authentication
 
-## Current Setup
+## Architecture
 
-Your existing Splash Screen scene has:
-- A Splash.cs script that waits 1 second and loads "Active Main Menu"
-- Basic scene setup with camera and objects
+```
+Splash.cs (Scene-specific logic + New User UI)
+    ↓
+AccountLoader (Loading flow + Progress UI)
+    ↓
+AccountManager (Data persistence + Cloud Save)
+```
 
-## Integration Steps
+## Flow Description
+
+1. **App Launch**: Splash.cs starts → AccountLoader checks for existing account
+2. **Existing Account**: AccountLoader loads account → transitions to main menu
+3. **New User**: Splash.cs shows "New Game" button → username input → account creation → main menu
+
+## Setup Instructions
 
 ### Step 1: Update the Splash Script
 
-The Splash.cs script has been updated to automatically add the AccountLoader component. The script now:
-- Checks if AccountLoader exists
-- Adds AccountLoader if not present
-- Falls back to original behavior if account system is disabled
+The Splash.cs script has been updated to:
+- Automatically add AccountLoader component
+- Handle new user creation flow
+- Manage username input and validation
+- Call AccountManager for account creation
 
 **No changes needed in the scene** - the script will handle everything automatically.
 
 ### Step 2: Add UI Elements (Optional)
 
-If you want to show loading progress and account creation UI, add these elements to your Splash Screen scene:
+If you want to show the new user creation flow, add these elements to your Splash Screen scene:
+
+#### Required UI Elements for Splash.cs:
+
+1. **New Game Panel (GameObject)**
+   - Panel containing the "New Game" button
+   - Initially disabled
+   - Assign to `newGamePanel` field in Splash script
+
+2. **New Game Button (Button)**
+   - Button to start new game flow
+   - Place inside new game panel
+   - Assign to `newGameButton` field in Splash script
+
+3. **Username Panel (GameObject)**
+   - Panel containing username input
+   - Initially disabled
+   - Assign to `usernamePanel` field in Splash script
+
+4. **Username Input (TMP_InputField)**
+   - Input field for username
+   - Place inside username panel
+   - Assign to `usernameInput` field in Splash script
+
+5. **Start Game Button (Button)**
+   - Button to confirm username and start game
+   - Place inside username panel
+   - Assign to `startGameButton` field in Splash script
+
+6. **Error Text (TextMeshProUGUI)**
+   - Text for validation errors
+   - Place inside username panel
+   - Assign to `errorText` field in Splash script
+
+7. **Email Text (TextMeshProUGUI)**
+   - Text to show user's email
+   - Place inside username panel
+   - Assign to `emailText` field in Splash script
 
 #### Required UI Elements for AccountLoader:
 
 1. **Loading Bar (Slider)**
-   - Add a UI Slider for progress indication
+   - Progress bar for loading indication
    - Position at bottom of screen
    - Assign to `loadingBar` field in AccountLoader
 
 2. **Loading Text (TextMeshProUGUI)**
-   - Add text for percentage display
+   - Text for percentage display
    - Position near loading bar
    - Assign to `loadingText` field in AccountLoader
 
 3. **Status Text (TextMeshProUGUI)**
-   - Add text for status messages
+   - Text for status messages
    - Position above loading bar
    - Assign to `statusText` field in AccountLoader
-
-4. **Account Panel (GameObject)**
-   - Create a panel for username input
-   - Initially disabled
-   - Assign to `accountPanel` field in AccountLoader
-
-5. **Username Input (TMP_InputField)**
-   - Add input field for username
-   - Place inside account panel
-   - Assign to `usernameInput` field in AccountLoader
-
-6. **Confirm Button (Button)**
-   - Add button to confirm username
-   - Place inside account panel
-   - Assign to `confirmButton` field in AccountLoader
-
-7. **Skip Button (Button)**
-   - Add button to skip account creation
-   - Place inside account panel
-   - Assign to `skipButton` field in AccountLoader
-
-8. **Error Text (TextMeshProUGUI)**
-   - Add text for validation errors
-   - Place inside account panel
-   - Assign to `errorText` field in AccountLoader
-
-9. **Email Display Text (TextMeshProUGUI)**
-   - Add text to show user's email
-   - Place inside account panel
-   - Assign to `emailText` field in AccountLoader
 
 ### Step 3: UI Layout Example
 
 ```
 Canvas
-├── Loading Bar (Slider)
-├── Loading Text (TextMeshProUGUI)
-├── Status Text (TextMeshProUGUI)
-└── Account Panel (GameObject) - Initially Disabled
-    ├── Email Display Text (TextMeshProUGUI)
+├── Loading Bar (Slider) - AccountLoader
+├── Loading Text (TextMeshProUGUI) - AccountLoader
+├── Status Text (TextMeshProUGUI) - AccountLoader
+├── New Game Panel (GameObject) - Splash.cs
+│   └── New Game Button (Button)
+└── Username Panel (GameObject) - Splash.cs
+    ├── Email Text (TextMeshProUGUI)
     ├── Username Input (TMP_InputField)
-    ├── Confirm Button (Button)
-    ├── Skip Button (Button)
+    ├── Start Game Button (Button)
     └── Error Text (TextMeshProUGUI)
 ```
 
-### Step 4: Configure AccountLoader
+### Step 4: Configure Components
 
-1. Select the GameObject with the Splash script
-2. In the Inspector, find the AccountLoader component
-3. Assign all UI references to their respective fields
-4. Adjust settings:
-   - `minLoadTime`: Minimum loading time (default: 2 seconds)
-   - `mainMenuScene`: Scene to load after account setup (default: "Active Main Menu")
+1. **Splash Script Configuration:**
+   - Select the GameObject with the Splash script
+   - Assign UI references to their respective fields
+   - Set `mainMenuScene` to "Active Main Menu"
 
-### Step 5: Test the Integration
+2. **AccountLoader Configuration:**
+   - The AccountLoader component will be added automatically
+   - Assign loading UI references
+   - Adjust `minLoadTime` if needed (default: 2 seconds)
 
-1. **Test New User Flow:**
-   - Run the game
-   - Should see loading progress
-   - Should show username input for new users
-   - Should create account and load main menu
+## Flow Details
 
-2. **Test Existing User Flow:**
-   - Run the game after creating an account
-   - Should automatically load existing account
-   - Should skip to main menu
+### Existing User Flow
+1. Splash.cs starts
+2. AccountLoader checks for existing account
+3. AccountLoader shows loading progress
+4. AccountLoader loads existing account
+5. AccountLoader transitions to main menu
 
-3. **Test Error Handling:**
-   - Disconnect internet
-   - Should show error message
-   - Should continue to main menu
+### New User Flow
+1. Splash.cs starts
+2. AccountLoader checks for existing account
+3. AccountLoader shows "No existing account found"
+4. Splash.cs shows "New Game" button
+5. User clicks "New Game" → Splash.cs shows username input
+6. User enters username → Splash.cs validates and creates account
+7. Splash.cs transitions to main menu
+
+## Testing
+
+### Test Existing User Flow
+1. Create an account first
+2. Restart the game
+3. Should automatically load account and go to main menu
+
+### Test New User Flow
+1. Clear all data (or use fresh install)
+2. Run the game
+3. Should show "New Game" button
+4. Click "New Game" → should show username input
+5. Enter valid username → should create account and go to main menu
+
+### Test Error Handling
+1. Try invalid usernames (empty, too short, too long)
+2. Should show appropriate error messages
+3. Should allow retry with valid username
 
 ## Minimal Setup (No UI)
 
-If you don't want to add UI elements, the AccountLoader will still work:
+If you don't want to add UI elements:
 
-1. The Splash script automatically adds AccountLoader
-2. AccountLoader will handle authentication in background
-3. New users will skip account creation
-4. Existing users will load automatically
-5. Scene will transition to main menu after minimum load time
+1. **Existing Users**: Will automatically load and transition to main menu
+2. **New Users**: Will skip account creation and go directly to main menu
+3. **Loading Progress**: Will show in console logs only
 
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
 1. **AccountLoader not found:**
    - Ensure Splash script is on a GameObject in the scene
    - Check that `useAccountSystem` is enabled in Splash script
 
 2. **UI references missing:**
-   - AccountLoader will work without UI elements
+   - System will work without UI elements
    - Add UI elements for better user experience
 
 3. **Scene not loading:**
    - Check that `mainMenuScene` field matches your scene name
    - Ensure "Active Main Menu" scene is in Build Settings
 
-4. **Authentication failing:**
+4. **Account creation failing:**
    - Check console for error messages
-   - AccountLoader will continue to main menu even if authentication fails
+   - Verify AccountManager is properly initialized
 
-### Debug Information:
+### Debug Information
 
-The AccountLoader provides debug logs for:
-- Platform detection
-- Authentication status
-- Account creation/loading
+Both components provide debug logs for:
+- Account checking and loading
+- Username validation
+- Account creation
 - Error messages
 
 Check the Console window for detailed information.
-
-## Next Steps
-
-1. **Add UI Elements:** Enhance user experience with loading bar and account creation UI
-2. **Test on Device:** Verify platform authentication works on actual devices
-3. **Integrate with Managers:** Update LivesManager and LevelProgressManager to use AccountManager
-4. **Add Platform Integration:** Replace simulated emails with real Google Play Games Services/Game Center
 
 ## File Structure
 
@@ -174,11 +204,18 @@ Check the Console window for detailed information.
 Assets/
 ├── Scripts/
 │   ├── Loaders/
-│   │   └── AccountLoader.cs          # Loading flow and UI
+│   │   └── AccountLoader.cs          # Loading existing accounts
 │   ├── Managers/
 │   │   └── AccountManager.cs         # Data persistence and cloud save
 │   └── Scenes/
-│       └── Splash.cs                 # Updated to use AccountLoader
+│       └── Splash.cs                 # New user creation flow
 └── _Scenes/
     └── Splash Screen.unity           # Your existing scene
-``` 
+```
+
+## Next Steps
+
+1. **Add UI Elements**: Enhance user experience with loading bar and username input
+2. **Test on Device**: Verify platform authentication works on actual devices
+3. **Integrate with Managers**: Update LivesManager and LevelProgressManager to use AccountManager
+4. **Add Platform Integration**: Replace simulated emails with real Google Play Games Services/Game Center 

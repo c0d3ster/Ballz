@@ -23,14 +23,45 @@ public class GameManager : MonoBehaviour
       instance = go.AddComponent<GameManager>();
       DontDestroyOnLoad(go);
 
-      // Initialize SceneLoader first (dependency injection)
-      GameObject sceneLoaderObj = new GameObject("SceneLoader");
-      sceneLoaderObj.transform.SetParent(null);
-      SceneLoader sceneLoader = sceneLoaderObj.AddComponent<SceneLoader>();
-      DontDestroyOnLoad(sceneLoaderObj);
+      // Initialize SceneLoader first (foundation for scene management)
+      if (FindObjectsByType<SceneLoader>(FindObjectsSortMode.None).Length == 0)
+      {
+        GameObject sceneLoaderObj = new GameObject("SceneLoader");
+        sceneLoaderObj.transform.SetParent(null);
+        SceneLoader sceneLoader = sceneLoaderObj.AddComponent<SceneLoader>();
+        DontDestroyOnLoad(sceneLoaderObj);
+      }
+
+      // Initialize EventSystem for UI functionality
+      if (FindObjectsByType<UnityEngine.EventSystems.EventSystem>(FindObjectsSortMode.None).Length == 0)
+      {
+        GameObject eventSystemObj = new GameObject("EventSystem");
+        eventSystemObj.transform.SetParent(null);
+        eventSystemObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+        eventSystemObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+        DontDestroyOnLoad(eventSystemObj);
+      }
+
+      // Initialize AccountManager (for authentication and data persistence)
+      if (FindObjectsByType<AccountManager>(FindObjectsSortMode.None).Length == 0)
+      {
+        GameObject am = new GameObject("AccountManager");
+        am.transform.SetParent(null);
+        AccountManager accountManager = am.AddComponent<AccountManager>();
+        DontDestroyOnLoad(am);
+      }
+
+      // Initialize AccountLoader (for loading existing accounts)
+      if (FindObjectsByType<AccountLoader>(FindObjectsSortMode.None).Length == 0)
+      {
+        GameObject al = new GameObject("AccountLoader");
+        al.transform.SetParent(null);
+        AccountLoader accountLoader = al.AddComponent<AccountLoader>();
+        DontDestroyOnLoad(al);
+      }
 
       // Create LevelProgressManager if it doesn't exist
-      if (FindFirstObjectByType<LevelProgressManager>() == null)
+      if (FindObjectsByType<LevelProgressManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject lpm = new GameObject("LevelProgressManager");
         lpm.transform.SetParent(null);
@@ -39,7 +70,7 @@ public class GameManager : MonoBehaviour
       }
 
       // Create LivesManager if it doesn't exist
-      if (FindFirstObjectByType<LivesManager>() == null)
+      if (FindObjectsByType<LivesManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject lm = new GameObject("LivesManager");
         lm.transform.SetParent(null);
@@ -48,7 +79,7 @@ public class GameManager : MonoBehaviour
       }
 
       // Create CountManager if it doesn't exist
-      if (FindFirstObjectByType<CountManager>() == null)
+      if (FindObjectsByType<CountManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject cm = new GameObject("CountManager");
         cm.transform.SetParent(null);
@@ -56,44 +87,8 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(cm);
       }
 
-      // Create CloudSaveManager if it doesn't exist
-      if (FindFirstObjectByType<CloudSaveManager>() == null)
-      {
-        GameObject csm = new GameObject("CloudSaveManager");
-        csm.transform.SetParent(null);
-        CloudSaveManager cloudSaveManager = csm.AddComponent<CloudSaveManager>();
-        DontDestroyOnLoad(csm);
-      }
-
-      // Create SimpleUserManager if it doesn't exist
-      if (FindFirstObjectByType<SimpleUserManager>() == null)
-      {
-        GameObject sum = new GameObject("SimpleUserManager");
-        sum.transform.SetParent(null);
-        SimpleUserManager simpleUserManager = sum.AddComponent<SimpleUserManager>();
-        DontDestroyOnLoad(sum);
-      }
-
-      // Create CrossPlatformUserManager if it doesn't exist
-      if (FindFirstObjectByType<CrossPlatformUserManager>() == null)
-      {
-        GameObject cpum = new GameObject("CrossPlatformUserManager");
-        cpum.transform.SetParent(null);
-        CrossPlatformUserManager crossPlatformUserManager = cpum.AddComponent<CrossPlatformUserManager>();
-        DontDestroyOnLoad(cpum);
-      }
-
-      // Create SimpleLeaderboardManager if it doesn't exist
-      if (FindFirstObjectByType<SimpleLeaderboardManager>() == null)
-      {
-        GameObject slm = new GameObject("SimpleLeaderboardManager");
-        slm.transform.SetParent(null);
-        SimpleLeaderboardManager simpleLeaderboardManager = slm.AddComponent<SimpleLeaderboardManager>();
-        DontDestroyOnLoad(slm);
-      }
-
       // Create TimerManager if it doesn't exist
-      if (FindFirstObjectByType<TimerManager>() == null)
+      if (FindObjectsByType<TimerManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject tm = new GameObject("TimerManager");
         tm.transform.SetParent(null);
@@ -102,7 +97,7 @@ public class GameManager : MonoBehaviour
       }
 
       // Create HotkeyManager if it doesn't exist
-      if (FindFirstObjectByType<HotkeyManager>() == null)
+      if (FindObjectsByType<HotkeyManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject hm = new GameObject("HotkeyManager");
         hm.transform.SetParent(null);
@@ -111,7 +106,7 @@ public class GameManager : MonoBehaviour
       }
 
       // Create AdManager if it doesn't exist
-      if (FindFirstObjectByType<AdManager>() == null)
+      if (FindObjectsByType<AdManager>(FindObjectsSortMode.None).Length == 0)
       {
         GameObject am = new GameObject("AdManager");
         am.transform.SetParent(null);
@@ -159,15 +154,25 @@ public class GameManager : MonoBehaviour
 
   void LogManagerInstanceCounts()
   {
-    int gameManagerCount = FindObjectsOfType<GameManager>().Length;
-    int sceneLoaderCount = FindObjectsOfType<SceneLoader>().Length;
-    int levelProgressManagerCount = FindObjectsOfType<LevelProgressManager>().Length;
-    int livesManagerCount = FindObjectsOfType<LivesManager>().Length;
-    int countManagerCount = FindObjectsOfType<CountManager>().Length;
-    int timerManagerCount = FindObjectsOfType<TimerManager>().Length;
-    int hotkeyManagerCount = FindObjectsOfType<HotkeyManager>().Length;
-    int adManagerCount = FindObjectsOfType<AdManager>().Length;
+    // Managers
+    int gameManagerCount = FindObjectsByType<GameManager>(FindObjectsSortMode.None).Length;
+    int accountManagerCount = FindObjectsByType<AccountManager>(FindObjectsSortMode.None).Length;
+    int levelProgressManagerCount = FindObjectsByType<LevelProgressManager>(FindObjectsSortMode.None).Length;
+    int livesManagerCount = FindObjectsByType<LivesManager>(FindObjectsSortMode.None).Length;
+    int countManagerCount = FindObjectsByType<CountManager>(FindObjectsSortMode.None).Length;
+    int timerManagerCount = FindObjectsByType<TimerManager>(FindObjectsSortMode.None).Length;
+    int hotkeyManagerCount = FindObjectsByType<HotkeyManager>(FindObjectsSortMode.None).Length;
+    int adManagerCount = FindObjectsByType<AdManager>(FindObjectsSortMode.None).Length;
 
-    Debug.Log($"[GameManager] Instance counts - GameManager: {gameManagerCount}, SceneLoader: {sceneLoaderCount}, LevelProgressManager: {levelProgressManagerCount}, LivesManager: {livesManagerCount}, CountManager: {countManagerCount}, TimerManager: {timerManagerCount}, HotkeyManager: {hotkeyManagerCount}, AdManager: {adManagerCount}");
+    // Loaders
+    int sceneLoaderCount = FindObjectsByType<SceneLoader>(FindObjectsSortMode.None).Length;
+    int accountLoaderCount = FindObjectsByType<AccountLoader>(FindObjectsSortMode.None).Length;
+
+    // UI Systems
+    int eventSystemCount = FindObjectsByType<UnityEngine.EventSystems.EventSystem>(FindObjectsSortMode.None).Length;
+
+    Debug.Log($"[GameManager] Managers - GameManager: {gameManagerCount}, AccountManager: {accountManagerCount}, LevelProgressManager: {levelProgressManagerCount}, LivesManager: {livesManagerCount}, CountManager: {countManagerCount}, TimerManager: {timerManagerCount}, HotkeyManager: {hotkeyManagerCount}, AdManager: {adManagerCount}");
+    Debug.Log($"[GameManager] Loaders - SceneLoader: {sceneLoaderCount}, AccountLoader: {accountLoaderCount}");
+    Debug.Log($"[GameManager] UI Systems - EventSystem: {eventSystemCount}");
   }
 }

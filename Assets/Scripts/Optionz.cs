@@ -82,93 +82,63 @@ public partial class Optionz : MonoBehaviour
     SaveDifficulty();
   }
 
-  // Save control settings to PlayerPrefs
+  // Save control settings to AccountManager
   public static void SaveControlSettings()
   {
-    PlayerPrefs.SetInt(USE_TARGET_KEY, useTarget ? 1 : 0);
-    PlayerPrefs.SetInt(USE_ACCELEROMETER_KEY, useAccelerometer ? 1 : 0);
-    PlayerPrefs.SetInt(USE_JOYSTICK_KEY, useJoystick ? 1 : 0);
-    PlayerPrefs.SetInt(USE_KEYBOARD_KEY, useKeyboard ? 1 : 0);
-    PlayerPrefs.Save();
-    Debug.Log("[Optionz] Control settings saved");
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.UpdateSettings((float)diff, useTarget, useAccelerometer, useJoystick, useKeyboard);
+      Debug.Log("[Optionz] Control settings saved to AccountManager");
+    }
+    else
+    {
+      Debug.LogWarning("[Optionz] AccountManager not found, settings not saved");
+    }
   }
 
-  // Save difficulty setting to PlayerPrefs
+  // Save difficulty setting to AccountManager
   private static void SaveDifficulty()
   {
-    PlayerPrefs.SetFloat(DIFFICULTY_KEY, (float)diff);
-    PlayerPrefs.Save();
-    Debug.Log("[Optionz] Difficulty setting saved: " + DisplayDifficulty());
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.UpdateSettings((float)diff, useTarget, useAccelerometer, useJoystick, useKeyboard);
+      Debug.Log("[Optionz] Difficulty setting saved to AccountManager: " + DisplayDifficulty());
+    }
+    else
+    {
+      Debug.LogWarning("[Optionz] AccountManager not found, difficulty not saved");
+    }
   }
 
-  // Load all settings from PlayerPrefs
+  // Load all settings from AccountManager
   public static void LoadSettings()
   {
-    bool needsSave = false; // Track if we need to save defaults
-
-    // Load difficulty
-    if (PlayerPrefs.HasKey(DIFFICULTY_KEY))
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
     {
-      diff = PlayerPrefs.GetFloat(DIFFICULTY_KEY);
+      // Load settings from AccountManager
+      diff = accountManager.GetDifficulty();
+      useTarget = accountManager.GetUseTarget();
+      useAccelerometer = accountManager.GetUseAccelerometer();
+      useJoystick = accountManager.GetUseJoystick();
+      useKeyboard = accountManager.GetUseKeyboard();
+
+      Debug.Log("[Optionz] Settings loaded from AccountManager - Difficulty: " + DisplayDifficulty() +
+                ", Target: " + useTarget + ", Accelerometer: " + useAccelerometer +
+                ", Joystick: " + useJoystick + ", Keyboard: " + useKeyboard);
     }
     else
     {
+      // Fallback to default values if AccountManager not available
+      Debug.LogWarning("[Optionz] AccountManager not found, using default settings");
       diff = 1.0; // Default to medium
-      needsSave = true;
+      useTarget = true;
+      useAccelerometer = true;
+      useJoystick = true;
+      useKeyboard = true;
     }
-
-    // Load control settings
-    if (PlayerPrefs.HasKey(USE_TARGET_KEY))
-    {
-      useTarget = PlayerPrefs.GetInt(USE_TARGET_KEY) == 1;
-    }
-    else
-    {
-      useTarget = true; // Default to true
-      needsSave = true;
-    }
-
-    if (PlayerPrefs.HasKey(USE_ACCELEROMETER_KEY))
-    {
-      useAccelerometer = PlayerPrefs.GetInt(USE_ACCELEROMETER_KEY) == 1;
-    }
-    else
-    {
-      useAccelerometer = true; // Default to true
-      needsSave = true;
-    }
-
-    if (PlayerPrefs.HasKey(USE_JOYSTICK_KEY))
-    {
-      useJoystick = PlayerPrefs.GetInt(USE_JOYSTICK_KEY) == 1;
-    }
-    else
-    {
-      useJoystick = true; // Default to true
-      needsSave = true;
-    }
-
-    if (PlayerPrefs.HasKey(USE_KEYBOARD_KEY))
-    {
-      useKeyboard = PlayerPrefs.GetInt(USE_KEYBOARD_KEY) == 1;
-    }
-    else
-    {
-      useKeyboard = true; // Default to true
-      needsSave = true;
-    }
-
-    // Save defaults if this is the first time loading settings
-    if (needsSave)
-    {
-      SaveControlSettings();
-      SaveDifficulty();
-      Debug.Log("[Optionz] First time loading - saved default settings");
-    }
-
-    Debug.Log("[Optionz] Settings loaded - Difficulty: " + DisplayDifficulty() +
-              ", Target: " + useTarget + ", Accelerometer: " + useAccelerometer +
-              ", Joystick: " + useJoystick + ", Keyboard: " + useKeyboard);
   }
 
   static Optionz()

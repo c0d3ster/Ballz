@@ -175,8 +175,6 @@ public class LivesDisplay : MonoBehaviour
         rectTransform.pivot = new Vector2(0, 1);
         rectTransform.anchoredPosition = new Vector2(xPosition, 0);
         rectTransform.sizeDelta = new Vector2(scaledIconSize, scaledIconSize);
-
-        Debug.Log($"[LivesDisplay] Created life icon {i} with size: {rectTransform.sizeDelta}, position: {rectTransform.anchoredPosition}");
       }
 
       // Add EventTrigger component for click detection (less intrusive than Button)

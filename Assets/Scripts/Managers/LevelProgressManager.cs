@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using Enums;
 
@@ -12,13 +14,13 @@ public class LevelProgressManager : MonoBehaviour
   private int dodgeLevel = 1;
   private int jumpLevel = 1;
 
-  // Arrays for locked state visuals (including portals)
+  // UI elements for locked game modes
   public GameObject[] balanceLockedItems;
   public GameObject[] dodgeLockedItems;
   public GameObject[] jumpLockedItems;
   public GameObject[] pushLockedItems;
 
-  // References to lock objects
+  // Lock objects for each game mode
   public GameObject balanceLock;
   public GameObject dodgeLock;
   public GameObject jumpLock;
@@ -164,21 +166,39 @@ public class LevelProgressManager : MonoBehaviour
 
   public void SaveProgress()
   {
-    PlayerPrefs.SetInt("CollectLevel", collectLevel);
-    PlayerPrefs.SetInt("BalanceLevel", balanceLevel);
-    PlayerPrefs.SetInt("DodgeLevel", dodgeLevel);
-    PlayerPrefs.SetInt("JumpLevel", jumpLevel);
-    PlayerPrefs.SetInt("PushLevel", pushLevel);
-    PlayerPrefs.Save();
+    // Save progress to AccountManager
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.UpdateLevel(GameMode.Collect, collectLevel);
+      accountManager.UpdateLevel(GameMode.Balance, balanceLevel);
+      accountManager.UpdateLevel(GameMode.Dodge, dodgeLevel);
+      accountManager.UpdateLevel(GameMode.Jump, jumpLevel);
+      accountManager.UpdateLevel(GameMode.Push, pushLevel);
+    }
   }
 
   private void LoadProgress()
   {
-    collectLevel = PlayerPrefs.GetInt("CollectLevel", 1);
-    balanceLevel = PlayerPrefs.GetInt("BalanceLevel", 1);
-    dodgeLevel = PlayerPrefs.GetInt("DodgeLevel", 1);
-    jumpLevel = PlayerPrefs.GetInt("JumpLevel", 1);
-    pushLevel = PlayerPrefs.GetInt("PushLevel", 1);
+    // Load progress from AccountManager
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      collectLevel = accountManager.GetLevel(GameMode.Collect);
+      balanceLevel = accountManager.GetLevel(GameMode.Balance);
+      dodgeLevel = accountManager.GetLevel(GameMode.Dodge);
+      jumpLevel = accountManager.GetLevel(GameMode.Jump);
+      pushLevel = accountManager.GetLevel(GameMode.Push);
+    }
+    else
+    {
+      // Fallback to default values if AccountManager not available
+      collectLevel = 1;
+      balanceLevel = 1;
+      dodgeLevel = 1;
+      jumpLevel = 1;
+      pushLevel = 1;
+    }
   }
 
   public void ResetProgress()
@@ -190,13 +210,8 @@ public class LevelProgressManager : MonoBehaviour
     dodgeLevel = 1;
     jumpLevel = 1;
 
-    // Clear saved progress
-    PlayerPrefs.DeleteKey("CollectLevel");
-    PlayerPrefs.DeleteKey("BalanceLevel");
-    PlayerPrefs.DeleteKey("DodgeLevel");
-    PlayerPrefs.DeleteKey("JumpLevel");
-    PlayerPrefs.DeleteKey("PushLevel");
-    PlayerPrefs.Save();
+    // Save reset progress to AccountManager
+    SaveProgress();
 
     // Update visibility
     UpdateGameModeVisibility();
@@ -205,8 +220,12 @@ public class LevelProgressManager : MonoBehaviour
   [ContextMenu("Clear All Game Data")]
   public void ClearAllGameData()
   {
-    PlayerPrefs.DeleteAll();
-    PlayerPrefs.Save();
+    // Clear all data through AccountManager
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.ClearAccount();
+    }
 
     // Reload the current scene to apply changes
     UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);

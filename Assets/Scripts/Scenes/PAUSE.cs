@@ -86,7 +86,7 @@ public partial class PAUSE : MonoBehaviour
     {
       Time.timeScale = 1;
       SceneLoader.Instance.isPaused = false;
-      SceneLoader.Instance.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.LoadMainMenu();
     }
     // Right side - Control Optionz header
     GUI.Label(new Rect(rightPosition, Screen.height * 0.2f, rightButtonWidth, buttonHeight * 0.5f), "Control Optionz", headerStyle);

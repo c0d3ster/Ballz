@@ -33,7 +33,6 @@ public class AdManager : MonoBehaviour
     {
       Instance = this;
       DontDestroyOnLoad(gameObject);
-      Debug.Log("[AdManager] Instance created and set as singleton");
     }
     else
     {
@@ -52,7 +51,6 @@ public class AdManager : MonoBehaviour
 
   private async Task InitializeAds()
   {
-    Debug.Log("[AdManager] Starting ad initialization...");
     try
     {
       // Enable test suite if in test mode
@@ -80,8 +78,6 @@ public class AdManager : MonoBehaviour
         return;
       }
 
-      Debug.Log($"[AdManager] Initializing LevelPlay with app key: {levelplayAppKey}");
-
       // Register LevelPlay events BEFORE initialization
       LevelPlay.OnInitSuccess += OnLevelPlayInitSuccess;
       LevelPlay.OnInitFailed += OnLevelPlayInitFailed;
@@ -98,14 +94,7 @@ public class AdManager : MonoBehaviour
 
   private void OnLevelPlayInitSuccess(LevelPlayConfiguration config)
   {
-    Debug.Log($"[AdManager] LevelPlay initialization successful! Instance: {GetInstanceID()}");
     IsInitialized = true;
-
-    // // Launch test suite after successful initialization
-    // if (testMode)
-    // {
-    //   LevelPlay.LaunchTestSuite();
-    // }
 
     // Create Rewarded Ad object after successful initialization
     CreateRewardedAd();
@@ -116,7 +105,7 @@ public class AdManager : MonoBehaviour
 
   private void OnLevelPlayInitFailed(LevelPlayInitError error)
   {
-    Debug.LogError($"[AdManager] LevelPlay initialization failed: {error} Instance: {GetInstanceID()}");
+    Debug.LogError($"[AdManager] LevelPlay initialization failed: {error}");
     IsInitialized = false;
   }
 
@@ -136,8 +125,6 @@ public class AdManager : MonoBehaviour
       rewardedAd.OnAdClosed += OnRewardedAdClosed;
       rewardedAd.OnAdRewarded += OnRewardedAdRewarded;
       rewardedAd.OnAdInfoChanged += OnRewardedAdInfoChanged;
-
-      Debug.Log($"[AdManager] Rewarded Ad created with unit ID: {rewardedAdUnitId}");
     }
     catch (Exception e)
     {
@@ -150,18 +137,15 @@ public class AdManager : MonoBehaviour
     try
     {
       // Use the appropriate game ID based on platform
-      // Unity Services doesn't expose initialization state directly, so we'll use the game IDs
       string gameId = (Application.platform == RuntimePlatform.IPhonePlayer)
           ? iosGameId
           : androidGameId;
 
       if (!string.IsNullOrEmpty(gameId) && gameId != "unused")
       {
-        Debug.Log($"[AdManager] Using Game ID from configuration: {gameId}");
         return gameId;
       }
 
-      Debug.LogWarning("[AdManager] Game ID not configured - using manual configuration");
       return null;
     }
     catch (Exception e)
@@ -181,8 +165,6 @@ public class AdManager : MonoBehaviour
 
     try
     {
-      Debug.Log("[AdManager] Loading rewarded ad...");
-
       // Load rewarded ad using LevelPlay API
       rewardedAd.LoadAd();
     }
@@ -196,20 +178,14 @@ public class AdManager : MonoBehaviour
   {
     try
     {
-      Debug.Log("[AdManager] Requesting to show rewarded ad...");
-
       if (CanShowAd())
       {
-        Debug.Log("[AdManager] Ad is ready, showing immediately");
         rewardedAd.ShowAd();
       }
       else
       {
-        Debug.LogWarning("[AdManager] No ad ready to show!");
-
         // Set flag to true so the callback will show the ad when it loads
         shouldShowOnLoad = true;
-        Debug.Log("[AdManager] Set shouldShowOnLoad to true, loading ad...");
         LoadRewardedAd();
       }
     }
@@ -223,49 +199,39 @@ public class AdManager : MonoBehaviour
   // LevelPlay Rewarded Ad Event Handlers
   private void OnRewardedAdLoaded(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] Rewarded ad loaded successfully - Placement: {adInfo.PlacementName}");
+    Debug.Log("[AdManager] Ad loaded and ready");
 
     // Only show automatically if shouldShowOnLoad is enabled
     if (shouldShowOnLoad)
     {
-      Debug.Log("[AdManager] Auto-showing ad since shouldShowOnLoad is true");
       rewardedAd.ShowAd();
-
-      // Flip the flag back to false after showing
       shouldShowOnLoad = false;
-      Debug.Log("[AdManager] Set shouldShowOnLoad back to false");
-    }
-    else
-    {
-      Debug.Log("[AdManager] Ad ready but not auto-showing (shouldShowOnLoad is false)");
     }
   }
 
   private void OnRewardedAdLoadFailed(LevelPlayAdError error)
   {
-    Debug.LogError($"[AdManager] Rewarded ad failed to load: {error}");
+    Debug.LogError($"[AdManager] Ad failed to load: {error}");
   }
 
   private void OnRewardedAdDisplayed(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] Rewarded ad displayed - Placement: {adInfo.PlacementName}");
+    // Ad displayed successfully
   }
 
   private void OnRewardedAdDisplayFailed(LevelPlayAdDisplayInfoError error)
   {
-    Debug.LogError($"[AdManager] Rewarded ad display failed: {error}");
+    Debug.LogError($"[AdManager] Ad display failed: {error}");
     OnAdFailed?.Invoke();
   }
 
   private void OnRewardedAdClicked(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] Rewarded ad clicked - Placement: {adInfo.PlacementName}");
+    // Ad clicked
   }
 
   private void OnRewardedAdClosed(LevelPlayAdInfo adInfo)
   {
-    Debug.Log($"[AdManager] Rewarded ad closed - Placement: {adInfo.PlacementName}");
-
     // Load the next ad
     LoadRewardedAd();
   }
