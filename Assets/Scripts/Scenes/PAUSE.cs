@@ -18,9 +18,11 @@ public partial class PAUSE : MonoBehaviour
   {
     float middleButtonWidth = Screen.width * 0.25f;
     float rightButtonWidth = Screen.width * 0.3f; // Increased from 0.2f to 0.3f (30% of screen width)
+    float leftButtonWidth = Screen.width * 0.3f; // Left side width for account details
     float buttonHeight = Screen.height * 0.15f; // 20% for control options
     float checkboxSize = buttonHeight * 0.4f; // Back to original size since we're not using radio buttons
     float rightPosition = Screen.width * 0.65f; // Adjusted from 0.75f to 0.65f to accommodate wider rect
+    float leftPosition = Screen.width * 0.05f; // Left side position for account details
     float middlePosition = Screen.width * 0.375f; // Right side position
     int boxPadding = 3; // Left side position
 
@@ -64,6 +66,30 @@ public partial class PAUSE : MonoBehaviour
     disabledButtonStyle.normal.background = GUI.skin.button.normal.background;
     disabledButtonStyle.hover.background = GUI.skin.button.hover.background;
     disabledButtonStyle.active.background = GUI.skin.button.active.background;
+
+    // Left side - Account Details header
+    GUI.Label(new Rect(leftPosition, Screen.height * 0.2f, leftButtonWidth, buttonHeight * 0.5f), "Account Details", headerStyle);
+
+    // Get account details
+    AccountManager accountManager = AccountManager.Instance;
+    string username = "Not Set";
+    string email = "Not Set";
+    string platform = "Unknown";
+    string createdDate = "Unknown";
+
+    if (accountManager != null && accountManager.currentAccount != null)
+    {
+      username = accountManager.currentAccount.username ?? "Not Set";
+      email = accountManager.currentAccount.email ?? "Not Set";
+      platform = accountManager.currentAccount.platform ?? "Unknown";
+      createdDate = accountManager.currentAccount.createdDate.ToString("MMM dd, yyyy");
+    }
+
+    // Display account details
+    GUI.Label(new Rect(leftPosition + 20, Screen.height * 0.3f, leftButtonWidth - 20, checkboxSize), "Username: " + username, labelStyle);
+    GUI.Label(new Rect(leftPosition + 20, Screen.height * 0.4f, leftButtonWidth - 20, checkboxSize), "Email: " + email, labelStyle);
+    GUI.Label(new Rect(leftPosition + 20, Screen.height * 0.5f, leftButtonWidth - 20, checkboxSize), "Platform: " + platform, labelStyle);
+    GUI.Label(new Rect(leftPosition + 20, Screen.height * 0.6f, leftButtonWidth - 20, checkboxSize), "Created: " + createdDate, labelStyle);
 
     // middle - existing menu buttons
     if (GUI.Button(new Rect(middlePosition, Screen.height * 0.2f, middleButtonWidth, buttonHeight), "Resume Play", style))
