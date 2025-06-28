@@ -25,6 +25,8 @@ public partial class Splash : MonoBehaviour
   private Button startGameButton;
   private TextMeshProUGUI errorText;
   private TextMeshProUGUI emailText;
+  private TextMeshProUGUI usernameLabel;
+  private TextMeshProUGUI emailLabel;
 
   // Loading system
   private List<LoadingStep> loadingSteps = new List<LoadingStep>();
@@ -151,46 +153,65 @@ public partial class Splash : MonoBehaviour
     // Get screen dimensions
     float screenHeight = Screen.height;
     float bottomThirdY = -screenHeight / 3f; // Bottom third of screen
-    float buttonY = bottomThirdY + 40; // Consistent button level
+    float buttonY = bottomThirdY + 60; // Consistent button level
+    float newGameButtonY = buttonY - 70; // New Game button lower
 
     // Create loading text (above loading bar)
     GameObject loadingObj = CreateText("LoadingText", "Loading...", new Vector2(0, -screenHeight / 2f + 50));
     loadingText = loadingObj.GetComponent<TextMeshProUGUI>();
+    loadingText.fontSize = 20;
 
     // Create loading bar (bottom of screen)
     GameObject loadingBarObj = CreateLoadingBar("LoadingBar");
     loadingBar = loadingBarObj.GetComponent<Slider>();
 
-    // Create new game button (consistent button level)
-    GameObject newGameObj = CreateButton("NewGameButton", "New Game", new Vector2(0, buttonY));
+    // Create new game button (lower position)
+    GameObject newGameObj = CreateButton("NewGameButton", "New Game", new Vector2(0, newGameButtonY));
     newGameButton = newGameObj.GetComponent<Button>();
     newGameButton.onClick.AddListener(OnNewGameClicked);
     newGameObj.SetActive(false); // Hidden initially
 
-    // Create username input (consistent button level)
-    GameObject inputObj = CreateInputField("UsernameInput", "Enter username...", new Vector2(0, buttonY));
+    // Create username input (higher position)
+    GameObject inputObj = CreateInputField("UsernameInput", "Enter username...", new Vector2(50, buttonY));
     usernameInput = inputObj.GetComponent<TMP_InputField>();
     usernameInput.onValueChanged.AddListener(OnUsernameChanged);
     usernameInput.onSubmit.AddListener((string value) => OnStartGameClicked());
     inputObj.SetActive(false); // Hidden initially
 
-    // Create start game button (consistent button level)
-    GameObject startGameObj = CreateButton("StartGameButton", "Start Game", new Vector2(0, buttonY));
+    // Create start game button (same position as new game button)
+    GameObject startGameObj = CreateButton("StartGameButton", "Start Game", new Vector2(0, newGameButtonY));
     startGameButton = startGameObj.GetComponent<Button>();
     startGameButton.onClick.AddListener(OnStartGameClicked);
     startGameObj.SetActive(false); // Hidden initially
 
     // Create error text (below buttons)
-    GameObject errorObj = CreateText("ErrorText", "", new Vector2(0, buttonY - 60));
+    GameObject errorObj = CreateText("ErrorText", "", new Vector2(0, newGameButtonY - 40));
     errorText = errorObj.GetComponent<TextMeshProUGUI>();
     errorText.color = Color.red;
     errorObj.SetActive(false); // Hidden initially
 
-    // Create email text (above buttons)
-    GameObject emailObj = CreateText("EmailText", "", new Vector2(0, buttonY + 60));
+    // Create email text (above username input) - LEFT ALIGNED
+    GameObject emailObj = CreateText("EmailText", "", new Vector2(209, buttonY + 50));
     emailText = emailObj.GetComponent<TextMeshProUGUI>();
+    emailText.alignment = TextAlignmentOptions.Left;
     emailText.color = Color.gray;
     emailObj.SetActive(false); // Hidden initially
+
+    // Create email label (to the left of email text)
+    GameObject emailLabelObj = CreateText("EmailLabel", "Email:", new Vector2(-420, buttonY + 50));
+    emailLabel = emailLabelObj.GetComponent<TextMeshProUGUI>();
+    emailLabel.alignment = TextAlignmentOptions.Right;
+    emailLabel.color = new Color(0.8f, 0.8f, 0.8f, 1f);
+    emailLabel.fontSize = 24;
+    emailLabelObj.SetActive(false); // Hidden initially
+
+    // Create username label (to the left of username input)
+    GameObject usernameLabelObj = CreateText("UsernameLabel", "Username:", new Vector2(-420, buttonY));
+    usernameLabel = usernameLabelObj.GetComponent<TextMeshProUGUI>();
+    usernameLabel.alignment = TextAlignmentOptions.Right;
+    usernameLabel.color = new Color(0.8f, 0.8f, 0.8f, 1f);
+    usernameLabel.fontSize = 24;
+    usernameLabelObj.SetActive(false); // Hidden initially
   }
 
   private GameObject CreateLoadingBar(string name)
@@ -286,7 +307,7 @@ public partial class Splash : MonoBehaviour
 
     TextMeshProUGUI textComponent = obj.AddComponent<TextMeshProUGUI>();
     textComponent.text = text;
-    textComponent.fontSize = 24; // Normal font size
+    textComponent.fontSize = 18;
     textComponent.alignment = TextAlignmentOptions.Center;
     textComponent.color = Color.white;
     textComponent.fontStyle = FontStyles.Normal;
@@ -368,15 +389,34 @@ public partial class Splash : MonoBehaviour
     // Create placeholder text
     GameObject placeholderObj = CreateText(name + "Placeholder", placeholder, Vector2.zero);
     placeholderObj.transform.SetParent(obj.transform, false);
-    placeholderObj.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+    RectTransform placeholderRect = placeholderObj.GetComponent<RectTransform>();
+    placeholderRect.anchorMin = Vector2.zero;
+    placeholderRect.anchorMax = Vector2.one;
+    placeholderRect.offsetMin = new Vector2(10, 5);
+    placeholderRect.offsetMax = new Vector2(-10, -5);
+
     placeholderObj.GetComponent<TextMeshProUGUI>().color = Color.gray;
+    placeholderObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Left;
+    placeholderObj.GetComponent<TextMeshProUGUI>().fontSize = 18; // Set placeholder font size
     inputField.placeholder = placeholderObj.GetComponent<TextMeshProUGUI>();
 
     // Create text component
     GameObject textObj = CreateText(name + "Text", "", Vector2.zero);
     textObj.transform.SetParent(obj.transform, false);
-    textObj.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+    RectTransform textRect = textObj.GetComponent<RectTransform>();
+    textRect.anchorMin = Vector2.zero;
+    textRect.anchorMax = Vector2.one;
+    textRect.offsetMin = new Vector2(10, 5);
+    textRect.offsetMax = new Vector2(-10, -5);
+
+    textObj.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Left;
+    textObj.GetComponent<TextMeshProUGUI>().fontSize = 18; // Set input text font size
     inputField.textComponent = textObj.GetComponent<TextMeshProUGUI>();
+
+    // Set character limit to 20
+    inputField.characterLimit = 20;
 
     RectTransform rect = obj.GetComponent<RectTransform>();
     rect.anchoredPosition = position;
@@ -396,10 +436,18 @@ public partial class Splash : MonoBehaviour
     if (usernameInput != null) usernameInput.gameObject.SetActive(true);
     if (startGameButton != null) startGameButton.gameObject.SetActive(true);
     if (emailText != null) emailText.gameObject.SetActive(true);
+    if (usernameLabel != null) usernameLabel.gameObject.SetActive(true);
+    if (emailLabel != null) emailLabel.gameObject.SetActive(true);
+
+    // Disable hotkeys while form is active
+    if (HotkeyManager.Instance != null)
+    {
+      HotkeyManager.Instance.enabled = false;
+    }
 
     // Show user's email
     if (emailText != null && accountManager != null)
-      emailText.text = $"Email: {accountManager.userEmail}";
+      emailText.text = accountManager.userEmail;
 
     // Clear any previous errors
     if (errorText != null)
@@ -481,6 +529,12 @@ public partial class Splash : MonoBehaviour
     isProcessing = false;
     Debug.Log($"Account created: {account.username}");
 
+    // Re-enable hotkeys
+    if (HotkeyManager.Instance != null)
+    {
+      HotkeyManager.Instance.enabled = true;
+    }
+
     // Unsubscribe from event
     if (accountManager != null)
       accountManager.OnAccountCreated -= OnAccountCreated;
@@ -499,5 +553,11 @@ public partial class Splash : MonoBehaviour
   {
     if (accountManager != null)
       accountManager.OnAccountCreated -= OnAccountCreated;
+
+    // Destroy the Canvas to prevent it from affecting other scenes
+    if (uiCanvas != null)
+    {
+      DestroyImmediate(uiCanvas.gameObject);
+    }
   }
 }

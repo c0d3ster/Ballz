@@ -41,12 +41,15 @@ public class CountDisplay : MonoBehaviour
     countText.text = countFormat.Replace("{0}", "0").Replace("{1}", "0");
     countText.fontSize = fontSize;
     countText.color = textColor;
-    countText.alignment = TextAlignmentOptions.Center;
+    countText.alignment = TextAlignmentOptions.TopLeft;
 
-    // Position the text
+    // Position the text in top left
     RectTransform rectTransform = countObj.GetComponent<RectTransform>();
-    rectTransform.anchoredPosition = new Vector2(0, 35);
-    rectTransform.sizeDelta = new Vector2(300, 50);
+    rectTransform.anchorMin = new Vector2(0, 1);
+    rectTransform.anchorMax = new Vector2(0, 1);
+    rectTransform.pivot = new Vector2(0, 1);
+    rectTransform.anchoredPosition = new Vector2(42, -120);
+    rectTransform.sizeDelta = new Vector2(200, 75);
 
     isInitialized = true;
   }

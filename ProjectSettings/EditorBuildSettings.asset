@@ -36,7 +36,7 @@ EditorBuildSettings:
     path: Assets/_Scenes/Overlay Scenes/WIN.unity
     guid: 0937091907d98a14ea056f58104535c8
   - enabled: 1
-    path: Assets/_Scenes/Overlay Scenes/GAME OVER.unity
+    path: Assets/_Scenes/Overlay Scenes/GAME_OVER.unity
     guid: 5855484081f4c7641a7474d80137db5b
   - enabled: 1
     path: Assets/_Scenes/Overlay Scenes/RESET_CONFIRMATION.unity

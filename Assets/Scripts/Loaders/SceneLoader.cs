@@ -124,7 +124,7 @@ public partial class SceneLoader : MonoBehaviour
 
   public void LoadMainMenu()
   {
-    this.LoadMainMenu();
+    this.ChangeScene("Active Main Menu");
   }
 
   public void LoadWinScene()

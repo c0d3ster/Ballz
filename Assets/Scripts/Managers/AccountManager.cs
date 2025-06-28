@@ -6,6 +6,7 @@ using Unity.Services.Core;
 using Unity.Services.CloudSave;
 using Unity.Services.Authentication;
 using Enums;
+using System.Threading.Tasks;
 
 public class AccountManager : MonoBehaviour
 {
@@ -97,6 +98,20 @@ public class AccountManager : MonoBehaviour
     {
       InitializeCloudSave();
     }
+
+    // Subscribe to reset event
+    HotkeyManager.OnResetConfirmed += OnResetConfirmed;
+  }
+
+  private void OnResetConfirmed()
+  {
+    ClearAccount();
+  }
+
+  private void OnDestroy()
+  {
+    // Unsubscribe from reset event
+    HotkeyManager.OnResetConfirmed -= OnResetConfirmed;
   }
 
   private void InitializePlatform()
@@ -138,37 +153,70 @@ public class AccountManager : MonoBehaviour
     }
   }
 
-  public void StartAuthentication()
+  public async void StartAuthentication()
   {
-    Debug.Log("Starting platform authentication...");
-    StartCoroutine(AuthenticateWithPlatform());
+    Debug.Log("[AccountManager] Starting authentication");
+    await AuthenticateWithPlatform();
   }
 
-  private IEnumerator AuthenticateWithPlatform()
+  private async Task AuthenticateWithPlatform()
   {
-    // For now, we'll simulate getting the email
-    // In a real implementation, you'd integrate with Google Play Games Services or Game Center
-    yield return new WaitForSeconds(1f); // Simulate network delay
+    Debug.Log("[AccountManager] Starting platform authentication");
 
-#if UNITY_ANDROID
-      // TODO: Integrate with Google Play Games Services
-      userEmail = "android.user@example.com";
-#elif UNITY_IOS
-      // TODO: Integrate with Game Center
-      userEmail = "ios.user@example.com";
-#else
-    userEmail = "editor.user@example.com";
-#endif
-
-    if (!string.IsNullOrEmpty(userEmail))
+    try
     {
+      // Simulate platform authentication in editor
+      if (Application.isEditor)
+      {
+        userEmail = "test@example.com";
+        currentPlatform = "Editor";
+        isAuthenticated = true;
+        Debug.Log("[AccountManager] Editor authentication complete");
+
+        // Check for existing account and sync cloud data if needed
+        CheckForExistingAccount();
+        await CheckAndSyncCloudData();
+        return;
+      }
+
+      // Real platform authentication would go here
+      // For now, just set a default email
+      userEmail = "user@platform.com";
+      currentPlatform = Application.platform.ToString();
       isAuthenticated = true;
-      Debug.Log($"Authenticated with email: {userEmail}");
+
       CheckForExistingAccount();
+      await CheckAndSyncCloudData();
     }
-    else
+    catch (Exception e)
     {
-      OnAuthenticationFailed?.Invoke("Failed to get user email from platform");
+      Debug.LogError($"[AccountManager] Authentication failed: {e.Message}");
+      OnAuthenticationFailed?.Invoke(e.Message);
+    }
+  }
+
+  private async Task CheckAndSyncCloudData()
+  {
+    if (!isAuthenticated || !isCloudSaveAvailable || !enableCloudSave) return;
+
+    try
+    {
+      // Check if we have local data but no cloud data
+      string localData = PlayerPrefs.GetString("GameData", "");
+      if (!string.IsNullOrEmpty(localData))
+      {
+        var cloudData = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string> { "GameData" });
+
+        if (!cloudData.ContainsKey("GameData"))
+        {
+          Debug.Log("[AccountManager] Local data found but no cloud data - syncing to cloud");
+          await SyncLocalDataToCloud();
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      Debug.LogWarning($"[AccountManager] Failed to check cloud data: {e.Message}");
     }
   }
 
@@ -215,7 +263,6 @@ public class AccountManager : MonoBehaviour
 
     SaveAccount();
     isNewGame = true;
-    OnAccountCreated?.Invoke(currentAccount);
 
     Debug.Log($"New account created: {username} ({userEmail})");
   }
@@ -301,6 +348,12 @@ public class AccountManager : MonoBehaviour
         OnCloudSaveFailed?.Invoke();
       }
     }
+
+    // Fire account created event after save completes (regardless of cloud save success/failure)
+    if (currentAccount != null && currentAccount.isNewGame)
+    {
+      OnAccountCreated?.Invoke(currentAccount);
+    }
   }
 
   private async void LoadGameData()
@@ -321,10 +374,17 @@ public class AccountManager : MonoBehaviour
           Debug.Log("Game data loaded from cloud");
           return;
         }
+        else
+        {
+          // No cloud data found, check if we have local data that needs to be synced
+          await SyncLocalDataToCloud();
+        }
       }
       catch (Exception e)
       {
         Debug.LogWarning($"Cloud load failed: {e.Message}");
+        // Try to sync local data to cloud if load fails
+        await SyncLocalDataToCloud();
       }
     }
 
@@ -356,6 +416,31 @@ public class AccountManager : MonoBehaviour
     }
   }
 
+  private async Task SyncLocalDataToCloud()
+  {
+    if (!isCloudSaveAvailable || !enableCloudSave) return;
+
+    try
+    {
+      string localData = PlayerPrefs.GetString("GameData", "");
+      if (!string.IsNullOrEmpty(localData))
+      {
+        var data = new Dictionary<string, object>
+        {
+          { "GameData", localData }
+        };
+
+        await CloudSaveService.Instance.Data.Player.SaveAsync(data);
+        Debug.Log("Local data synced to cloud");
+        OnDataSaved?.Invoke();
+      }
+    }
+    catch (Exception e)
+    {
+      Debug.LogWarning($"Failed to sync local data to cloud: {e.Message}");
+    }
+  }
+
   public bool HasExistingAccount()
   {
     string savedEmail = PlayerPrefs.GetString("UserEmail", "");
@@ -381,11 +466,6 @@ public class AccountManager : MonoBehaviour
   public GameData GetGameData()
   {
     return gameData;
-  }
-
-  public void SaveGameProgress()
-  {
-    SaveGameData();
   }
 
   public void UpdateLives(int lives)
