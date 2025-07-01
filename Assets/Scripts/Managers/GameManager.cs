@@ -51,6 +51,15 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(am);
       }
 
+      // Initialize PlatformAuthManager (for platform-specific authentication)
+      if (FindObjectsByType<PlatformAuthManager>(FindObjectsSortMode.None).Length == 0)
+      {
+        GameObject pam = new GameObject("PlatformAuthManager");
+        pam.transform.SetParent(null);
+        PlatformAuthManager platformAuthManager = pam.AddComponent<PlatformAuthManager>();
+        DontDestroyOnLoad(pam);
+      }
+
       // Initialize AccountLoader (for loading existing accounts)
       if (FindObjectsByType<AccountLoader>(FindObjectsSortMode.None).Length == 0)
       {
@@ -157,6 +166,7 @@ public class GameManager : MonoBehaviour
     // Managers
     int gameManagerCount = FindObjectsByType<GameManager>(FindObjectsSortMode.None).Length;
     int accountManagerCount = FindObjectsByType<AccountManager>(FindObjectsSortMode.None).Length;
+    int platformAuthManagerCount = FindObjectsByType<PlatformAuthManager>(FindObjectsSortMode.None).Length;
     int levelProgressManagerCount = FindObjectsByType<LevelProgressManager>(FindObjectsSortMode.None).Length;
     int livesManagerCount = FindObjectsByType<LivesManager>(FindObjectsSortMode.None).Length;
     int countManagerCount = FindObjectsByType<CountManager>(FindObjectsSortMode.None).Length;
@@ -171,7 +181,7 @@ public class GameManager : MonoBehaviour
     // UI Systems
     int eventSystemCount = FindObjectsByType<UnityEngine.EventSystems.EventSystem>(FindObjectsSortMode.None).Length;
 
-    Debug.Log($"[GameManager] Managers - GameManager: {gameManagerCount}, AccountManager: {accountManagerCount}, LevelProgressManager: {levelProgressManagerCount}, LivesManager: {livesManagerCount}, CountManager: {countManagerCount}, TimerManager: {timerManagerCount}, HotkeyManager: {hotkeyManagerCount}, AdManager: {adManagerCount}");
+    Debug.Log($"[GameManager] Managers - GameManager: {gameManagerCount}, AccountManager: {accountManagerCount}, PlatformAuthManager: {platformAuthManagerCount}, LevelProgressManager: {levelProgressManagerCount}, LivesManager: {livesManagerCount}, CountManager: {countManagerCount}, TimerManager: {timerManagerCount}, HotkeyManager: {hotkeyManagerCount}, AdManager: {adManagerCount}");
     Debug.Log($"[GameManager] Loaders - SceneLoader: {sceneLoaderCount}, AccountLoader: {accountLoaderCount}");
     Debug.Log($"[GameManager] UI Systems - EventSystem: {eventSystemCount}");
   }

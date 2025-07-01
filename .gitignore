@@ -46,3 +46,8 @@ crashlytics-build.properties
 # Security - API Keys and Configuration
 unity-keys.config
 *.config
+
+# Keystore files
+*.keystore
+*.jks
+Assets/Plugins/Android/*.keystore

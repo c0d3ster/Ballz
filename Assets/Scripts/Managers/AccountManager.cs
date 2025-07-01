@@ -165,34 +165,70 @@ public class AccountManager : MonoBehaviour
 
     try
     {
-      // Simulate platform authentication in editor
-      if (Application.isEditor)
+      // Use PlatformAuthManager for real platform authentication
+      PlatformAuthManager platformAuth = PlatformAuthManager.Instance;
+      if (platformAuth == null)
       {
-        userEmail = "test@example.com";
-        currentPlatform = "Editor";
-        isAuthenticated = true;
-        Debug.Log("[AccountManager] Editor authentication complete");
-
-        // Check for existing account and sync cloud data if needed
-        CheckForExistingAccount();
-        await CheckAndSyncCloudData();
+        Debug.LogError("[AccountManager] PlatformAuthManager not found!");
+        OnAuthenticationFailed?.Invoke("PlatformAuthManager not found");
         return;
       }
 
-      // Real platform authentication would go here
-      // For now, just set a default email
-      userEmail = "user@platform.com";
-      currentPlatform = Application.platform.ToString();
-      isAuthenticated = true;
+      // Subscribe to platform auth events
+      platformAuth.OnAuthenticationSuccess += OnPlatformAuthSuccess;
+      platformAuth.OnAuthenticationFailed += OnPlatformAuthFailed;
 
-      CheckForExistingAccount();
-      await CheckAndSyncCloudData();
+      // Start platform authentication
+      bool success = await platformAuth.AuthenticateWithPlatform();
+
+      if (!success)
+      {
+        Debug.LogWarning("[AccountManager] Platform authentication failed, using fallback");
+        // Fallback authentication is handled by PlatformAuthManager
+      }
     }
     catch (Exception e)
     {
       Debug.LogError($"[AccountManager] Authentication failed: {e.Message}");
       OnAuthenticationFailed?.Invoke(e.Message);
     }
+  }
+
+  private void OnPlatformAuthSuccess(string email, string platform)
+  {
+    Debug.Log($"[AccountManager] Platform authentication successful: {email} on {platform}");
+
+    // Unsubscribe from events
+    PlatformAuthManager platformAuth = PlatformAuthManager.Instance;
+    if (platformAuth != null)
+    {
+      platformAuth.OnAuthenticationSuccess -= OnPlatformAuthSuccess;
+      platformAuth.OnAuthenticationFailed -= OnPlatformAuthFailed;
+    }
+
+    // Set account data
+    userEmail = email;
+    currentPlatform = platform;
+    isAuthenticated = true;
+
+    // Check for existing account and sync cloud data if needed
+    CheckForExistingAccount();
+    _ = CheckAndSyncCloudData();
+  }
+
+  private void OnPlatformAuthFailed(string error)
+  {
+    Debug.LogError($"[AccountManager] Platform authentication failed: {error}");
+
+    // Unsubscribe from events
+    PlatformAuthManager platformAuth = PlatformAuthManager.Instance;
+    if (platformAuth != null)
+    {
+      platformAuth.OnAuthenticationSuccess -= OnPlatformAuthSuccess;
+      platformAuth.OnAuthenticationFailed -= OnPlatformAuthFailed;
+    }
+
+    OnAuthenticationFailed?.Invoke(error);
   }
 
   private async Task CheckAndSyncCloudData()
