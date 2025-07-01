@@ -151,7 +151,7 @@ public partial class GAME_OVER : MonoBehaviour
     // Main Menu button - positioned on the left
     if (GUI.Button(new Rect(Screen.width * 0.1f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 15% from left
     {
-      SceneLoader.Instance.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.LoadMainMenu();
     }
   }
 

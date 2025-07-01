@@ -159,7 +159,7 @@ public class PlayerController : MonoBehaviour
     {
       if (string.IsNullOrEmpty(SceneLoader.Instance.currentScene) || (SceneLoader.Instance.currentScene == "Active Main Menu"))
       {
-        SceneLoader.Instance.ChangeScene("Active Main Menu");
+        SceneLoader.Instance.LoadMainMenu();
       }
       else
       {

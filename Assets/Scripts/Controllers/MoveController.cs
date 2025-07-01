@@ -114,8 +114,6 @@ public class MoveController : MonoBehaviour
     // Account for mobile scaling in the calculation
     movementRadius = (outerCircle.sizeDelta.x + innerCircle.sizeDelta.x) / 2;
 
-    Debug.Log($"[MoveController] Movement radius calculated: {movementRadius} (outer: {outerCircle.sizeDelta.x}, inner: {innerCircle.sizeDelta.x})");
-
     isInitialized = true;
   }
 

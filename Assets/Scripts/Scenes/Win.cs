@@ -32,7 +32,7 @@ public partial class Win : MonoBehaviour
     if (GUI.Button(new Rect(Screen.width * 0.08f, verticalPosition, buttonWidth, buttonHeight), "Main Menu", buttonStyle)) // 8% from left
     {
       Time.timeScale = 1;
-      SceneLoader.Instance.ChangeScene("Active Main Menu");
+      SceneLoader.Instance.LoadMainMenu();
     }
 
     // Try For Better Time button - center position

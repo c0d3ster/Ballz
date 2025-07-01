@@ -53,7 +53,6 @@ public class LivesManager : MonoBehaviour
       InitializeLivesManager();
       LoadLives();
       SceneManager.sceneLoaded += OnSceneLoaded;
-      Debug.Log($"[LivesManager] Start - Initialized with {CurrentLives}/{maxLives} lives");
 
       // Subscribe to hotkey events
       HotkeyManager.OnResetConfirmed += ClearLivesData;
@@ -135,8 +134,16 @@ public class LivesManager : MonoBehaviour
 
   private void LoadLives()
   {
+    // Get AccountManager reference
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager == null)
+    {
+      Debug.LogError("[LivesManager] AccountManager not found!");
+      return;
+    }
+
     // Check if this is the first time running (no saved data)
-    bool isFirstRun = !PlayerPrefs.HasKey(LIVES_KEY);
+    bool isFirstRun = accountManager.GetCurrentLives() == 5 && accountManager.GetLastLifeLostTime() == DateTime.UtcNow;
 
     if (isFirstRun)
     {
@@ -147,22 +154,11 @@ public class LivesManager : MonoBehaviour
     }
     else
     {
-      // Load saved data
-      CurrentLives = PlayerPrefs.GetInt(LIVES_KEY, maxLives);
-
-      // Load the last life lost time as a binary timestamp
-      string lastLifeLostTicksString = PlayerPrefs.GetString(LAST_LIFE_LOST_KEY, "0");
-      if (long.TryParse(lastLifeLostTicksString, out long ticks))
-      {
-        lastLifeLostTime = new DateTime(ticks, DateTimeKind.Utc);
-      }
-      else
-      {
-        lastLifeLostTime = DateTime.UtcNow;
-      }
+      // Load saved data from AccountManager
+      CurrentLives = accountManager.GetCurrentLives();
+      lastLifeLostTime = accountManager.GetLastLifeLostTime();
 
       Debug.Log($"[LivesManager] Loading saved lives: {CurrentLives}/{maxLives}");
-      Debug.Log($"[LivesManager] Last life lost time: {lastLifeLostTime}");
 
       // Check if enough time has passed to regenerate lives
       CheckAndRegenerateLivesOnLoad();
@@ -185,8 +181,6 @@ public class LivesManager : MonoBehaviour
 
       if (livesToRegenerate > 0)
       {
-        Debug.Log($"[LivesManager] Regenerated {livesToRegenerate} lives during load. {oldLives} -> {CurrentLives}/{maxLives}");
-
         // Update the last life lost time to account for regenerated lives
         if (CurrentLives < maxLives)
         {
@@ -205,9 +199,12 @@ public class LivesManager : MonoBehaviour
 
   private void SaveLives()
   {
-    PlayerPrefs.SetInt(LIVES_KEY, CurrentLives);
-    PlayerPrefs.SetString(LAST_LIFE_LOST_KEY, lastLifeLostTime.Ticks.ToString());
-    PlayerPrefs.Save();
+    // Save lives data to AccountManager
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.UpdateLivesWithTimestamp(CurrentLives, lastLifeLostTime);
+    }
   }
 
   private void CheckLifeRegeneration()
@@ -348,9 +345,14 @@ public class LivesManager : MonoBehaviour
   public void ClearLivesData()
   {
     Debug.Log("[LivesManager] Clearing all lives data...");
-    PlayerPrefs.DeleteKey(LIVES_KEY);
-    PlayerPrefs.DeleteKey(LAST_LIFE_LOST_KEY);
-    PlayerPrefs.Save();
+
+    // Reset lives data in AccountManager
+    AccountManager accountManager = AccountManager.Instance;
+    if (accountManager != null)
+    {
+      accountManager.UpdateLivesWithTimestamp(maxLives, DateTime.UtcNow);
+    }
+
     Debug.Log("[LivesManager] Cleared all lives data");
 
     // Force reset to max lives

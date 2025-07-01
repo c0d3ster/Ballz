@@ -86,9 +86,10 @@ public class CountManager : MonoBehaviour
       ResetCount();
       FindPickupsInScene();
 
-      // Update count display to trigger visibility logic
+      // Notify CountDisplay of scene change to trigger proper visibility logic
       if (countDisplay != null)
       {
+        countDisplay.OnSceneLoaded();
         countDisplay.UpdateCount(CurrentCount, TotalCount);
       }
     }
